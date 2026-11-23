@@ -70,8 +70,9 @@ impl Card {
             }@else{(image(srcs,&self.title,false))}
             @if !poster && let Some(logo)=&self.logo{span.ch-logo-badge{(image(logo.clone(),"",true))}}
             @if let Some(b)=&self.badge{span.badge.live[self.badge_live]{(b)}}
-            @if poster && let Some(r)=self.imdb.filter(|v|*v!=0.){(rating(r))}
+            // one rating per picture: the TMDB one (Home) replaces the IMDb badge
             @if poster && let Some(s)=self.score.filter(|v|*v>0.){(score(s))}
+            @else if poster && let Some(r)=self.imdb.filter(|v|*v!=0.){(rating(r))}
             @if let Some(p)=self.progress{
                 div.progress.light[self.progress_light]{i style=(format!("width:{}%",(p*100.).clamp(if poster{2.}else{1.},100.))){}}
             }
