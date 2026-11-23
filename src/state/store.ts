@@ -47,10 +47,27 @@ export interface GlobalSettings {
   prefetchWifiOnly: boolean;
   hideAdult: boolean;
   recentSearches: string[];
+  /** channels / films / series / programmes opened from a search, newest first (quick access) */
+  recentPicks: SearchPick[];
   /** live timeshift kept on disk, in minutes (0 = off) */
   liveBuffer: number;
   /** also for the IPTV source's channels (their HLS output starts much slower than their direct stream) */
   liveBufferIptv: boolean;
+}
+
+export interface SearchPick {
+  profileId: string;
+  kind: 'channel' | 'movie' | 'series' | 'program';
+  id: string;
+  title: string;
+  image?: string;
+  logo?: (string | undefined)[];
+  sub?: string;
+  /** programme: its channel and slot (programme rows get new ids at each guide refresh) */
+  chId?: string;
+  epgId?: string;
+  start?: number;
+  stop?: number;
 }
 
 const SETTINGS_KEY = 'cybertv.settings';
@@ -65,6 +82,7 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   prefetchWifiOnly: true,
   hideAdult: true,
   recentSearches: [],
+  recentPicks: [],
   liveBuffer: 30,
   liveBufferIptv: false,
 };
@@ -140,6 +158,8 @@ interface AppState {
   setTab(t: TabId): void;
   push(r: Route): void;
   pop(): boolean;
+  /** Android: Back at the root of a tab asks before leaving the app */
+  exitAsk: boolean;
   resetStack(): void;
   play(r: PlayRequest | null): void;
   setSync(s: Partial<SyncState>): void;
@@ -156,6 +176,7 @@ export const useApp = create<AppState>((set, get) => ({
   screen: 'boot',
   profile: null,
   settings: loadSettings(),
+  exitAsk: false,
   tab: 'home',
   stack: [],
   player: null,

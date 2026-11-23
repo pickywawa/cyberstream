@@ -90,6 +90,17 @@ export async function boot() {
   }
 }
 
+/** "Quitter" in the exit dialog: stop playback and every native service, then end the process */
+export async function quitApp() {
+  useApp.setState({ exitAsk: false, player: null });
+  try {
+    await CyberNative.quitApp();
+  } catch {
+    // APK older than this web bundle: no native quit, Capacitor's is the next best
+    await CapApp.exitApp();
+  }
+}
+
 /** Back from remote / Escape / Android back button */
 export function handleBack(hardware: boolean): boolean {
   // Back while a video is starting: that launch is abandoned (it must not open later on its own)
@@ -103,6 +114,11 @@ export function handleBack(hardware: boolean): boolean {
     return true;
   }
   if (window.dispatchEvent(new CustomEvent('cyber:player-back', { cancelable: true })) === false) return true;
+  // Android (remote / back button) at the root of any tab: confirm before leaving the app
+  if (isAndroidApp && !st.player && !st.stack.length) {
+    if (!st.exitAsk) useApp.setState({ exitAsk: true });
+    return true;
+  }
   const ok = useApp.getState().pop();
   if (!ok && hardware) void CapApp.minimizeApp().catch(() => CapApp.exitApp());
   return ok;

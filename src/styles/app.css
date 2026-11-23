@@ -242,12 +242,12 @@ h1, h2, h3 { margin: 0; font-family: var(--font-display); }
 
 /* ───────────── Rails ───────────── */
 .rail { margin-top: clamp(18px, 2.4vw, 34px); }
-.rail-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--gutter); margin-bottom: 10px; }
+.rail-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--gutter); margin-bottom: 4px; }
 .rail-head a, .rail-head button { color: var(--text); text-decoration: underline; font-weight: 600; font-size: 0.95rem; padding: 4px 6px; border-radius: 6px; }
 /* TV: "Tous" sits far from the cards and is awkward to reach with the remote; the grids stay reachable from Home's tiles */
 html.tv .rail-head a, html.tv .rail-head button { display: none; }
 .rail-track {
-  display: flex; gap: var(--gap); overflow-x: auto; overflow-y: hidden; padding: 16px var(--gutter);
+  display: flex; gap: var(--gap); overflow-x: auto; overflow-y: hidden; padding: 10px var(--gutter) 16px;
   scroll-padding: 0 var(--gutter); scrollbar-width: none; scroll-behavior: smooth;
 }
 .perf .rail-track { scroll-behavior: auto; }
@@ -402,6 +402,8 @@ html.tv .rail-head a, html.tv .rail-head button { display: none; }
 .mic.listening { background: var(--accent); color: var(--accent-text); animation: pulse 1.2s infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 22%, transparent); } }
 .recent { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px var(--gutter); }
+.search-quick { margin-top: 6px; }
+.search-quick .rail:first-child { margin-top: 10px; }
 
 /* ───────────── Forms ───────────── */
 .form { display: flex; flex-direction: column; gap: 14px; }

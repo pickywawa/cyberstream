@@ -22,16 +22,32 @@ struct Results {
     series: Vec<Media>,
     programs: Vec<Program>,
 }
+/** a channel / film / series / programme opened from an earlier search */
+#[derive(Deserialize)]
+struct Pick {
+    kind: String,
+    id: String,
+    title: String,
+    image: Option<String>,
+    logo: Option<Vec<Option<String>>>,
+    sub: Option<String>,
+}
 #[wasm_bindgen]
 pub fn search_results_html(
     raw: &str,
     recent: &str,
+    picks: &str,
     query: &str,
     lang: &str,
 ) -> Result<String, String> {
     let data: Option<Results> = serde_json::from_str(raw).map_err(|_| "Résultats invalides")?;
     let recent: Vec<String> = serde_json::from_str(recent).map_err(|_| "Historique invalide")?;
+    let picks: Vec<Pick> = serde_json::from_str(picks).unwrap_or_default();
     let t = |k| lookup(lang, k);
+    let of = |kind: &str| picks.iter().filter(|p| p.kind == kind).collect::<Vec<_>>();
+    let (channels, programs) = (of("channel"), of("program"));
+    let media: Vec<_> = picks.iter().filter(|p| p.kind == "movie" || p.kind == "series").collect();
+    let cmd = |p: &Pick| format!("pick:{}:{}", p.kind, p.id);
     Ok(html!{
         @if let Some(r)=data{
             @if r.channels.is_empty()&&r.movies.is_empty()&&r.series.is_empty()&&r.programs.is_empty(){div.empty{(t("search.noResult").replace("{q}",query))}}
@@ -46,9 +62,22 @@ pub fn search_results_html(
                 div.grid.posters{@for s in r.series.iter().take(18){(Card{sub:Some(t("search.series").into()),..s.card("series")}.outer("poster"))}
                 @for m in r.movies.iter().take(60){(Card{sub:m.credited(None),..m.card("movie")}.outer("poster"))}}
             }}
-        }@else if !recent.is_empty(){div style="margin-top:14px"{
-            div.container.muted.small style="margin-bottom:8px"{(t("search.recent"))}
-            div.recent data-row{@for term in recent{button.chip.active data-f data-cmd=(format!("query:{term}")){(term)}}}
-        }}
+        }@else{
+            @if !recent.is_empty(){div style="margin-top:14px"{
+                div.container.muted.small style="margin-bottom:8px"{(t("search.recent"))}
+                div.recent data-row{@for term in &recent{button.chip.active data-f data-cmd=(format!("query:{term}")){(term)}}}
+            }}
+            @if !picks.is_empty(){div.search-quick{
+                @if !channels.is_empty(){(rail("pick-channels",t("search.channels"),None,html!{@for p in &channels{
+                    (Card{title:p.title.clone(),cmd:cmd(p),logo:Some(p.logo.clone().unwrap_or_default()),long_press:true,..Default::default()}.outer("logo"))
+                }}))}
+                @if !media.is_empty(){(rail("pick-media",&format!("{} & {}",t("search.movies"),t("search.series")),None,html!{@for p in &media{
+                    (Card{title:p.title.clone(),sub:p.sub.clone(),image:p.image.clone(),cmd:cmd(p),..Default::default()}.outer("poster"))
+                }}))}
+                @if !programs.is_empty(){(rail("pick-programs",t("search.programs"),None,html!{@for p in &programs{
+                    (Card{title:p.title.clone(),sub:p.sub.clone(),image:p.image.clone(),center_logo:p.logo.clone(),cmd:cmd(p),..Default::default()}.outer("land"))
+                }}))}
+            }}
+        }
     }.into_string())
 }

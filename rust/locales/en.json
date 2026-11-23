@@ -1,5 +1,7 @@
 {
   "app.name": "Cyberstream",
+  "app.exitTitle": "Quit Cyberstream?",
+  "app.exit": "Quit",
   "nav.home": "Home",
   "nav.search": "Search",
   "nav.tv": "Live TV",
@@ -386,6 +388,7 @@
   "search.voice": "Voice search",
   "search.listening": "Listening…",
   "search.recent": "Recent searches",
+  "search.pickGone": "This item is no longer available",
   "search.noResult": "No result for “{q}”",
   "search.channels": "Channels",
   "search.programs": "TV programs",

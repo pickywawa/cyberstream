@@ -59,6 +59,8 @@ export interface CyberNativePlugin {
   playerPause(): Promise<void>;
   playerSeek(o: { positionMs: number }): Promise<void>;
   playerStop(): Promise<void>;
+  /** stops the player, proxy, timeshift and enrollment server, closes the task and ends the process */
+  quitApp(): Promise<void>;
   playerTracks(): Promise<{ tracks: NativeTrack[] }>;
   playerSelectTrack(o: { type: 'audio' | 'text' | 'video'; id: string | null }): Promise<void>;
   playerSetResize(o: { mode: 'fit' | 'fill' | 'zoom' }): Promise<void>;

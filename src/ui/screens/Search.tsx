@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApp } from '@/state/store';
+import { useApp, type SearchPick } from '@/state/store';
 import { t, fmtTime } from '@/core/i18n';
 import { db, getMeta } from '@/core/db';
 import { searchWorker } from '@/core/workers';
@@ -146,17 +146,65 @@ export function Search() {
     channels: res.channels.slice(0, 30), movies: res.movies.slice(0, 60), series: res.series.slice(0, 18),
     programs: res.programs.map(({ p, ch }) => ({ id: String(p.id ?? p.epgId + ':' + p.start), title: p.title, image: p.icon, time: fmtTime(p.start), channel: ch })),
   }, ['channels','movies','series','programs','id','name','title','time','image','channel','logo','logoAlt','poster','year','imdbRating']), [res, profile.lang]);
-  const html = useMemo(() => search_results_html(raw, JSON.stringify(settings.recentSearches), q, profile.lang), [raw, settings.recentSearches, q, profile.lang]);
+  // what was opened from earlier searches (this profile; programmes until a day after they ended)
+  const picks = useMemo(() => {
+    const old = Date.now() - 24 * 3600_000;
+    return settings.recentPicks.filter((x) => x.profileId === profile.id && !(x.kind === 'program' && (x.stop || 0) < old));
+  }, [settings.recentPicks, profile.id]);
+  const picksRaw = useMemo(() => JSON.stringify(picks.map(({ kind, id, title, image, logo, sub }) => ({ kind, id, title, image, logo, sub }))), [picks]);
+  const html = useMemo(() => search_results_html(raw, JSON.stringify(settings.recentSearches), picksRaw, q, profile.lang), [raw, settings.recentSearches, picksRaw, q, profile.lang]);
+  const pick = (p: Omit<SearchPick, 'profileId'>) => {
+    const all = useApp.getState().settings.recentPicks;
+    const entry: SearchPick = { ...p, profileId: profile.id };
+    const same = (x: SearchPick) => x.profileId === profile.id && x.kind === p.kind && x.id === p.id;
+    const mine = all.filter((x) => x.profileId === profile.id && !same(x)).slice(0, 23);
+    update({ recentPicks: [entry, ...mine, ...all.filter((x) => x.profileId !== profile.id)] });
+    remember();
+  };
+  const openPick = async (kind: string, id: string, hold: boolean) => {
+    const it = picks.find((x) => x.kind === kind && x.id === id);
+    if (!it) return;
+    pick(it);
+    if (kind === 'movie') return openMovie(id);
+    if (kind === 'series') return openSeries(id);
+    const ch = await db.channels.get(kind === 'channel' ? id : it.chId!);
+    if (!ch) return toast(t('search.pickGone'));
+    if (kind === 'channel') return hold ? openChannel(id) : void playChannel(ch);
+    const p = it.epgId && it.start != null ? await db.programs.where('[epgId+start]').equals([it.epgId, it.start]).first() : undefined;
+    if (p) setProg({ p, ch });
+    else void playChannel(ch);
+  };
   const select = (cmd: string, hold = false) => {
     const [action, id] = readCommand(cmd);
     if (action === 'query') setQ(id);
-    if (action === 'movie') openMovie(id);
-    if (action === 'series') openSeries(id);
+    if (action === 'pick') {
+      const i = id.indexOf(':');
+      void openPick(id.slice(0, i), id.slice(i + 1), hold);
+      return;
+    }
+    if (action === 'movie') {
+      const m = res?.movies.find((x) => x.id === id);
+      if (m) pick({ kind: 'movie', id, title: m.title, image: m.poster, sub: m.year ? String(m.year) : undefined });
+      openMovie(id);
+    }
+    if (action === 'series') {
+      const m = res?.series.find((x) => x.id === id);
+      if (m) pick({ kind: 'series', id, title: m.title, image: m.poster, sub: t('search.series') });
+      openSeries(id);
+    }
     if (action === 'channel') {
       const ch = res?.channels.find(x => x.id === id);
-      if (ch) hold ? openChannel(id) : void playChannel(ch);
+      if (ch) {
+        pick({ kind: 'channel', id, title: ch.name, logo: [ch.logoAlt, ch.logo] });
+        hold ? openChannel(id) : void playChannel(ch);
+      }
     }
-    if (action === 'program') setProg(res?.programs.find(({p}) => String(p.id ?? p.epgId + ':' + p.start) === id) || null);
+    if (action === 'program') {
+      const hit = res?.programs.find(({p}) => String(p.id ?? p.epgId + ':' + p.start) === id) || null;
+      if (hit) pick({ kind: 'program', id: `${hit.p.epgId}:${hit.p.start}`, title: hit.p.title, image: hit.p.icon, logo: [hit.ch.logoAlt, hit.ch.logo],
+        sub: `${hit.ch.name} · ${fmtTime(hit.p.start)}`, chId: hit.ch.id, epgId: hit.p.epgId, start: hit.p.start, stop: hit.p.stop });
+      setProg(hit);
+    }
   };
   return (
     <div className="tab-search">

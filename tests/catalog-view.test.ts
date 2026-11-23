@@ -40,8 +40,12 @@ it('keeps the catalogue actions on person and search pages', () => {
   const html=person_html(JSON.stringify({p:{name:'Camille',bio:'z'.repeat(401)},items}),'','fr',false);
   expect(html.indexOf('series:b')).toBeLessThan(html.indexOf('movie:a'));
   expect(html).toContain('data-cmd="bio"');
-  const hits=search_results_html(JSON.stringify({movies:[],series:[],channels:[{id:'ch:1',name:'Chaîne'}],programs:[]}),'[]','','en');
+  const hits=search_results_html(JSON.stringify({movies:[],series:[],channels:[{id:'ch:1',name:'Chaîne'}],programs:[]}),'[]','[]','','en');
   expect(hits).toContain('data-cmd="channel:ch:1" data-lp');
+  const quick=search_results_html('null','["dune"]',JSON.stringify([{kind:'movie',id:'m:1',title:'Dune',sub:'2021'},{kind:'channel',id:'ch:1',title:'Chaîne',logo:[null,'/l.png']}]),'','en');
+  expect(quick).toContain('data-cmd="query:dune"');
+  expect(quick).toContain('data-cmd="pick:movie:m:1"');
+  expect(quick).toContain('data-cmd="pick:channel:ch:1" data-lp');
 });
 it('uses the next image once a candidate fails and displays a label if every candidate fails', () => {
   const data=JSON.stringify({srcs:['/first-test','/second-test'],label:'Illustration <2>'});

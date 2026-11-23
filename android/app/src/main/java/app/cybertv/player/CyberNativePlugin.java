@@ -688,6 +688,23 @@ public class CyberNativePlugin extends Plugin {
         });
     }
 
+    /** "Quitter" from the exit dialog: everything stops, the task leaves the recents and the process ends */
+    @PluginMethod
+    public void quitApp(PluginCall call) {
+        call.resolve();
+        getActivity().runOnUiThread(() -> {
+            releasePlayer();
+            if (enroll != null) enroll.stop();
+            if (proxy != null) proxy.shutdown();
+            Activity a = getActivity();
+            a.finishAndRemoveTask();
+            main.postDelayed(() -> {
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
+            }, 300);
+        });
+    }
+
     @PluginMethod
     public void playerSetRate(PluginCall call) {
         float r = call.getFloat("rate", 1f);

@@ -4,6 +4,9 @@ import { ProfilePicker } from '@/ui/screens/Profiles';
 import { Onboarding } from '@/ui/screens/Onboarding';
 import { Shell } from '@/ui/Shell';
 import { VoiceControl } from '@/ui/voice/VoiceControl';
+import { Sheet } from '@/ui/components/Overlay';
+import { t } from '@/core/i18n';
+import { quitApp } from './services';
 
 const Player = lazy(() => import('@/ui/screens/Player').then((m) => ({ default: m.Player })));
 
@@ -12,6 +15,7 @@ export function App() {
   const player = useApp((s) => s.player);
   const toasts = useApp((s) => s.toasts);
   const launching = useApp((s) => s.launching);
+  const exitAsk = useApp((s) => s.exitAsk);
   return (
     <>
       {screen === 'boot' && (
@@ -33,6 +37,7 @@ export function App() {
           <div className="spinner big" />
         </div>
       )}
+      {exitAsk && <ExitConfirm />}
       <VoiceControl />
       <div className="toasts">
         {toasts.map((t) => (
@@ -42,6 +47,19 @@ export function App() {
         ))}
       </div>
     </>
+  );
+}
+
+/** Back at the root of a tab (Android): leave the app? "Annuler" is focused so a second Back / OK stays */
+function ExitConfirm() {
+  const close = () => useApp.setState({ exitAsk: false });
+  return (
+    <Sheet title={t('app.exitTitle')} onClose={close} bottom={false}>
+      <div className="btn-row" data-row>
+        <button className="btn" data-f data-autofocus onClick={close}>{t('common.cancel')}</button>
+        <button className="btn primary" data-f onClick={() => void quitApp()}>{t('app.exit')}</button>
+      </div>
+    </Sheet>
   );
 }
 

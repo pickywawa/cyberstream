@@ -57,6 +57,15 @@ public class LocalProxy {
     private final File prefetchDir;
     private final Timeshift timeshift;
 
+    /** app quit: live buffers stop recording and the port is released */
+    void shutdown() {
+        timeshift.stopAll();
+        try {
+            if (server != null) server.close();
+        } catch (Exception ignored) {
+        }
+    }
+
     public LocalProxy(File cacheDir) {
         Arrays.setAll(imageLocks, i -> new Object());
         this.prefetchDir = new File(cacheDir, "prefetch");

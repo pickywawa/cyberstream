@@ -184,10 +184,10 @@ export function LiveTv() {
           <VirtualGrid
             className="vgrid"
             items={shown}
-            minWidth={narrow ? 150 : 250}
+            minWidth={narrow ? 150 : 165}
             aspect={16 / 9}
             extraHeight={narrow ? 70 : 78}
-            gap={narrow ? 10 : 18}
+            gap={narrow ? 10 : 14}
             getKey={(c) => c.id}
             render={(c) => (
               <ChannelCard
