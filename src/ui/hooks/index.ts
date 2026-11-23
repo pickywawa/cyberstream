@@ -141,14 +141,15 @@ export function useMediaQuery(q: string): boolean {
  * Featured banner (Home, Replay): auto-advance every 8 s unless the remote is inside it, the remote's
  * Left on the first button / Right on the last one, dots ("go:N"), and swiping (touch or mouse drag).
  */
-export function useCarousel(count: number) {
+export function useCarousel(count: number, opts: { auto?: boolean } = {}) {
+  const auto = opts.auto ?? true;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
-    if (paused || count < 2) return;
+    if (!auto || paused || count < 2) return;
     const tm = setInterval(() => setI((x) => (x + 1) % count), 8000);
     return () => clearInterval(tm);
-  }, [count, paused, i]);
+  }, [count, paused, i, auto]);
   const step = (d: number) => setI((x) => (x + d + count) % count);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
@@ -182,7 +183,8 @@ export function useCarousel(count: number) {
     onDragStart: (e: React.DragEvent) => e.preventDefault(),
     onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
       if (count < 2 || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-      const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('.btn-row [data-f]'));
+      // the banner's own control (one: Left / Right change slide) or its row of buttons (the ends do)
+      const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[data-slide], .btn-row [data-f]'));
       const at = buttons.indexOf(document.activeElement as HTMLElement);
       if (at < 0) return;
       const left = e.key === 'ArrowLeft';

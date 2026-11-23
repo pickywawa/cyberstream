@@ -1,5 +1,5 @@
 import { dataWorker } from '@/core/workers';
-import { useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { db, setMeta } from '@/core/db';
@@ -7,7 +7,8 @@ import {
   continueWatching, favoritesOf, getProgress, hideFromContinue, matchMovies, matchSeries,
 } from '@/core/repo';
 import type { Movie, Series } from '@/core/types';
-import { useAsync, useCarousel } from '../hooks';
+import { ScreenActive, useAsync, useCarousel } from '../hooks';
+import { TrailerBg, useTrailers } from '../components/Trailer';
 import { RustView, readCommand } from '../components/RustView';
 import { home_html, hero_html } from '@/rust/generated/cyberstream';
 import { openMovie, openSeries, playMovie, prioritizeEnrichment, resume } from '../actions';
@@ -135,16 +136,21 @@ export function Home() {
   </div>;
 }
 
+/**
+ * Featured titles: one selectable banner (OK / tap opens the page), Left / Right or swipe for the
+ * next one, no auto-advance. The image shows first, then the title's trailer plays behind.
+ */
 function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
-  const { index: i, handlers, command } = useCarousel(items.length);
+  const { index: i, handlers, command } = useCarousel(items.length, { auto: false });
   const h = items[i];
-  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','plot','genres']), i, items.length, lang), [h.item, i, items.length, lang]);
+  const active = useContext(ScreenActive);
+  const trailers = useTrailers(h.kind, h.item);
+  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','genres']), i, items.length, lang), [h.item, i, items.length, lang]);
   return <section className="hero" {...handlers}>
     <RustView className="hero-inner" html={html} onCommand={cmd => {
       if (command(cmd)) return;
-      if (h.kind === 'series') return openSeries(h.item.id);
-      if (cmd === 'play') void playMovie(h.item.id);
-      if (cmd === 'info') openMovie(h.item.id);
+      if (cmd === 'info') return h.kind === 'series' ? openSeries(h.item.id) : openMovie(h.item.id);
     }} />
+    <div className="hero-trailer"><TrailerBg urls={trailers} delay={2500} active={active} /></div>
   </section>;
 }

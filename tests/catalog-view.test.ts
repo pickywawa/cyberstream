@@ -58,5 +58,8 @@ it('renders a featured movie with provider artwork before TMDB enrichment', () =
   const html = hero_html(JSON.stringify({title:'Nouveau film', poster:'/provider-poster'}), 0, 2, 'fr');
   expect(html).toContain('src="/provider-poster"');
   expect(html).toContain('<h1>Nouveau film</h1>');
-  for (const action of ['play', 'info', 'go:1']) expect(html).toContain(`data-cmd="${action}"`);
+  // one selectable banner (opens the page), no Lecture / Infos buttons, no synopsis
+  for (const action of ['info', 'go:1']) expect(html).toContain(`data-cmd="${action}"`);
+  expect(html).not.toContain('data-cmd="play"');
+  expect(hero_html(JSON.stringify({title:'X', plot:'Résumé'}), 0, 1, 'fr')).not.toContain('Résumé');
 });

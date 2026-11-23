@@ -118,10 +118,12 @@ struct Hero {
     plot: Option<String>,
 }
 #[wasm_bindgen]
-pub fn hero_html(raw: &str, index: usize, count: usize, lang: &str) -> Result<String, String> {
+pub fn hero_html(raw: &str, index: usize, count: usize, _lang: &str) -> Result<String, String> {
     let h: Hero = serde_json::from_str(raw).map_err(|_| "Bannière invalide")?;
     let m = h.item;
+    // the whole banner is one control: it opens the title's page (its trailer plays behind, see Home.tsx)
     Ok(html!{
+        button.hero-select data-f data-autofocus data-slide data-cmd="info" aria-label=(&m.title){
         div.bg.poster-only[m.backdrop.as_deref().unwrap_or("").is_empty()]{
             @if m.backdrop.is_some() || m.poster.is_some() {
                 (Image{srcs:vec![m.backdrop.map(|s|tmdb(&s,"w1280")), m.poster.map(|s|tmdb(&s,"w780"))],label:m.title.clone(),eager:true,..Default::default()}.markup())
@@ -133,10 +135,7 @@ pub fn hero_html(raw: &str, index: usize, count: usize, lang: &str) -> Result<St
             }@else{h1{(&m.title)}}
             div.facts{@if let Some(y)=m.year{span{(y)}}@for g in m.genres.iter().flatten().take(2){span{(g)}}
                 @if let Some(r)=h.rating.filter(|v|*v!=0.){span.rating{(format!("★ {r:.1}"))}}}
-            @if let Some(plot)=h.plot.filter(|s|!s.is_empty()){p.clamp3{(plot)}}
-            div.btn-row data-row{button.btn.primary data-f data-autofocus data-cmd="play"{(icon("play",""))" "(lookup(lang,"home.play"))}
-                button.btn data-f data-cmd="info"{(icon("info",""))" "(lookup(lang,"home.info"))}
-}
+        }
         }
         (dots(index,count))
     }.into_string())

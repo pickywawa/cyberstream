@@ -14,12 +14,12 @@ import { Img } from '../components/Img';
 import { BackButton } from '../components/BackButton';
 import { Rail } from '../components/Rail';
 import { PosterCard } from '../components/Cards';
-import { IcVolume, IcVolumeOff } from '../icons';
 import { flagOf } from '@/core/util/lang';
 import { langPrefs } from '@/core/prefs';
 import { openMovie, openSeries, playEpisode, playMovie, prioritizeEnrichment } from '../actions';
 import { loadVodInfoIfNeeded, loadXtreamEpisodesIfNeeded } from '../episodes';
-import { actorPhoto, wikiTrailers } from '@/core/enrich/people';
+import { actorPhoto } from '@/core/enrich/people';
+import { TrailerBg, useTrailers } from '../components/Trailer';
 
 export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   const item = useLiveQuery(() => (kind === 'movie' ? db.movies.get(id) : db.series.get(id)), [kind, id]);
@@ -30,25 +30,6 @@ export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   useEffect(() => {
     if (kind === 'movie') void loadVodInfoIfNeeded(id);
   }, [kind, id]);
-  // enriched before trailers in every language were looked for: look once more (at most daily)
-  // no trailer, or never looked for alternatives (YouTube refuses some videos in an embed)
-  const needTrailer = !!item && !!item.tmdbId && (!item.trailer || !item.trailerAlts) && Date.now() - (item.trailerLookupAt || 0) > 86400000;
-  useEffect(() => {
-    if (!needTrailer || !item?.tmdbId) return;
-    const table = kind === 'movie' ? db.movies : db.series;
-    void (async () => {
-      // TMDB (with a key), then Wikidata (no key needed: the provider gives the TMDB id)
-      const [tm, wd] = await Promise.all([
-        dataWorker().tmdbTrailers(kind === 'movie' ? 'movie' : 'tv', item.tmdbId!).catch(() => [] as string[]),
-        wikiTrailers(kind, item.tmdbId!).catch(() => [] as string[]),
-      ]);
-      const list = [...new Set([item.trailer, ...tm, ...wd].filter((u): u is string => !!u))];
-      const keys = await (table as typeof db.movies).where('groupKey').equals(item.groupKey).primaryKeys();
-      const patch = list.length ? { trailer: list[0], trailerAlts: list.slice(1), trailerLookupAt: Date.now() } : { trailerLookupAt: Date.now() };
-      for (const k of new Set([item.id, ...keys])) await (table as typeof db.movies).update(k, patch);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needTrailer, item?.tmdbId]);
   if (item === undefined) return <div className="spinner big" style={{ margin: '30vh auto' }} />;
   if (!item) return <div className="empty">{t('common.empty')}</div>;
   return kind === 'movie' ? <MovieDetail m={item as Movie} /> : <SeriesDetail s={item as Series} />;
@@ -120,127 +101,6 @@ function SagaRail({ m }: { m: Movie }) {
   );
 }
 
-function youtubeKey(url?: string): string | undefined {
-  return url?.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1];
-}
-
-/**
- * Trailer replacing the backdrop shortly after the page opens (YouTube embed, no controls).
- * Sound on by default; muting is remembered for the next trailers. If the browser refuses to
- * autoplay with sound, it plays muted instead (without changing the saved choice).
- */
-function TrailerBg({ urls }: { urls: (string | undefined)[] }) {
-  const settings = useApp((s) => s.settings);
-  const update = useApp((s) => s.updateSettings);
-  const playing = useApp((s) => !!s.player);
-  // YouTube refuses some videos in an embed (error 101 / 150): the next one is tried
-  const keys = [...new Set(urls.map(youtubeKey).filter((k): k is string => !!k))];
-  const [skip, setSkip] = useState(0);
-  const keysId = keys.join();
-  useEffect(() => setSkip(0), [keysId]);
-  const key = keys[skip];
-  const [mount, setMount] = useState(false);
-  const [on, setOn] = useState(false);
-  const [muted, setMuted] = useState(settings.trailerMuted);
-  const ref = useRef<HTMLIFrameElement>(null);
-  // like cybertv: "Animations réduites" (on by default on Android) no longer turns trailers off, only the setting does
-  const enabled = !!key && settings.autoTrailer && !playing;
-  const startMuted = useRef(settings.trailerMuted);
-  useEffect(() => {
-    if (!enabled) {
-      setMount(false);
-      setOn(false);
-      return;
-    }
-    startMuted.current = useApp.getState().settings.trailerMuted;
-    setMuted(startMuted.current);
-    const tm = setTimeout(() => setMount(true), 900);
-    return () => clearTimeout(tm);
-  }, [enabled]);
-
-  const cmd = (func: string) => ref.current?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*');
-
-  // YouTube IFrame API messages: reveal once the video really plays, fall back to muted if blocked
-  useEffect(() => {
-    if (!mount || !key) return;
-    let playingSeen = false;
-    let failed = false;
-    const onMsg = (e: MessageEvent) => {
-      if (!/youtube(-nocookie)?\.com$/.test(new URL(e.origin).hostname) || e.source !== ref.current?.contentWindow) return;
-      let d: any;
-      try {
-        d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-      } catch {
-        return;
-      }
-      if (d?.event === 'onError') {
-        failed = true;
-        setOn(false);
-        setSkip((n) => n + 1);
-        return;
-      }
-      const state = d?.event === 'onStateChange' ? d.info : d?.info?.playerState;
-      if (state === 1 && !playingSeen) {
-        playingSeen = true;
-        // a short beat hides YouTube's title overlay
-        setTimeout(() => setOn(true), 350);
-      }
-    };
-    window.addEventListener('message', onMsg);
-    const fallback = setTimeout(() => {
-      if (playingSeen || failed) return;
-      if (!startMuted.current) {
-        cmd('mute');
-        cmd('playVideo');
-        setMuted(true);
-      }
-      // no API message at all (blocked postMessage): show it anyway, as before
-      setTimeout(() => setOn(true), 1200);
-    }, 3500);
-    return () => {
-      window.removeEventListener('message', onMsg);
-      clearTimeout(fallback);
-    };
-  }, [mount, key]);
-
-  if (!enabled || !mount) return null;
-  const params = new URLSearchParams({
-    autoplay: '1', mute: startMuted.current ? '1' : '0', controls: '0', loop: '1', playlist: key!, modestbranding: '1', playsinline: '1', rel: '0',
-    iv_load_policy: '3', disablekb: '1', fs: '0', enablejsapi: '1', origin: location.origin,
-  });
-  return (
-    <>
-      <div className={`trailer ${on ? 'on' : ''}`}>
-        <iframe
-          ref={ref}
-          src={`https://www.youtube-nocookie.com/embed/${key}?${params}`}
-          title="trailer"
-          tabIndex={-1}
-          allow="autoplay; encrypted-media; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          onLoad={() => ref.current?.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: 'cyber-trailer' }), '*')}
-        />
-      </div>
-      {on && (
-        <button
-          className="icon-btn trailer-mute"
-          data-f
-          onClick={() => {
-            const next = !muted;
-            cmd(next ? 'mute' : 'unMute');
-            setMuted(next);
-            // remembered for the next trailers
-            update({ trailerMuted: next });
-          }}
-          aria-label={muted ? t('detail.unmute') : t('detail.mute')}
-        >
-          {muted ? <IcVolumeOff /> : <IcVolume />}
-        </button>
-      )}
-    </>
-  );
-}
-
 /** audio / subtitle languages of all versions of a title */
 function useGroupLangs(kind: 'movie' | 'series', it: Movie | Series) {
   return useAsync(async () => {
@@ -262,6 +122,7 @@ function HeroBlock({ it, langs, fav, variants, series, resumeLabel, playable, pr
   resumeLabel?:string | null; playable?:boolean; progress?: WatchState; select:(cmd:string)=>void;
 }) {
   const profile = useApp(s => s.profile)!;
+  const trailers = useTrailers(series ? 'series' : 'movie', it);
   const html = useMemo(() => {
     const prefs = langPrefs(profile);
     const pairs = (languages?:string[]) => (languages || []).map(l => [l, flagOf(l)]);
@@ -273,7 +134,7 @@ function HeroBlock({ it, langs, fav, variants, series, resumeLabel, playable, pr
        profile.lang);
   }, [it, langs, fav, variants, series, resumeLabel, playable, progress, profile]);
   return <section className="detail-hero"><div className="bg">
-    <Img srcs={[resizeTmdb(it.backdrop, 'w1280'), it.poster]} eager label={it.title} /><TrailerBg urls={[it.trailer, ...(it.trailerAlts || [])]} />
+    <Img srcs={[resizeTmdb(it.backdrop, 'w1280'), it.poster]} eager label={it.title} /><TrailerBg urls={trailers} />
   </div><RustView className="content" html={html} onCommand={select} /></section>;
 }
 
