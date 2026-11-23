@@ -1004,3 +1004,6 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .cat-wrap .cat-card { background: var(--surface); border: 1px solid var(--accent); }
 .cat-wrap .cat-card:hover { background: var(--surface-2); }
 .cat-wrap .cat-card[data-f]:focus-visible, .kbd .cat-wrap .cat-card[data-f]:focus { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+/* universes: see-through, only the border */
+.cat-wrap .cat-card { background: transparent; }
+.cat-wrap .cat-card:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
