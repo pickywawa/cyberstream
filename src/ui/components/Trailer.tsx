@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/state/store';
+import { isAndroidApp } from '@/core/platform';
 import { t } from '@/core/i18n';
 import { db } from '@/core/db';
 import { dataWorker } from '@/core/workers';
@@ -58,8 +59,12 @@ function youtubeKey(url?: string): string | undefined {
  * Sound on by default; muting is remembered for the next trailers. If the browser refuses to
  * autoplay with sound, it plays muted instead (without changing the saved choice).
  */
-/** how long the video plays hidden before it shows (YouTube's start overlay fades out meanwhile) */
-const REVEAL_MS = 1600;
+/**
+ * How long the video plays hidden before it shows, while YouTube's start overlay fades out. Its
+ * mobile player (Android WebView, phones) also puts previous / pause / next over the picture at
+ * start, whatever the embed options: they need a longer wait.
+ */
+const REVEAL_MS = isAndroidApp || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 3400 : 1600;
 
 export function TrailerBg({ urls, delay = 300, active = true }: {
   urls: (string | undefined)[];
@@ -115,6 +120,8 @@ export function TrailerBg({ urls, delay = 300, active = true }: {
     let talking = false;
     let shown = false;
     let reveal = 0;
+    let lastState: number | undefined;
+    let unmuteRefused = false;
     const onMsg = (e: MessageEvent) => {
       if (!/youtube(-nocookie)?\.com$/.test(new URL(e.origin).hostname) || e.source !== ref.current?.contentWindow) return;
       let d: any;
@@ -131,18 +138,30 @@ export function TrailerBg({ urls, delay = 300, active = true }: {
         return;
       }
       const state = d?.event === 'onStateChange' ? d.info : d?.info?.playerState;
-      if (state === 1 && !playingSeen) {
+      if (state === undefined || state === lastState) return;
+      lastState = state;
+      if (state === 1) {
         playingSeen = true;
-        reveal = window.setTimeout(() => {
+        // shown only after playing a while without a break (YouTube's overlays gone)
+        clearTimeout(reveal);
+        if (!shown) reveal = window.setTimeout(() => {
+          if (lastState !== 1) return;
           shown = true;
           setOn(true);
-          if (!startMuted.current) cmd('unMute');
+          if (!startMuted.current && !unmuteRefused) cmd('unMute');
         }, REVEAL_MS);
-      }
-      if (state === 2 && shown) {
+      } else if (state === 2) {
+        // nobody pauses it here: the browser did (often unmuting without a tap). The paused
+        // player shows YouTube's previous / play / next: hide it, go on muted, show it again later
+        clearTimeout(reveal);
+        if (shown) unmuteRefused = true;
+        shown = false;
+        setOn(false);
         cmd('mute');
         cmd('playVideo');
-        setMuted(true);
+        if (unmuteRefused) setMuted(true);
+      } else if (state === 3 && !shown) {
+        clearTimeout(reveal);
       }
     };
     window.addEventListener('message', onMsg);

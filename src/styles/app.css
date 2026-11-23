@@ -837,6 +837,8 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 
 /* phones: content scrolling under the status bar is masked (time and icons stay readable) */
 .mobile .stack-page::before { content: ''; position: sticky; display: block; top: 0; height: var(--sat); margin-bottom: calc(-1 * var(--sat)); background: var(--bg); z-index: 39; }
+/* …except over a film / series / replay image: it goes up under the status bar, lightly shaded */
+.mobile .stack-page:has(.detail-hero)::before { background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0)); }
 
 /* phones: tab content scrolling under the status bar is masked too */
 .mobile .page:not(.page-home)::before { content: ''; position: sticky; display: block; top: 0; height: var(--sat); margin-bottom: calc(-1 * var(--sat)); background: var(--bg); z-index: 39; }
