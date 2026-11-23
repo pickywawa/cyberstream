@@ -1007,3 +1007,8 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 /* universes: see-through, only the border */
 .cat-wrap .cat-card { background: transparent; }
 .cat-wrap .cat-card:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+/* universes, final: grey tile, one line, as wide as its name, lower */
+.cat-wrap .cat-card { background: var(--surface); width: auto; min-width: 0; height: 52px; padding: 0 22px; }
+.cat-wrap .cat-card:hover { background: var(--surface-2); }
+.cat-wrap .cat-card .lb { white-space: nowrap; }
+.mobile .cat-wrap .cat-card { width: auto; height: 44px; padding: 0 16px; }
