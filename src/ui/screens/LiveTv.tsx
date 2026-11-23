@@ -52,14 +52,14 @@ export function LiveTv() {
   const now = useNow(30000);
   const minute = Math.floor(now / 60000);
   const narrow = useMediaQuery('(max-width: 760px)') && !isTvMode();
-  // channel thumbnails about a ninth of the screen wide (at least 190 px): 5 a row at 1280 px, 8 at 1920 px
+  // channel thumbnails about an eighth of the screen wide (at least 200 px): 5 a row at 1280 px, 7 at 1920 px
   const [vw, setVw] = useState(() => window.innerWidth);
   useEffect(() => {
     const h = () => setVw(window.innerWidth);
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
-  const cardMin = Math.max(190, Math.round(vw / 9));
+  const cardMin = Math.max(200, Math.round(vw / 8));
 
   // with two audio languages in the profile, the user can narrow the list to one of them
   const [onlyLang, setOnlyLang] = useState<string | null>(() => sessionStorage.getItem('tv.lang'));
