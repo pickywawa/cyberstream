@@ -16,13 +16,25 @@ export interface TmdbLists {
   trendingTv: TmdbListItem[];
   popularTv: TmdbListItem[];
   topRatedTv: TmdbListItem[];
+  /** most voted films ever: the classics everybody has seen */
+  classics?: TmdbListItem[];
+  realityTv?: TmdbListItem[];
+  /** talk / entertainment shows people watch right now */
+  buzzTv?: TmdbListItem[];
+  /** films on each subscription platform of the region */
+  platforms?: { name: string; items: TmdbListItem[] }[];
 }
+
+/** subscription platforms (TMDB watch provider ids, same in FR and US) */
+const PLATFORMS: [number, string][] = [
+  [8, 'Netflix'], [119, 'Prime Video'], [381, 'Canal+'], [337, 'Disney+'], [1899, 'HBO Max'], [531, 'Paramount+'], [350, 'Apple TV+'],
+];
 
 export const listsKey = (lang: string) => `tmdb:lists:${lang}`;
 
 export async function refreshLists(tmdb: Tmdb, lang: string, force = false): Promise<TmdbLists> {
   const cur = await getMeta<TmdbLists>(listsKey(lang));
-  if (cur && !force && Date.now() - cur.fetchedAt < 12 * 3600000) return cur;
+  if (cur && cur.platforms && !force && Date.now() - cur.fetchedAt < 12 * 3600000) return cur;
   const [trendingMovies, popularMovies, nowPlaying, topRatedMovies, trendingTv, popularTv, topRatedTv] = await Promise.all([
     tmdb.list('movie', 'trending:week', 3),
     tmdb.list('movie', 'popular', 3),
@@ -32,7 +44,21 @@ export async function refreshLists(tmdb: Tmdb, lang: string, force = false): Pro
     tmdb.list('tv', 'popular', 3),
     tmdb.list('tv', 'top_rated', 3),
   ]);
-  const lists: TmdbLists = { fetchedAt: Date.now(), trendingMovies, popularMovies, nowPlaying, topRatedMovies, trendingTv, popularTv, topRatedTv };
+  // the rows at the bottom of Home: a failure leaves them out, never the lists above
+  const region = lang === 'en' ? 'US' : 'FR';
+  const origin = lang === 'en' ? 'US' : 'FR';
+  const safe = (p: Promise<TmdbListItem[]>) => p.catch(() => [] as TmdbListItem[]);
+  const both = async (params: Record<string, string>) =>
+    [...(await safe(tmdb.discover('tv', { ...params, with_origin_country: origin }, 2))), ...(await safe(tmdb.discover('tv', params, 1)))];
+  const classics = await safe(tmdb.discover('movie', { sort_by: 'vote_count.desc' }, 3));
+  const realityTv = await both({ with_genres: '10764', sort_by: 'popularity.desc' });
+  const buzzTv = await both({ with_genres: '10767', sort_by: 'popularity.desc' });
+  const platforms: { name: string; items: TmdbListItem[] }[] = [];
+  for (const [id, name] of PLATFORMS) {
+    const items = await safe(tmdb.discover('movie', { with_watch_providers: id, watch_region: region, with_watch_monetization_types: 'flatrate', sort_by: 'popularity.desc' }, 2));
+    if (items.length) platforms.push({ name, items });
+  }
+  const lists: TmdbLists = { fetchedAt: Date.now(), trendingMovies, popularMovies, nowPlaying, topRatedMovies, trendingTv, popularTv, topRatedTv, classics, realityTv, buzzTv, platforms };
   await setMeta(listsKey(lang), lists);
   return lists;
 }

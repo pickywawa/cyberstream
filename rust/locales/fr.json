@@ -1,4 +1,11 @@
 {
+  "home.docs": "Documentaires",
+  "home.classics": "Les films à avoir vus dans sa vie",
+  "home.awardSeries": "Les séries primées",
+  "home.awardMovies": "Les films récompensés",
+  "home.reality": "Télé-réalité",
+  "home.buzz": "Les émissions qui font du bruit",
+  "home.onPlatform": "Films sur {p}",
   "help.how": "Comment l’obtenir",
   "help.open": "Ouvrir {site}",
   "help.scan": "Scanne ce code avec ton téléphone pour ouvrir la page.",

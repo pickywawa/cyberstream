@@ -32,7 +32,7 @@ function saveHomeSnapshot(profileId: string, key: string, data: unknown) {
   void setMeta(`snapshot:home:${profileId}`, { key, data, at: Date.now() }).catch(() => {});
 }
 
-const SHELF_FIELDS = ['cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','rating','durationSec','positionSec'];
+const SHELF_FIELDS = ['classics','awardMovies','awardSeries','reality','buzz','platforms','cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','rating','durationSec','positionSec'];
 
 function featured<T extends Movie | Series>(pool: T[], prefs: LangPrefs, hideAdult: boolean): T[] {
   const eligible = sortByLang(pool.filter(m => !hideAdult || m.universe !== 'adult'), prefs);
@@ -125,8 +125,14 @@ export function Home() {
     }
     if (action === 'tile') {
       if (id === 'live') return setTab('tv');
+      // sport / news / music live on TV channels: the TV tab, on that category
+      if (id === 'sport' || id === 'news' || id === 'music') {
+        try { sessionStorage.setItem('tv.cat', id); } catch { /* private mode */ }
+        return setTab('tv');
+      }
+      if (id === 'ent') return push({ name: 'grid', kind: 'series', title: t('universe.ent'), filter: { universe: 'ent' } });
       if (id === 'series' || id === 'cinema' || id === 'kids' || id === 'docs') push({ name: 'grid',
-        kind: id === 'series' ? 'series' : 'movie', title: t(`universe.${id}`), filter: id === 'kids' || id === 'docs' ? { universe: id } : {} });
+        kind: id === 'series' ? 'series' : 'movie', title: t(id === 'docs' ? 'home.docs' : `universe.${id}`), filter: id === 'kids' || id === 'docs' ? { universe: id } : {} });
     }
     if (action === 'genre') push({ name: 'grid', kind: 'movie', title: id, filter: { genre: id } });
     if (action === 'all' && (id === 'fresh' || id === 'newSeries' || id === 'mustSee' || id === 'kids')) push({

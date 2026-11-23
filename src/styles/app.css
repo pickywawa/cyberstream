@@ -633,11 +633,19 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 }
 .cat-card .ic svg { width: 24px; height: 24px; }
 .cat-card .txt { display: flex; flex-direction: column; min-width: 0; }
-.cat-card .lb { font-weight: 700; font-size: 1rem; white-space: nowrap; }
+.cat-card .lb { font-weight: 800; font-size: .92rem; white-space: nowrap; text-transform: uppercase; letter-spacing: .06em; }
 .cat-card .sb { font-size: .8rem; color: var(--text-2); }
 .cat-card:hover { background: var(--surface-2); }
 .cat-card[data-f]:focus-visible, .kbd .cat-card[data-f]:focus { transform: scale(1.04); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
 .cat-card[data-f]:focus-visible .ic, .kbd .cat-card[data-f]:focus .ic { background: var(--accent); color: var(--accent-text); }
+/* Home universes: one colour each (blue, red, green, yellow, purple, other blue, orange) */
+:root { --cat-1: #3b82f6; --cat-2: #ef4444; --cat-3: #22c55e; --cat-4: #eab308; --cat-5: #a855f7; --cat-6: #06b6d4; --cat-7: #f97316; }
+.cat-wrap { display: contents; }
+.cat-wrap .cat-card { background: color-mix(in srgb, var(--cat) 14%, var(--surface)); border-color: color-mix(in srgb, var(--cat) 32%, transparent); }
+.cat-wrap .cat-card .ic { background: var(--cat); color: #fff; }
+.cat-wrap .cat-card:hover { background: color-mix(in srgb, var(--cat) 22%, var(--surface)); }
+.cat-wrap .cat-card[data-f]:focus-visible, .kbd .cat-wrap .cat-card[data-f]:focus { border-color: var(--cat); background: color-mix(in srgb, var(--cat) 30%, var(--surface)); }
+.cat-wrap .cat-card[data-f]:focus-visible .ic, .kbd .cat-wrap .cat-card[data-f]:focus .ic { background: #fff; color: var(--cat); }
 .mobile .cat-card { min-width: 0; height: 56px; padding: 0 16px 0 9px; gap: 10px; }
 .mobile .cat-card .ic { width: 38px; height: 38px; border-radius: 10px; }
 .mobile .cat-card .ic svg { width: 20px; height: 20px; }

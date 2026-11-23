@@ -1,4 +1,11 @@
 {
+  "home.docs": "Documentaries",
+  "home.classics": "Films to see in your lifetime",
+  "home.awardSeries": "Award-winning series",
+  "home.awardMovies": "Award-winning films",
+  "home.reality": "Reality TV",
+  "home.buzz": "Shows everyone’s talking about",
+  "home.onPlatform": "Films on {p}",
   "help.how": "How to get it",
   "help.open": "Open {site}",
   "help.scan": "Scan this code with your phone to open the page.",

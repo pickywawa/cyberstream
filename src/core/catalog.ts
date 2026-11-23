@@ -1,4 +1,5 @@
 import { VariantGroups } from '../rust/generated/cyberstream';
+import { awards } from './enrich/awards';
 import { db, getMeta } from './db';
 import type { Movie, Series, TmdbListItem } from './types';
 import { listsKey, type TmdbLists } from './enrich/enrich';
@@ -154,7 +155,28 @@ export async function homeCatalog(profileId: string, lang: string, hideAdult: bo
     .map(([g, l]) => [g, l.slice(0, 30)] as [string, Movie[]]);
   const mustSee = topRated.length >= 6 ? topRated : L(sample.filter((m) => (m.rating || 0) >= 7.3).sort((a, b) => (b.rating || 0) - (a.rating || 0))).slice(0, 30);
   const kids = sample.filter((m) => m.universe === 'kids' || (m.genres || []).some((g) => /anim|famil/i.test(g))).slice(0, 30);
+  // the rows at the bottom: classics, award winners (Wikidata, no key needed), reality TV, talk
+  // shows, and the films of each streaming platform
+  const aw = await awards(lang).catch(() => null);
+  const [classics, awardMovies, awardSeries0, reality, buzz, topRatedTvRows] = await Promise.all([
+    matchMovies(profileId, lists?.classics || []),
+    matchMovies(profileId, aw?.movies || []),
+    matchSeries(profileId, aw?.series || []),
+    matchSeries(profileId, lists?.realityTv || []),
+    matchSeries(profileId, lists?.buzzTv || []),
+    matchSeries(profileId, lists?.topRatedTv || []),
+  ]);
+  // few series carry their awards in Wikidata: completed with the most acclaimed ones
+  const seenSeries = new Set(awardSeries0.map((s) => s.groupKey));
+  const awardSeries = awardSeries0.length >= 12 ? awardSeries0 : [...awardSeries0, ...topRatedTvRows.filter((s) => !seenSeries.has(s.groupKey))];
+  const platforms: [string, Movie[]][] = [];
+  for (const p of lists?.platforms || []) {
+    const rows = await matchMovies(profileId, p.items);
+    if (rows.length >= 3) platforms.push([p.name, L(rows).slice(0, 30)]);
+  }
+  const vis = <T extends Movie | Series>(rows: T[]) => rows.filter((m) => !hideAdult || m.universe !== 'adult').slice(0, 30);
   return {
+    classics: vis(classics), awardMovies: vis(awardMovies), awardSeries: vis(awardSeries), reality: vis(L(reality)), buzz: vis(L(buzz)), platforms,
     fresh, newSeries, top: top.slice(0, 10), nowPlaying, popularMovies, mustSee, trendingTv, popularTv, genres, kids,
     hasVod: sample.length > 0 || newSeries.length > 0,
   };

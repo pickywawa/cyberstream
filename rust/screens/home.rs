@@ -20,6 +20,13 @@ struct Home {
     fav_series: Vec<Media>,
     has_vod: bool,
     trakt: Option<Trakt>,
+    classics: Vec<Media>,
+    award_series: Vec<Media>,
+    award_movies: Vec<Media>,
+    reality: Vec<Media>,
+    buzz: Vec<Media>,
+    /** films on each streaming platform: (name, films in the catalogue) */
+    platforms: Vec<(String, Vec<Media>)>,
 }
 #[derive(Deserialize)]
 struct Mixed {
@@ -82,8 +89,10 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
     let t = |k| lookup(lang, k);
     let mut seen = HashSet::new();
     Ok(html!{
-        section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (id,key) in [("cinema","universe.cinema"),("series","universe.series"),("live","nav.tv"),("kids","universe.kids"),("docs","universe.docs")]{
-            (Card{title:t(key).into(),cmd:format!("tile:{id}"),icon:id.into(),..Default::default()}.outer("tile"))
+        // universes: films / series grids, Sport / Info / Musique open the TV tab on that category;
+        // each its colour (blue, red, green, yellow, purple, other blue, orange, then again)
+        section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
+            div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){(Card{title:t(key).into(),cmd:format!("tile:{id}"),icon:id.into(),..Default::default()}.outer("tile"))}
         }}}
         @if !h.cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &h.cont{(w.card(true,true).outer("land"))}}))}
         @if !h.has_vod{div.empty{h3{(t("home.emptyTitle"))}p{(t("home.emptyText"))}button.btn.primary data-f data-cmd="tile:live"{(t("nav.tv"))}}}
@@ -106,6 +115,12 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
         (standard(lang,t("home.kids"),"movie",h.kids.iter(),Some("all:kids")))
         (standard(lang,t("home.popularMovies"),"movie",h.popular_movies.iter(),None))
         @for (g,items) in &h.genres{(standard(lang,g,"movie",items.iter(),Some(&format!("genre:{g}"))))}
+        (standard(lang,t("home.classics"),"movie",h.classics.iter(),None))
+        (standard(lang,t("home.awardSeries"),"series",h.award_series.iter(),None))
+        (standard(lang,t("home.awardMovies"),"movie",h.award_movies.iter(),None))
+        (standard(lang,t("home.reality"),"series",h.reality.iter(),None))
+        (standard(lang,t("home.buzz"),"series",h.buzz.iter(),None))
+        @for (p,items) in &h.platforms{(standard(lang,&t("home.onPlatform").replace("{p}",p),"movie",items.iter(),None))}
     }.into_string())
 }
 #[derive(Deserialize, Default)]

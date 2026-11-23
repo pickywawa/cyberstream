@@ -115,6 +115,17 @@ export class Tmdb {
     return out;
   }
 
+  /** /discover with filters (platform, genre, origin…), best first */
+  async discover(kind: Kind, params: Record<string, string | number>, pages = 2): Promise<TmdbListItem[]> {
+    const out: TmdbListItem[] = [];
+    for (let page = 1; page <= pages; page++) {
+      const r = await this.get<any>(`/discover/${kind}`, { include_adult: 'false', ...params, page });
+      out.push(...this.parse<TmdbListItem[]>('list', r, kind));
+      if (page >= (r.total_pages || 1)) break;
+    }
+    return out;
+  }
+
   async search(kind: Kind, query: string, year?: number): Promise<TmdbListItem | null> {
     const r = await this.get<any>(`/search/${kind}`, {
       query,
