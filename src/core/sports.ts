@@ -1,5 +1,6 @@
 import type { Program } from './types';
 import { norm } from './util/text';
+import { timeoutSignal } from './net/http';
 
 /**
  * Live scores from ESPN's public scoreboard JSON (no key, no account; unofficial and undocumented,
@@ -85,7 +86,7 @@ let cache: { at: number; country: string; events: LiveEvent[] } | null = null;
 export async function liveEvents(country: string): Promise<LiveEvent[]> {
   if (cache && cache.country === country && Date.now() - cache.at < 45000) return cache.events;
   const leagues = LEAGUES[country] || LEAGUES.FR;
-  const results = await Promise.allSettled(leagues.map((l) => fetch(`${BASE}${l}/scoreboard`, { signal: AbortSignal.timeout(8000) }).then((r) => r.json())));
+  const results = await Promise.allSettled(leagues.map((l) => fetch(`${BASE}${l}/scoreboard`, { signal: timeoutSignal(8000) }).then((r) => r.json())));
   const events: LiveEvent[] = [];
   for (const r of results) {
     if (r.status !== 'fulfilled') continue;

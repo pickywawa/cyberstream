@@ -1,5 +1,5 @@
 import { dataWorker } from '@/core/workers';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { db, setMeta } from '@/core/db';
@@ -7,7 +7,7 @@ import {
   continueWatching, favoritesOf, hideFromContinue, matchMovies, matchSeries,
 } from '@/core/repo';
 import type { Movie, Series } from '@/core/types';
-import { useAsync } from '../hooks';
+import { useAsync, useCarousel } from '../hooks';
 import { RustView, readCommand } from '../components/RustView';
 import { home_html, hero_html } from '@/rust/generated/cyberstream';
 import { openMovie, openSeries, playMovie, prioritizeEnrichment, resume } from '../actions';
@@ -132,18 +132,12 @@ export function Home() {
 }
 
 function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
-  const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (paused || items.length < 2) return;
-    const tm = setInterval(() => setI((x) => (x + 1) % items.length), 8000);
-    return () => clearInterval(tm);
-  }, [items.length, paused]);
-  const h = items[Math.min(i, items.length - 1)];
-  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','plot','genres']), Math.min(i, items.length - 1), items.length, lang), [h.item, i, items.length, lang]);
-  return <section className="hero" onFocus={() => setPaused(true)} onBlur={e => setPaused(e.currentTarget.contains(e.relatedTarget))}>
+  const { index: i, handlers, command } = useCarousel(items.length);
+  const h = items[i];
+  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','plot','genres']), i, items.length, lang), [h.item, i, items.length, lang]);
+  return <section className="hero" {...handlers}>
     <RustView className="hero-inner" html={html} onCommand={cmd => {
-      if (cmd === 'next') return setI(x => (x + 1) % items.length);
+      if (command(cmd)) return;
       if (h.kind === 'series') return openSeries(h.item.id);
       if (cmd === 'play') void playMovie(h.item.id);
       if (cmd === 'info') openMovie(h.item.id);

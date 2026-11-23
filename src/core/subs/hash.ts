@@ -1,5 +1,5 @@
 import { movie_hash } from '../../rust/generated/cyberstream';
-import { proxify } from '../net/http';
+import { proxify, timeoutSignal } from '../net/http';
 
 const CHUNK = 65536;
 
@@ -12,7 +12,7 @@ export function computeHash(size: number, head: ArrayBuffer, tail: ArrayBuffer):
 }
 
 async function range(url: string, from: number, to: number): Promise<{ buf: ArrayBuffer; total?: number } | null> {
-  const res = await fetch(proxify(url), { headers: { Range: `bytes=${from}-${to}` }, signal: AbortSignal.timeout(10000) });
+  const res = await fetch(proxify(url), { headers: { Range: `bytes=${from}-${to}` }, signal: timeoutSignal(10000) });
   if (res.status !== 206) return null;
   const total = Number(res.headers.get('content-range')?.split('/')[1]);
   return { buf: await res.arrayBuffer(), total: Number.isFinite(total) ? total : undefined };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { t } from '@/core/i18n';
 import { CyberNative, type TvDevice, type TvInstallEvent } from '@/core/native';
-import { fetchManifest } from '@/core/updater';
+import { latestApkUrl } from '@/core/updater';
 import { IcCheck, IcRefresh, IcTv } from '../icons';
 import { useApp } from '@/state/store';
 import { db } from '@/core/db';
@@ -159,8 +159,10 @@ function Install({ tv, withConfig, onDone, onBack }: { tv: TvDevice; withConfig:
     const h = CyberNative.addListener('tvInstall', (e) => !off && setEv(e));
     void (async () => {
       try {
-        // The installer can send this phone's APK when the release channel is offline.
-        const url = (await fetchManifest())?.apk || '';
+        // always the newest GitHub release, never this phone's (possibly older) copy
+        const url = await latestApkUrl().catch((e) => {
+          throw new Error(`download: ${(e as Error)?.message || e}`);
+        });
         const launch = withConfig ? await configLink() : undefined;
         const r = await CyberNative.tvInstall({ ip: tv.ip, port, url, launch });
         if (!off) onDone(r.model);

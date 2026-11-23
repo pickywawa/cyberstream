@@ -110,7 +110,7 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
     const fresh = (await db.profiles.get(p.id))!;
     setProfile(fresh);
     setStep(3);
-    void runSync(p.id);
+    void runSync(p.id, true, { setupScreen: true });
   };
 
   return (
@@ -247,7 +247,7 @@ function SyncStep({ profile }: { profile: Profile }) {
     const tm = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(tm);
   }, []);
-  const order = ['live', 'vod', 'series', 'logos', 'epg'] as const;
+  const order = ['live', 'vod', 'series', 'epg', 'logos'] as const;
   // blocking: the app opens once everything it needs is saved (a half-filled first start
   // downloaded the rest again behind the user's back)
   const finished = !sync.running && !!sync.progress;
@@ -267,7 +267,9 @@ function SyncStep({ profile }: { profile: Profile }) {
       <div className="list">
         {order.map(s => {
           const rows = Object.values(sync.entries).filter(e => e.step === s);
-          const active = sync.running && rows.find(e => s === 'epg' || e.count === undefined);
+          // the guide has no final count: it is over once the logos (last step) start
+          const epgOver = Object.values(sync.entries).some(e => e.step === 'logos');
+          const active = sync.running && rows.find(e => (s === 'epg' && !epgOver) || e.count === undefined);
           const st = active || rows[rows.length - 1];
           const count = rows.reduce((n, e) => n + (e.count || 0), 0);
           const done = !active && rows.some(e => e.count !== undefined);
@@ -282,7 +284,8 @@ function SyncStep({ profile }: { profile: Profile }) {
             const elapsed = (Date.now() - (st.since || Date.now())) / 1000;
             const rate = elapsed > 2 ? ((st.done || 0) - (st.sinceDone || 0)) / elapsed : 0;
             if (rate > 0) left = t('sync.left', { t: fmtSecs((st.total - (st.done || 0)) / rate) });
-          } else if (active && s === 'epg' && count) detail = t('sync.programs', { n: nf.format(count) });
+          } else if (active && st.unit === 'bytes' && st.done !== undefined) detail = `${nf.format(Math.round(st.done / 1024))} KiB`;
+          else if (active && s === 'epg' && count) detail = t('sync.programs', { n: nf.format(count) });
           else if (active) detail = st.items ? `${nf.format(st.items)} ${t('sync.items')}` : t('sync.downloading');
           else if (done) detail = s === 'logos' ? '' : nf.format(count);
           return (
@@ -309,7 +312,7 @@ function SyncStep({ profile }: { profile: Profile }) {
       {finished && sync.lastError && (
         <div className="btn-row" data-row>
           <button className="btn primary" data-f data-autofocus onClick={enter}>{t('onboard.start')}</button>
-          <button className="btn" data-f onClick={() => void runSync(profile.id)}>{t('common.retry')}</button>
+          <button className="btn" data-f onClick={() => void runSync(profile.id, true, { setupScreen: true })}>{t('common.retry')}</button>
         </div>
       )}
     </div>

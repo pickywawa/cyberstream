@@ -51,6 +51,13 @@ export function proxify(url: string): string {
   return proxyBase + encodeURIComponent(url);
 }
 
+/** AbortSignal.timeout() is missing from older Android TV WebViews (Chrome < 103) and threw there */
+export function timeoutSignal(ms: number): AbortSignal {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 export class HttpError extends Error {
   constructor(public status: number, url: string) {
     super(`HTTP ${status} — ${url.replace(/(password|username)=[^&]+/g, '$1=***')}`);

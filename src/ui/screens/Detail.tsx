@@ -18,13 +18,17 @@ import { IcVolume, IcVolumeOff } from '../icons';
 import { flagOf } from '@/core/util/lang';
 import { langPrefs } from '@/core/prefs';
 import { openMovie, openSeries, playEpisode, playMovie, prioritizeEnrichment } from '../actions';
-import { loadXtreamEpisodesIfNeeded } from '../episodes';
+import { loadVodInfoIfNeeded, loadXtreamEpisodesIfNeeded } from '../episodes';
 
 export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   const item = useLiveQuery(() => (kind === 'movie' ? db.movies.get(id) : db.series.get(id)), [kind, id]);
   useEffect(() => {
     if (item) prioritizeEnrichment(kind, [item]);
   }, [item, kind]);
+  // no TMDB key (or no TMDB match): the provider's own details
+  useEffect(() => {
+    if (kind === 'movie') void loadVodInfoIfNeeded(id);
+  }, [kind, id]);
   if (item === undefined) return <div className="spinner big" style={{ margin: '30vh auto' }} />;
   if (!item) return <div className="empty">{t('common.empty')}</div>;
   return kind === 'movie' ? <MovieDetail m={item as Movie} /> : <SeriesDetail s={item as Series} />;
@@ -49,8 +53,8 @@ function useRecommendations(kind: 'movie' | 'series', it: Movie | Series) {
     const recos = (await availableByTmdb(profile.id, kind, it.recos || [], prefs)).filter((x) => x.groupKey !== it.groupKey);
     if (recos.length >= 3) return { title: t('detail.recommended'), items: recos.slice(0, 24) };
     const g = it.genres?.[0];
-    if (!g) return { title: t('detail.recommended'), items: recos };
-    const more = await dataWorker().similarByGenre(profile.id,kind,it.groupKey,g,prefs);
+    if (!g && !it.categoryId) return { title: t('detail.recommended'), items: recos };
+    const more = await dataWorker().similarByGenre(profile.id,kind,it.groupKey,g,prefs,it.categoryId);
     const seen = new Set(recos.map((x) => x.groupKey));
     return { title: recos.length ? t('detail.recommended') : t('detail.similar'), items: [...recos, ...more.filter((x) => !seen.has(x.groupKey))].slice(0, 24) };
   }, [kind, it.id, it.recos?.join(), it.genres?.join()]);

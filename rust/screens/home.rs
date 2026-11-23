@@ -136,8 +136,8 @@ pub fn hero_html(raw: &str, index: usize, count: usize, lang: &str) -> Result<St
             @if let Some(plot)=h.plot.filter(|s|!s.is_empty()){p.clamp3{(plot)}}
             div.btn-row data-row{button.btn.primary data-f data-autofocus data-cmd="play"{(icon("play",""))" "(lookup(lang,"home.play"))}
                 button.btn data-f data-cmd="info"{(icon("info",""))" "(lookup(lang,"home.info"))}
-                @if count>1{button.btn.ghost.small data-f data-cmd="next" aria-label="next"{"›"}}}
+                @if count>1{button.btn.ghost.small data-f data-cmd="prev" aria-label="previous"{"‹"}button.btn.ghost.small data-f data-cmd="next" aria-label="next"{"›"}}}
         }
-        div.dots{@for i in 0..count{i.on[i==index]{}}}
+        (dots(index,count))
     }.into_string())
 }

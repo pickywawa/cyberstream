@@ -5,7 +5,7 @@ import { db, getMeta, setMeta } from '@/core/db';
 import { continueWatching, getProgress } from '@/core/repo';
 import type { Channel } from '@/core/types';
 import { OFFICIAL_LIVE, officialFor, replayCatalog, replayInfo, replayShow, type OfficialLive, type ReplayCatalog, type ReplayItem, type ReplayProvider, type ReplayShow } from '@/core/replay';
-import { useAsync } from '../hooks';
+import { useAsync, useCarousel } from '../hooks';
 import { profileCountry } from '@/core/prefs';
 import { Rail } from '../components/Rail';
 import { LogoTile } from '../components/Cards';
@@ -122,17 +122,12 @@ function LiveRail() {
 }
 
 function ReplayHero({ items }: { items: ReplayItem[] }) {
-  const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (paused || items.length < 2) return;
-    const tm = setInterval(() => setI((x) => (x + 1) % items.length), 8000);
-    return () => clearInterval(tm);
-  }, [items.length, paused]);
-  const it = items[Math.min(i, items.length - 1)];
+  const { index: i, handlers, command } = useCarousel(items.length);
+  const it = items[i];
   const html = useMemo(() => replay_banner(JSON.stringify(it), getLang(), i, items.length), [it, i, items.length]);
-  return <section className="hero" onFocus={() => setPaused(true)} onBlur={e => setPaused(e.currentTarget.contains(e.relatedTarget))}>
+  return <section className="hero" {...handlers}>
     <RustView className="hero-inner" html={html} onCommand={cmd => {
+      if (command(cmd)) return;
       if (cmd === 'play' && it.kind === 'video') void playReplay(it);
       else openReplay(it);
     }} />

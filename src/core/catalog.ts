@@ -103,11 +103,17 @@ export async function moviesSample(profileId: string, limit = 3000): Promise<Mov
   return db.movies.where('profileId').equals(profileId).limit(limit).toArray();
 }
 
-export async function similarByGenre(profileId: string, kind: 'movie'|'series', groupKey: string, genre: string, prefs: LangPrefs) {
-  const table = kind === 'movie' ? db.movies : db.series;
-  const rows = await (table as typeof db.movies).where('profileId').equals(profileId)
-    .filter(x => x.groupKey !== groupKey && !!x.genres?.includes(genre)).limit(200).toArray();
-  return dedupLang(rows,prefs).sort((a,b) => (b.imdbRating || b.rating || 0) - (a.imdbRating || a.rating || 0)).slice(0,24);
+export async function similarByGenre(profileId: string, kind: 'movie'|'series', groupKey: string, genre: string | undefined, prefs: LangPrefs, categoryId?: string) {
+  const table = (kind === 'movie' ? db.movies : db.series) as typeof db.movies;
+  const rank = (rows: (Movie | Series)[]) => dedupLang(rows,prefs).sort((a,b) => (b.imdbRating || b.rating || 0) - (a.imdbRating || a.rating || 0));
+  const byGenre = genre ? rank(await table.where('profileId').equals(profileId)
+    .filter(x => x.groupKey !== groupKey && !!x.genres?.includes(genre)).limit(200).toArray()) : [];
+  if (byGenre.length >= 12 || !categoryId) return byGenre.slice(0,24);
+  // titles TMDB hasn't enriched have no genres: the provider's category ("FR - Comédie") instead
+  const seen = new Set(byGenre.map(x => x.groupKey));
+  const byCategory = rank(await table.where('categoryId').equals(categoryId)
+    .filter(x => x.groupKey !== groupKey && x.profileId === profileId && !seen.has(x.groupKey)).limit(200).toArray());
+  return [...byGenre, ...byCategory].slice(0,24);
 }
 
 /** the film / series rails of Home (the rest — continue watching, favourites, Trakt — is small) */

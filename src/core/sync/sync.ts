@@ -3,7 +3,7 @@ import type { Category, Channel, Episode, Movie, Program, Series, Source, SyncPr
 import { XtreamList, PlaylistCatalog, xtream_episodes } from '../../rust/generated/cyberstream';
 import { XtreamClient, asArray, num, normalizeServer } from '../sources/xtream';
 import { decodeTextBody, fetchTextStream, setPrefetchSince, prefetched, fetchWithTimeout } from '../net/http';
-import { cleanName, norm } from '../util/text';
+import { cleanName, norm, uid } from '../util/text';
 import { langPrefs } from '../prefs';
 import { keepCategory } from '../util/lang';
 import { GuideImport } from '../epg/staging';
@@ -42,7 +42,7 @@ async function pruneStale(table: any, sourceId: string, keep: Set<string>): Prom
 
 const ENRICH_FIELDS = [
   'poster', 'backdrop', 'logo', 'plot', 'rating', 'genres', 'cast', 'director', 'trailer', 'tmdbId', 'durationSec', 'year', 'enrichedAt', 'origLang',
-  'enrichV', 'imdbId', 'imdbRating', 'imdbVotes', 'cert', 'certAge', 'recos', 'people', 'collection',
+  'enrichV', 'imdbId', 'imdbRating', 'imdbVotes', 'cert', 'certAge', 'recos', 'people', 'collection', 'providerInfoAt',
 ] as const;
 
 /** keep TMDB enrichment & first-seen date when a row is re-synced */
@@ -99,19 +99,43 @@ async function dropExcluded(source: string, kind: ListKind, ids: string[]) {
 
 /** Stream one catalogue in bounded batches. Only primary keys survive between committed batches.
  * A malformed or truncated response may add rows, but never authorises deletion. */
-async function importList(src: Source, kind: ListKind, cats: unknown[], load: (category?:string) => Promise<Response>, parts: string[], excluded:string[], progress: Progress, liveReady?: Promise<void>) {
+async function importList(src: Source, kind: ListKind, cats: unknown[], load: (category?:string) => Promise<Response>, parts: string[], excluded:string[], progress: Progress, liveReady?: Promise<void>, setup = false) {
   const parser = new XtreamList(kind, src.id, src.profileId, JSON.stringify(cats));
   const keep = new Set<string>();
   const table = kind === 'live' ? db.channels : kind === 'vod' ? db.movies : db.series;
   let pending: (Movie | Series | Channel)[] = [];
-  const flush = async () => {
-    await liveReady;
-    const batch = pending;
-    pending = [];
+  const prefix = `setup:batch:${Date.now()}:${uid()}:`;
+  let written = 0, published = 0;
+  let waiting = !!liveReady;
+  void liveReady?.then(() => { waiting = false; }, () => { waiting = false; });
+  const save = async (batch: typeof pending) => {
     if (kind !== 'live') await mergeExisting(table, batch as (Movie | Series)[], !src.lastSyncAt);
     if (kind === 'live') await db.channels.bulkPut(batch as Channel[]);
     else if (kind === 'vod') await db.movies.bulkPut(batch as Movie[]);
     else await db.series.bulkPut(batch as Series[]);
+  };
+  const publishStaged = async () => {
+    while (published < written) {
+      const key = prefix + published;
+      const batch = await getMeta<typeof pending>(key);
+      if (!batch) throw new Error('Lot de catalogue manquant');
+      await save(batch);
+      await db.meta.delete(key);
+      published++;
+    }
+  };
+  const flush = async () => {
+    const batch = pending;
+    pending = [];
+    if (setup && waiting) {
+      // Keep draining the provider while live is being validated, without exposing backup rows.
+      await setMeta(prefix + written, batch);
+      written++;
+    } else {
+      await liveReady;
+      await publishStaged();
+      await save(batch);
+    }
     for (const r of batch) keep.add(r.id);
   };
   try {
@@ -157,8 +181,9 @@ async function importList(src: Source, kind: ListKind, cats: unknown[], load: (c
         }
       } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
-    await liveReady;
     if (pending.length) await flush();
+    await liveReady;
+    await publishStaged();
     const categories: Category[] = JSON.parse(parser.categories());
     await db.categories.bulkPut(categories);
     await dropExcluded(src.id,kind,excluded);
@@ -167,10 +192,11 @@ async function importList(src: Source, kind: ListKind, cats: unknown[], load: (c
     return { count: keep.size, categories: categories.map(c => c.id) };
   } finally {
     parser.free();
+    if (published < written) await db.meta.where('key').startsWith(prefix).delete();
   }
 }
 
-async function syncXtream(src: Source, password: string, progress: Progress) {
+async function syncXtream(src: Source, password: string, progress: Progress, setup: boolean) {
   const x = new XtreamClient({ server: src.url, username: src.username!, password });
   const { auth, ...account } = await x.account();
   if (!auth) throw new Error('Authentification Xtream refusée');
@@ -195,12 +221,12 @@ async function syncXtream(src: Source, password: string, progress: Progress) {
     const load = (category?:string) => fetchWithTimeout(x.listUrl(kind,category),{timeoutMs:180000});
     try {
       const local = await prefetched(x.listUrl(kind));
-      let result = local ? await importList(src,kind,active,async () => local,[],excluded,progress,liveReady).catch(() => null) : null;
+      let result = local ? await importList(src,kind,active,async () => local,[],excluded,progress,liveReady,setup).catch(() => null) : null;
       if (!result && ids.length && ids.length <= 40) {
         // A provider ignoring category_id is detected by Rust on its first mismatched record.
-        result = await importList(src,kind,active,load,ids,excluded,progress,liveReady).catch(() => null);
+        result = await importList(src,kind,active,load,ids,excluded,progress,liveReady,setup).catch(() => null);
       }
-      result ??= await importList(src,kind,active,load,[],excluded,progress,liveReady);
+      result ??= await importList(src,kind,active,load,[],excluded,progress,liveReady,setup);
       counts[kind] = result.count;
       for (const id of result.categories) categories.add(id);
     } catch (error) {
@@ -245,9 +271,51 @@ export async function loadXtreamEpisodes(seriesId: string, password: string): Pr
   return db.episodes.where('seriesId').equals(seriesId).toArray();
 }
 
+const list = (v: unknown) => String(v ?? '').split(/\s*[,/|]\s*/).map(x => x.trim()).filter(Boolean);
+
+/**
+ * Details from the provider (Xtream get_vod_info) for a film TMDB hasn't enriched (no TMDB key, or
+ * no match): duration, genres, age, director, cast, plot, trailer, backdrop. Never overwrites TMDB data.
+ */
+export async function loadXtreamVodInfo(movieId: string, password: string): Promise<boolean> {
+  const m = await db.movies.get(movieId);
+  if (!m) return false;
+  const src = await db.sources.get(m.sourceId);
+  if (!src || src.type !== 'xtream') return false;
+  const r = await new XtreamClient({ server: src.url, username: src.username!, password }).vodInfo(m.extId);
+  const i = r?.info && typeof r.info === 'object' && !Array.isArray(r.info) ? r.info : {};
+  // TMDB may have enriched it during the request
+  Object.assign(m, await db.movies.get(movieId));
+  const tmdb = (m.enrichedAt || 0) > 0;
+  const patch: Partial<Movie> = { providerInfoAt: Date.now() };
+  const put = <K extends keyof Movie>(k: K, v: Movie[K] | undefined) => {
+    const empty = v === undefined || v === '' || (Array.isArray(v) && !v.length);
+    if (!empty && (!tmdb || m[k] === undefined)) patch[k] = v;
+  };
+  const secs = num(i.duration_secs) || (num(i.episode_run_time ?? i.runtime) || 0) * 60;
+  put('durationSec', secs > 0 ? Math.round(secs) : undefined);
+  put('genres', list(i.genre));
+  put('director', String(i.director || '').trim() || undefined);
+  put('cast', list(i.cast || i.actors).slice(0, 10));
+  put('plot', String(i.plot || i.description || '').trim() || undefined);
+  const age = parseInt(String(i.age || i.mpaa_rating || '').replace(/[^\d]/g, ''), 10);
+  if (Number.isFinite(age) && age > 0 && age <= 21) { put('certAge', age); put('cert', String(age)); }
+  const yt = String(i.youtube_trailer || '').trim();
+  const key = yt.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1] || (/^[\w-]{11}$/.test(yt) ? yt : '');
+  put('trailer', key ? `https://www.youtube.com/watch?v=${key}` : undefined);
+  const backdrop = asArray<string>(i.backdrop_path).find(x => typeof x === 'string' && /^https?:/.test(x));
+  if (!m.backdrop) put('backdrop', backdrop);
+  const rating = num(i.rating);
+  if (rating && rating > 0 && !m.rating) put('rating', Math.round(rating * 10) / 10);
+  const tmdbId = num(i.tmdb_id);
+  if (tmdbId && !m.tmdbId) put('tmdbId', tmdbId);
+  await db.movies.update(movieId, patch);
+  return Object.keys(patch).length > 1;
+}
+
 // ───────────────────────────── M3U ─────────────────────────────
 
-async function syncM3u(src: Source, progress: Progress, all = false): Promise<void> {
+async function syncM3u(src: Source, progress: Progress, setup?: SetupDownload, all = false): Promise<void> {
   progress({ sourceId: src.id, step: 'live', message: 'Téléchargement de la playlist' });
   const reader = (await fetchTextStream(src.url, 300000)).getReader();
   const parser = new PlaylistCatalog(src.id, src.profileId, Date.now());
@@ -258,11 +326,18 @@ async function syncM3u(src: Source, progress: Progress, all = false): Promise<vo
   type Rows = { categories: Category[]; channels: Channel[]; movies: Movie[]; series: Series[]; episodes: Episode[] };
   const tables = Object.keys(keep) as (keyof Rows)[];
   let pending: Rows = { categories: [], channels: [], movies: [], series: [], episodes: [] };
+  const kinds = [['live', 'channels'], ['vod', 'movies'], ['series', 'series']] as const;
+  let headerRead = false, lastReport = 0;
+  if (setup) for (const [step] of kinds) progress({ sourceId: src.id, step, items: 0 });
   let n = 0, total = 0, nextProgress = 25000;
   try {
     for (;;) {
       const { value = '', done } = await reader.read();
       const batch: Rows = JSON.parse(parser.feed(value, done));
+      if (setup && !headerRead && (value.includes('\n') || done)) {
+        headerRead = true;
+        for (const url of JSON.parse(parser.header()).epgUrls) setup.queueGuide(url);
+      }
       for (const key of tables) {
         for (const row of batch[key]) {
           (pending[key] as { id: string }[]).push(row);
@@ -284,8 +359,12 @@ async function syncM3u(src: Source, progress: Progress, all = false): Promise<vo
         pending = { categories: [], channels: [], movies: [], series: [], episodes: [] };
         n = 0;
       }
+      if (setup && (Date.now() - lastReport >= 250 || done)) {
+        for (const [step, key] of kinds) progress({ sourceId: src.id, step, items: keep[key].size });
+        lastReport = Date.now();
+      }
       if (done) break;
-      if (total >= nextProgress) {
+      if (!setup && total >= nextProgress) {
         progress({ sourceId: src.id, step: 'live', message: `${total} entrées lues` });
         nextProgress = total + 25000;
       }
@@ -294,7 +373,7 @@ async function syncM3u(src: Source, progress: Progress, all = false): Promise<vo
     if (!total && !excluded.length) throw new Error('Playlist vide ou invalide');
     await setMeta(`epg:auto:${src.id}`, JSON.parse(parser.header()).epgUrls);
   } finally { parser.free(); reader.releaseLock(); }
-  if (!total && excluded.length) return syncM3u(src,progress,true);
+  if (!total && excluded.length) return syncM3u(src,progress,setup,true);
   for (const [kind,prefix] of [['live','lc'],['vod','vc'],['series','sc']] as const) {
     await dropExcluded(src.id,kind,excluded.filter(k => k.startsWith(src.id+':'+prefix+':')));
   }
@@ -335,9 +414,32 @@ async function openGuide(url: string, since: number, signal?: AbortSignal) {
   return { response: await fetchWithTimeout(url, { timeoutMs: 300000, signal }), cached: false };
 }
 
-type EarlyGuide = { url: string; download: Promise<Awaited<ReturnType<typeof openGuide>> | null> };
+type GuideResponse = Awaited<ReturnType<typeof openGuide>>;
+type EarlyGuides = Map<string, Promise<GuideResponse | null>>;
+type SetupDownload = { queueGuide: (url: string) => void };
 
-export async function syncEpg(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, early?: EarlyGuide) {
+/** Drain the response into browser-managed blob storage while catalogues are being imported.
+ * XMLTV matching still runs against the final channels, in guide priority order. */
+async function downloadGuide(url: string, since: number, signal: AbortSignal, progress: Progress) {
+  const guide = await openGuide(url, since, signal);
+  const body = guide.response.body;
+  if (!body) throw new Error('Guide vide');
+  let bytes = 0, lastReport = 0;
+  const total = Number(guide.response.headers.get('content-length')) || undefined;
+  const report = () => progress({ step: 'epg', done: bytes, total, unit: 'bytes' });
+  const stream = body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, out) {
+      bytes += chunk.byteLength;
+      if (Date.now() - lastReport >= 250) { report(); lastReport = Date.now(); }
+      out.enqueue(chunk);
+    },
+    flush: report,
+  }));
+  const blob = await new Response(stream).blob();
+  return { cached: guide.cached, response: new Response(blob) };
+}
+
+export async function syncEpg(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, early?: EarlyGuides) {
   const urls = await epgUrlsForProfile(profileId, secrets);
   if (!urls.length) return;
   const channels = await db.channels.where('profileId').equals(profileId).toArray();
@@ -399,7 +501,7 @@ export async function fillMissingEpgIds(profileId: string): Promise<number> {
 
 async function syncEpgUrls(
   urls: string[], byEpg: Set<string>, byBase: Map<string, Channel[]>, byName: Map<string, Channel[]>, covered: Set<string>,
-  from: number, to: number, progress: Progress, since: number, early?: EarlyGuide,
+  from: number, to: number, progress: Progress, since: number, early?: EarlyGuides,
 ) {
   await GuideImport.clearAbandoned();
   for (const url of urls) {
@@ -459,7 +561,8 @@ async function syncEpgUrls(
     };
     try {
       // Recheck the URL list after sync: a failover or an M3U header can change the guides.
-      const ready = early?.url === url ? await early.download : null;
+      const ready = await early?.get(url);
+      early?.delete(url);
       const guide = ready ?? await openGuide(url, since);
       try {
         await importDocument(guide.response);
@@ -492,13 +595,13 @@ export async function prefetchPlan(profileId: string, secrets: Record<string, st
  * Syncs a source on the server in use; when it fails, tries the backup servers in order.
  * The first one that works becomes the server in use (persisted, so the next start uses it too).
  */
-export async function syncSource(src: Source, password: string | undefined, progress: Progress): Promise<Source> {
-  const sync = () => syncSourceLocked(src, password, progress);
+export async function syncSource(src: Source, password: string | undefined, progress: Progress, setup?: SetupDownload): Promise<Source> {
+  const sync = () => syncSourceLocked(src, password, progress, setup);
   if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request(`cyberstream:sync:${src.id}`, sync);
   return sync();
 }
 
-async function syncSourceLocked(src: Source, password: string | undefined, progress: Progress): Promise<Source> {
+async function syncSourceLocked(src: Source, password: string | undefined, progress: Progress, setup?: SetupDownload): Promise<Source> {
   progress({ sourceId: src.id, step: 'start' });
   const servers = serversOf(src);
   const errors: string[] = [];
@@ -510,8 +613,8 @@ async function syncSourceLocked(src: Source, password: string | undefined, progr
     src.url = server;
     if (i > 0) progress({ sourceId: src.id, step: 'start', message: `Serveur de secours : ${serverLabel(server)}` });
     try {
-      if (src.type === 'xtream') await syncXtream(src, password || '', progress);
-      else await syncM3u(src, progress);
+      if (src.type === 'xtream') await syncXtream(src, password || '', progress, !!setup);
+      else await syncM3u(src, progress, setup);
       ok = true;
       break;
     } catch (e) {
@@ -545,35 +648,50 @@ async function syncSourceLocked(src: Source, password: string | undefined, progr
   return src;
 }
 
-export async function syncProfile(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, withEpg = true) {
+export async function syncProfile(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, withEpg = true, setupScreen = false) {
   const sources = (await db.sources.where('profileId').equals(profileId).toArray()).filter((s) => s.enabled).sort((a, b) => a.priority - b.priority);
-  const org = refreshIptvOrg(false, true).catch(() => false);
+  // setup screen: logos last, so the iptv-org download doesn't slow down the catalogues and guides
+  let org = setupScreen ? undefined : refreshIptvOrg(false, true).catch(() => false);
   const controller = new AbortController();
-  let early: EarlyGuide | undefined;
-  if (withEpg) {
-    const [url] = await epgUrlsForProfile(profileId, secrets);
-    if (url) {
-      const since = (await getMeta<number>(`epg:last:${profileId}`)) || 0;
+  const early: EarlyGuides = new Map();
+  const since = withEpg ? (await getMeta<number>(`epg:last:${profileId}`)) || 0 : 0;
+  let queued = Promise.resolve();
+  const queueGuide = (url: string) => {
+    if (!withEpg || !url || early.has(url)) return;
+    const download = queued.then(async () => {
+      if (controller.signal.aborted) return null;
       progress({ step: 'epg' });
-      early = { url, download: openGuide(url, since, controller.signal).catch(() => null) };
-    }
-  }
+      return setupScreen ? downloadGuide(url, since, controller.signal, progress) : openGuide(url, since, controller.signal);
+    }).catch(() => null);
+    early.set(url, download);
+    queued = download.then(() => {});
+  };
   try {
-    for (const s of sources) await syncSource(s, secrets[s.id], progress);
+    if (setupScreen) {
+      const cutoff = `setup:batch:${Date.now() - 86400000}:`;
+      await db.meta.where('key').between('setup:batch:', cutoff).delete();
+    }
+    if (withEpg) {
+      const urls = await epgUrlsForProfile(profileId, secrets);
+      for (const url of setupScreen ? urls : urls.slice(0, 1)) queueGuide(url);
+    }
+    for (const s of sources) await syncSource(s, secrets[s.id], progress, setupScreen ? { queueGuide } : undefined);
+    if (withEpg) await syncEpg(profileId, secrets, progress, early);
     progress({ step: 'logos' });
     try {
+      org ??= refreshIptvOrg(false, true).catch(() => false);
       if ((await org) === false && !(await getMeta('iptvorg:index'))) await refreshIptvOrg(true);
       progress({ step: 'logos', count: await applyIptvOrg(profileId) });
     } catch {
       /* offline: next sync */
       progress({ step: 'logos', count: 0 });
     }
-    if (withEpg) await syncEpg(profileId, secrets, progress, early);
-    // channels were rewritten: versions without a guide id take their sibling's again
-    else await fillMissingEpgIds(profileId);
+    // channels were rewritten (and iptv-org ids added): versions without a guide id take their sibling's again
+    await fillMissingEpgIds(profileId);
   } finally {
     // Also releases an unused response body if its source switched to a backup.
     controller.abort();
+    await queued;
   }
   await db.profiles.update(profileId, { lastSyncAt: Date.now() });
   await setMeta(`catalog:version:${profileId}`, Date.now());

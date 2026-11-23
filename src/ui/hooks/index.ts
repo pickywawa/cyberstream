@@ -1,3 +1,4 @@
+import type React from 'react';
 import { createContext, useContext, useEffect, useRef, useState, type DependencyList } from 'react';
 import { useApp } from '@/state/store';
 
@@ -134,4 +135,43 @@ export function useMediaQuery(q: string): boolean {
     return () => mq.removeEventListener('change', h);
   }, [q]);
   return m;
+}
+
+/**
+ * Featured banner (Home, Replay): auto-advance every 8 s unless the remote is inside it, ‹ › buttons
+ * and dots ("prev" / "next" / "go:N" commands), and swiping on touch screens.
+ */
+export function useCarousel(count: number) {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused || count < 2) return;
+    const tm = setInterval(() => setI((x) => (x + 1) % count), 8000);
+    return () => clearInterval(tm);
+  }, [count, paused, i]);
+  const step = (d: number) => setI((x) => (x + d + count) % count);
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const handlers = {
+    onFocus: () => setPaused(true),
+    onBlur: (e: React.FocusEvent<HTMLElement>) => setPaused(e.currentTarget.contains(e.relatedTarget)),
+    onTouchStart: (e: React.TouchEvent) => {
+      const t = e.touches[0];
+      touch.current = t ? { x: t.clientX, y: t.clientY } : null;
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const start = touch.current;
+      const t = e.changedTouches[0];
+      touch.current = null;
+      if (!start || !t || count < 2) return;
+      const dx = t.clientX - start.x;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(t.clientY - start.y)) step(dx < 0 ? 1 : -1);
+    },
+  };
+  /** true when the command moved the banner */
+  const command = (cmd: string) => {
+    if (cmd === 'next' || cmd === 'prev') return (step(cmd === 'next' ? 1 : -1), true);
+    if (cmd.startsWith('go:')) return (setI(Math.min(count - 1, Math.max(0, Number(cmd.slice(3)) || 0))), true);
+    return false;
+  };
+  return { index: count ? Math.min(i, count - 1) : 0, handlers, command };
 }

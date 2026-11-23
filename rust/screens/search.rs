@@ -35,10 +35,6 @@ pub fn search_results_html(
     Ok(html!{
         @if let Some(r)=data{
             @if r.channels.is_empty()&&r.movies.is_empty()&&r.series.is_empty()&&r.programs.is_empty(){div.empty{(t("search.noResult").replace("{q}",query))}}
-            @if !r.series.is_empty()||!r.movies.is_empty(){section.rail{div.rail-head{h2.section-title{(t("search.movies"))" & "(t("search.series"))}}
-                div.grid.posters{@for s in r.series.iter().take(18){(Card{sub:Some(t("search.series").into()),..s.card("series")}.outer("poster"))}
-                @for m in r.movies.iter().take(60){(Card{sub:m.credited(None),..m.card("movie")}.outer("poster"))}}
-            }}
             @if !r.channels.is_empty(){(rail("channels",t("search.channels"),None,html!{@for c in r.channels.into_iter().take(30){
                 (Card{title:c.name,cmd:format!("channel:{}",c.id),logo:Some(vec![c.logo_alt,c.logo]),long_press:true,..Default::default()}.outer("logo"))
             }}))}
@@ -46,6 +42,10 @@ pub fn search_results_html(
                 (Card{title:p.title,sub:Some(format!("{} · {}",p.channel.name,p.time)),image:p.image,
                    center_logo:Some(vec![p.channel.logo_alt,p.channel.logo]),cmd:format!("program:{}",p.id),..Default::default()}.outer("land"))
             }}))}
+            @if !r.series.is_empty()||!r.movies.is_empty(){section.rail{div.rail-head{h2.section-title{(t("search.movies"))" & "(t("search.series"))}}
+                div.grid.posters{@for s in r.series.iter().take(18){(Card{sub:Some(t("search.series").into()),..s.card("series")}.outer("poster"))}
+                @for m in r.movies.iter().take(60){(Card{sub:m.credited(None),..m.card("movie")}.outer("poster"))}}
+            }}
         }@else if !recent.is_empty(){div style="margin-top:14px"{
             div.container.muted.small style="margin-bottom:8px"{(t("search.recent"))}
             div.recent data-row{@for term in recent{button.chip.active data-f data-cmd=(format!("query:{term}")){(term)}}}

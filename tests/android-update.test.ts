@@ -27,3 +27,19 @@ it('reports a missing manifest on the newest published version as unavailable', 
   vi.stubGlobal('fetch', async () => Response.json([{ ...preview, assets: [] }]));
   expect(await checkForUpdate()).toEqual({ status: 'unavailable' });
 });
+
+it('installs the TV from the newest release APK, even without its update.json', async () => {
+  const { latestApkUrl } = await import('../src/core/updater');
+  const apk = { name: 'Cyberstream-0.16.3-android.apk', browser_download_url: base + '/Cyberstream-0.16.3-android.apk' };
+  vi.stubGlobal('fetch', async (url: string) => {
+    if (url === releases) return Response.json([{ ...preview, tag_name: 'v0.16.2', assets: [] }, { ...preview, assets: [apk] }]);
+    throw Error('Unexpected URL');
+  });
+  expect(await latestApkUrl()).toBe(apk.browser_download_url);
+});
+
+it('refuses to fall back to the phone APK when the releases are unreachable', async () => {
+  const { latestApkUrl } = await import('../src/core/updater');
+  vi.stubGlobal('fetch', async () => { throw new TypeError('Failed to fetch'); });
+  await expect(latestApkUrl()).rejects.toThrow();
+});

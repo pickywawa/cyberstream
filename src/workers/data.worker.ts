@@ -2,7 +2,7 @@ import {homeCatalog, similarByGenre} from '@/core/catalog';
 /// <reference lib="webworker" />
 
 import { setProxyBase } from '@/core/net/http';
-import { syncProfile, syncEpg, syncSource, testSource, loadXtreamEpisodes, prefetchPlan, fillMissingEpgIds } from '@/core/sync/sync';
+import { syncProfile, syncEpg, syncSource, testSource, loadXtreamEpisodes, loadXtreamVodInfo, prefetchPlan, fillMissingEpgIds } from '@/core/sync/sync';
 import { takePrefetchHits } from '@/core/net/http';
 import { Tmdb } from '@/core/enrich/tmdb';
 import { Enricher, enrichSeason, refreshLists } from '@/core/enrich/enrich';
@@ -21,11 +21,11 @@ export const api = {
     setProxyBase(proxyBase);
   },
 
-  async syncProfile(profileId: string, secrets: Secrets, onProgress: (p: SyncProgress) => void, withEpg = true) {
+  async syncProfile(profileId: string, secrets: Secrets, onProgress: (p: SyncProgress) => void, withEpg = true, setupScreen = false) {
     if (busy) return false;
     busy = true;
     try {
-      await syncProfile(profileId, secrets, onProgress, withEpg);
+      await syncProfile(profileId, secrets, onProgress, withEpg, setupScreen);
       return true;
     } finally {
       busy = false;
@@ -62,6 +62,10 @@ export const api = {
 
   loadEpisodes(seriesId: string, password: string) {
     return loadXtreamEpisodes(seriesId, password);
+  },
+
+  loadVodInfo(movieId: string, password: string) {
+    return loadXtreamVodInfo(movieId, password);
   },
 
   async startEnrichment(profileId: string, token: string | null, lang: string, onUpdate: () => void) {

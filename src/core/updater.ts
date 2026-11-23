@@ -49,21 +49,47 @@ export function decide(m: UpdateManifest, installed: { versionCode: number; webV
   return 'none';
 }
 
+const fetchOptions = { cache: 'no-store', timeoutMs: 10000 } as const;
+const releasesRepo = () => __UPDATE_URL__.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/?$/)?.[1];
+type Release = { tag_name: string; draft: boolean; assets: { name: string; browser_download_url: string }[] };
+
+/** newest published numbered release (prereleases included: /releases/latest skips them) */
+async function newestRelease(repo: string): Promise<Release | undefined> {
+  const res = await fetchWithTimeout(`https://api.github.com/repos/${repo}/releases?per_page=30`, fetchOptions);
+  const releases: Release[] = await res.json();
+  return releases.filter(r => !r.draft && /^v\d+\.\d+\.\d+$/.test(r.tag_name))
+    .sort((a, b) => cmpVersion(b.tag_name.slice(1), a.tag_name.slice(1)))[0];
+}
+
+/**
+ * APK of the newest release, for installing on a TV from the phone. '' when no update channel is
+ * configured (dev builds: the phone sends its own APK). Throws when the release can't be reached,
+ * so an older copy is never sent silently.
+ */
+export async function latestApkUrl(): Promise<string> {
+  if (!__UPDATE_URL__) return '';
+  const repo = releasesRepo();
+  if (repo) {
+    const newest = await newestRelease(repo);
+    const apk = newest?.assets.find(a => /\.apk$/i.test(a.name));
+    if (apk) return apk.browser_download_url;
+  }
+  const m = await fetchManifest();
+  if (!m?.apk) throw new Error('no apk');
+  return m.apk;
+}
+
 export async function fetchManifest(): Promise<UpdateManifest | null> {
   if (!__UPDATE_URL__) return null;
   try {
-    const options = { cache: 'no-store', timeoutMs: 10000 } as const;
+    const options = fetchOptions;
     let url: string = __UPDATE_URL__;
     let expectedVersion: string | undefined;
-    const repo = url.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/?$/)?.[1];
+    const repo = releasesRepo();
     if (repo) {
-      // /releases/latest skips prereleases, including the Android TV preview channel.
-      const res = await fetchWithTimeout(`https://api.github.com/repos/${repo}/releases?per_page=30`, options);
-      const releases: { tag_name: string; draft: boolean; assets: { name: string; browser_download_url: string }[] }[] = await res.json();
-      const newest = releases.filter(r => !r.draft && /^v\d+\.\d+\.\d+$/.test(r.tag_name))
-        .sort((a, b) => cmpVersion(b.tag_name.slice(1), a.tag_name.slice(1)))[0];
+      const newest = await newestRelease(repo);
       const manifest = newest?.assets.find(asset => asset.name === 'update.json');
-      if (!manifest) return null;
+      if (!newest || !manifest) return null;
       url = manifest.browser_download_url;
       expectedVersion = newest.tag_name.slice(1);
     }

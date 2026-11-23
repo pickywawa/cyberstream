@@ -139,6 +139,8 @@ export interface Movie {
   origLang?: string;
   /** set when langs/subs come from the actual stream tracks */
   tracksAt?: number;
+  /** Xtream get_vod_info read (duration, genres, age… when there is no TMDB enrichment) */
+  providerInfoAt?: number;
   /** TMDB extras (enrichment v2) */
   enrichV?: number;
   imdbId?: string;

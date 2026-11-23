@@ -141,7 +141,7 @@ async function applyImportLink(p: EnrollPayload) {
       // first start of the TV: the setup screen follows the download (counts, time left)
       useApp.setState({ screen: 'onboarding', importedProfile: prof, booted: true });
       setLang(prof.lang);
-      void runSync(prof.id);
+      void runSync(prof.id, true, { setupScreen: true });
       return true;
     }
     await selectProfile(prof);
@@ -278,7 +278,7 @@ export async function schedulePrefetch(profileId: string, runNow = false) {
   }
 }
 
-export async function runSync(profileId: string, withEpg = true, opts: { quiet?: boolean } = {}) {
+export async function runSync(profileId: string, withEpg = true, opts: { quiet?: boolean; setupScreen?: boolean } = {}) {
   const s = useApp.getState();
   if (s.sync.running) return;
   const firstSync = !s.profile?.lastSyncAt;
@@ -305,6 +305,7 @@ export async function runSync(profileId: string, withEpg = true, opts: { quiet?:
         }
       }),
       withEpg,
+      !!opts.setupScreen,
     );
     const prof = await db.profiles.get(profileId);
     // a full sync makes the one-time migrations useless

@@ -1,5 +1,6 @@
 import { CapacitorHttp } from '@capacitor/core';
 import { isNative } from '../platform';
+import { timeoutSignal } from './http';
 
 export interface Req {
   url: string;
@@ -37,7 +38,7 @@ export async function request<T = any>(r: Req): Promise<{ status: number; data: 
     method,
     headers,
     body: r.body !== undefined ? JSON.stringify(r.body) : undefined,
-    signal: AbortSignal.timeout(r.timeoutMs || 15000),
+    signal: timeoutSignal(r.timeoutMs || 15000),
   });
   const text = await res.text();
   let data: any = text;
