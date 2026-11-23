@@ -1012,3 +1012,4 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .cat-wrap .cat-card:hover { background: var(--surface-2); }
 .cat-wrap .cat-card .lb { white-space: nowrap; }
 .mobile .cat-wrap .cat-card { width: auto; height: 44px; padding: 0 16px; }
+.cat-wrap .cat-card .lb { font-weight: 500; }
