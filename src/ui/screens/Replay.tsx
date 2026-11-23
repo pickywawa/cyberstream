@@ -13,6 +13,16 @@ import { Radios } from './Radios';
 const MEM = new Map<string, ReplayCatalog>();
 type Filter = 'all' | ReplayProvider | 'kids';
 
+/** profile start: the saved catalogue goes to memory (the tab shows its rows at once), then the network refreshes it */
+export async function preloadReplay(lang: string, country: string) {
+  const key = `${lang}:${country}`;
+  if (MEM.has(key)) return;
+  const saved = await replayCatalog(lang, { cachedOnly: true, country }).catch(() => null);
+  if (saved && !MEM.has(key)) MEM.set(key, saved);
+  // a little later, so the start of the app isn't slowed down (fresh enough copies are kept as is)
+  setTimeout(() => void replayCatalog(lang, { country }).then((c) => c && MEM.set(key, c), () => {}), 8000);
+}
+
 export function Replay() {
   const profile = useApp((s) => s.profile)!;
   const lang = profile.lang;

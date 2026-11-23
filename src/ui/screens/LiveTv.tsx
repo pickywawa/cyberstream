@@ -186,8 +186,8 @@ export function LiveTv() {
             items={shown}
             minWidth={narrow ? 150 : 165}
             aspect={16 / 9}
-            extraHeight={narrow ? 70 : 78}
-            gap={narrow ? 10 : 14}
+            extraHeight={narrow ? 64 : 60}
+            gap={narrow ? 8 : 10}
             getKey={(c) => c.id}
             render={(c) => (
               <ChannelCard

@@ -58,7 +58,20 @@ function scopeItems(scope: Element): HTMLElement[] {
 export function focusEl(el: HTMLElement | null | undefined, scroll = true) {
   if (!el) return;
   el.focus({ preventScroll: true });
-  if (scroll) el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+  if (!scroll) return;
+  // the featured banner sits at the top of its page: show it whole (back up from the rows below)
+  if (el.closest('.hero')) {
+    const box = scrollParent(el);
+    if (box) return box.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+  }
+  el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+}
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY;
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+  }
+  return null;
 }
 
 export function focusFirst(root: Element = currentScope()) {

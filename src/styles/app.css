@@ -605,6 +605,12 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 
 /* ───────────── Home categories (app style) ───────────── */
 .cat-rail .rail-track { gap: 12px; }
+/* Home: smaller posters (several rows on screen at once) and tighter rows, the universe tiles right under the banner */
+.home-shelves { --card-w: clamp(96px, 10vw, 160px); }
+.home-shelves .rail { margin-top: clamp(4px, 0.8vw, 12px); }
+.home-shelves .rail.cat-rail { margin-top: 0; }
+.home-shelves .rail-track { padding-bottom: 10px; }
+.mobile .home-shelves { --card-w: clamp(132px, 15vw, 240px); }
 .cat-card {
   display: flex; align-items: center; gap: 12px; width: auto; min-width: clamp(160px, 16vw, 230px); height: 72px; padding: 0 22px 0 12px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: background .15s, border-color .15s;

@@ -119,7 +119,8 @@ function TrailerBg({ url }: { url?: string }) {
   const [on, setOn] = useState(false);
   const [muted, setMuted] = useState(settings.trailerMuted);
   const ref = useRef<HTMLIFrameElement>(null);
-  const enabled = !!key && settings.autoTrailer && !settings.performance && !playing;
+  // like cybertv: "Animations réduites" (on by default on Android) no longer turns trailers off, only the setting does
+  const enabled = !!key && settings.autoTrailer && !playing;
   const startMuted = useRef(settings.trailerMuted);
   useEffect(() => {
     if (!enabled) {
