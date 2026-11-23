@@ -1028,3 +1028,7 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .mobile .cat-wrap .cat-card { height: 42px; padding: 0 14px 0 12px; gap: 8px; }
 .mobile .cat-wrap .cat-card .ic svg { width: 20px; height: 20px; }
 .mobile .cat-wrap .cat-card .lb { font-size: .9rem; }
+/* universes: room above and below the bar, lighter text */
+.home-shelves .rail.cat-rail { margin: clamp(10px, 1.4vw, 20px) 0 clamp(6px, 1vw, 14px); }
+.cat-wrap .cat-card .lb { font-weight: 400; }
+.cat-wrap .cat-card:hover .lb, .cat-wrap .cat-card[data-f]:focus-visible .lb, .kbd .cat-wrap .cat-card[data-f]:focus .lb { font-weight: 600; }
