@@ -43,9 +43,10 @@ export function cmpVersion(a: string, b: string): number {
 
 /** what to do for a given manifest and installed state (pure, unit-tested) */
 export function decide(m: UpdateManifest, installed: { versionCode: number; webVersion: string }): 'web' | 'apk' | 'none' {
+  // a newer APK carries the new web content too: one install instead of a web restart then an APK
+  if (m.versionCode > installed.versionCode && m.apk) return 'apk';
   const webNewer = cmpVersion(m.version, installed.webVersion) > 0;
   if (webNewer && m.web && m.minVersionCode <= installed.versionCode) return 'web';
-  if (m.versionCode > installed.versionCode && m.apk) return 'apk';
   return 'none';
 }
 

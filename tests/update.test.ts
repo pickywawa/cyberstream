@@ -11,6 +11,10 @@ describe('self-update decision', () => {
   it('installs a newer web bundle silently when the APK is recent enough', () => {
     expect(decide(m, { versionCode: 3, webVersion: '0.3.0' })).toBe('web');
   });
+  it('installs the APK alone when it is newer too (it carries the web content: one step)', () => {
+    expect(decide(m, { versionCode: 2, webVersion: '0.3.0' })).toBe('apk');
+    expect(decide({ ...m, minVersionCode: 1 }, { versionCode: 2, webVersion: '0.3.0' })).toBe('apk');
+  });
   it('asks for the APK when the web bundle needs a newer native side', () => {
     expect(decide(m, { versionCode: 2, webVersion: '0.2.0' })).toBe('apk');
   });
