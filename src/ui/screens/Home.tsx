@@ -1,0 +1,150 @@
+import { dataWorker } from '@/core/workers';
+import { useEffect, useMemo, useState } from 'react';
+import { useApp } from '@/state/store';
+import { t } from '@/core/i18n';
+import { db, setMeta } from '@/core/db';
+import {
+  continueWatching, favoritesOf, hideFromContinue, matchMovies, matchSeries,
+} from '@/core/repo';
+import type { Movie, Series } from '@/core/types';
+import { useAsync } from '../hooks';
+import { RustView, readCommand } from '../components/RustView';
+import { home_html, hero_html } from '@/rust/generated/cyberstream';
+import { openMovie, openSeries, playMovie, prioritizeEnrichment, resume } from '../actions';
+import { langPrefs } from '@/core/prefs';
+import { sortByLang } from '@/core/util/lang';
+import { traktLists } from '@/core/trakt';
+import type { TmdbListItem } from '@/core/types';
+
+type HeroItem = { kind: 'movie' | 'series'; item: Movie | Series };
+type MixItem = HeroItem;
+
+export const homeKey = (profileId: string, prefsKey: string, hideAdult: boolean) => `home:${profileId}:${prefsKey}:${hideAdult}`;
+export const homePrefsKey = (p: { lang: string; audioLangs?: string[]; subLangs?: string[] }) => `${p.lang}|${p.audioLangs?.join()}|${p.subLangs?.join()}`;
+
+let lastSnapshot = 0;
+/** persisted (throttled) so the next launch shows Home immediately — see loadHomeSnapshot() */
+function saveHomeSnapshot(profileId: string, key: string, data: unknown) {
+  if (Date.now() - lastSnapshot < 20000) return;
+  lastSnapshot = Date.now();
+  void setMeta(`snapshot:home:${profileId}`, { key, data, at: Date.now() }).catch(() => {});
+}
+
+const SHELF_FIELDS = ['cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','durationSec','positionSec'];
+
+export function Home() {
+  const profile = useApp((s) => s.profile)!;
+  const settings = useApp((s) => s.settings);
+  const push = useApp((s) => s.push);
+  const setTab = useApp((s) => s.setTab);
+  const hideAdult = settings.hideAdult || (profile.parental.enabled && !useApp.getState().unlockedAdult);
+
+  const prefsKey = homePrefsKey(profile);
+  const data = useAsync(async () => {
+    const prefs = langPrefs(profile);
+    const [catalog,cont,favs] = await Promise.all([
+      dataWorker().homeCatalog(profile.id,profile.lang,hideAdult,prefs),continueWatching(profile.id),favoritesOf(profile.id),
+    ]);
+    const favMovies = (await db.movies.bulkGet(favs.filter((f) => f.kind === 'movie').map((f) => f.itemId))).filter(Boolean) as Movie[];
+    const favSeries = (await db.series.bulkGet(favs.filter((f) => f.kind === 'series').map((f) => f.itemId))).filter(Boolean) as Series[];
+    // Trakt: recommendations, watchlist and personal lists, only what the sources carry
+    const tr = await traktLists(profile.id).catch(() => null);
+    const mixed = async (movies: TmdbListItem[], shows: TmdbListItem[]) => {
+      const [m, sr] = await Promise.all([matchMovies(profile.id, movies), matchSeries(profile.id, shows)]);
+      const out: MixItem[] = [];
+      for (let i = 0; i < Math.max(m.length, sr.length); i++) {
+        if (m[i]) out.push({ kind: 'movie', item: m[i] });
+        if (sr[i]) out.push({ kind: 'series', item: sr[i] });
+      }
+      return out;
+    };
+    const trakt = tr
+      ? {
+          forYou: await mixed(tr.forYouMovies, tr.forYouShows),
+          watchlist: await mixed(tr.watchlistMovies, tr.watchlistShows),
+          lists: await Promise.all(tr.lists.map(async (l) => ({ name: l.name, items: await mixed(l.movies, l.shows) }))),
+        }
+      : null;
+    return {
+      trakt,
+      ...catalog, cont, favMovies, favSeries,
+    };
+  }, [profile.id, prefsKey, hideAdult], { key: homeKey(profile.id, prefsKey, hideAdult) });
+
+  // snapshot for the next cold start: Home renders at once, then refreshes
+  useEffect(() => {
+    if (data) saveHomeSnapshot(profile.id, homeKey(profile.id, prefsKey, hideAdult), data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  // enrich what's on screen first
+  useEffect(() => {
+    if (!data) return;
+    prioritizeEnrichment('movie', [...data.top, ...data.fresh.slice(0, 16), ...data.nowPlaying.slice(0, 10)]);
+    prioritizeEnrichment('series', [...data.trendingTv.slice(0, 10), ...data.newSeries.slice(0, 16)]);
+  }, [data]);
+
+  const hero = useMemo<HeroItem[]>(() => {
+    if (!data) return [];
+    const pool: HeroItem[] = [
+      ...data.top.map((m) => ({ kind: 'movie' as const, item: m })),
+      ...data.trendingTv.slice(0, 3).map((s) => ({ kind: 'series' as const, item: s })),
+      ...data.fresh.map((m) => ({ kind: 'movie' as const, item: m })),
+    ];
+    const seen = new Set<string>();
+    const prefs = langPrefs(profile);
+    const ok = pool.filter((h) => h.item.backdrop && !seen.has(h.item.groupKey) && seen.add(h.item.groupKey));
+    return sortByLang(ok.map((h) => ({ ...h, langs: h.item.langs, subs: h.item.subs, origLang: h.item.origLang })), prefs).slice(0, 6);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  const shelves = useMemo(() => data && home_html(JSON.stringify({
+    ...data, genres: data.genres.map(([genre, rows]) => [genre, rows.slice(0, 30)]),
+  }, SHELF_FIELDS), profile.lang), [data, profile.lang]);
+  if (!data || !shelves) return <div className="empty"><div className="spinner big" style={{ margin: '80px auto' }} /></div>;
+
+  const select = (cmd: string, hold = false) => {
+    const [action, id] = readCommand(cmd);
+    if (action === 'movie') return hold ? void playMovie(id) : openMovie(id);
+    if (action === 'series') return openSeries(id);
+    if (action === 'remove' || action === 'resume') {
+      const key = action === 'remove' ? readCommand(id)[1] : id;
+      const w = data.cont.find(w => w.key === key);
+      if (w) action === 'remove' ? void hideFromContinue(w).then(() => useApp.getState().bumpCatalog()) : void resume(w);
+    }
+    if (action === 'tile') {
+      if (id === 'live') return setTab('tv');
+      if (id === 'series' || id === 'cinema' || id === 'kids' || id === 'docs') push({ name: 'grid',
+        kind: id === 'series' ? 'series' : 'movie', title: t(`universe.${id}`), filter: id === 'kids' || id === 'docs' ? { universe: id } : {} });
+    }
+    if (action === 'genre') push({ name: 'grid', kind: 'movie', title: id, filter: { genre: id } });
+    if (action === 'all' && (id === 'fresh' || id === 'newSeries' || id === 'mustSee' || id === 'kids')) push({
+      name: 'grid', kind: id === 'newSeries' ? 'series' : 'movie', title: t(`home.${id}`),
+      filter: id === 'kids' ? { universe: 'kids' } : { sort: id === 'mustSee' ? 'rating' : 'added' },
+    });
+  };
+  return <div>
+    {hero.length ? <Hero items={hero} lang={profile.lang} /> : <div className="hero-spacer" />}
+    <RustView className="home-shelves" html={shelves} onCommand={select} onHold={cmd => select(cmd, true)} />
+  </div>;
+}
+
+function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused || items.length < 2) return;
+    const tm = setInterval(() => setI((x) => (x + 1) % items.length), 8000);
+    return () => clearInterval(tm);
+  }, [items.length, paused]);
+  const h = items[Math.min(i, items.length - 1)];
+  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','logo','year','rating','plot','genres']), Math.min(i, items.length - 1), items.length, lang), [h.item, i, items.length, lang]);
+  return <section className="hero" onFocus={() => setPaused(true)} onBlur={e => setPaused(e.currentTarget.contains(e.relatedTarget))}>
+    <RustView className="hero-inner" html={html} onCommand={cmd => {
+      if (cmd === 'next') return setI(x => (x + 1) % items.length);
+      if (h.kind === 'series') return openSeries(h.item.id);
+      if (cmd === 'play') void playMovie(h.item.id);
+      if (cmd === 'info') openMovie(h.item.id);
+    }} />
+  </section>;
+}

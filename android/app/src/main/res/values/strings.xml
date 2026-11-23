@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cyberstream</string>
+    <string name="title_activity_main">Cyberstream</string>
+    <string name="package_name">app.cyberstream.player</string>
+    <string name="custom_url_scheme">app.cyberstream.player</string>
+</resources>
