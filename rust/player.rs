@@ -214,9 +214,12 @@ pub fn remote_command(
             "digit"
         }
         _ if panel => "pass",
+        // controls shown: the remote moves between them, never zaps
         _ if visible => "wake-pass",
-        "ArrowUp" => "wake",
-        "ArrowDown" if !vod => "down",
+        // Up / Down only show the controls; zapping is Left / Right on a channel
+        "ArrowUp" | "ArrowDown" => "wake",
+        "ArrowLeft" if channel && !vod => "zap-prev",
+        "ArrowRight" if channel && !vod => "zap-next",
         "ArrowLeft" => "left",
         "ArrowRight" => "right",
         "Enter" => "wake",

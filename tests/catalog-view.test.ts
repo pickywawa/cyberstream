@@ -54,5 +54,5 @@ it('renders a featured movie with provider artwork before TMDB enrichment', () =
   const html = hero_html(JSON.stringify({title:'Nouveau film', poster:'/provider-poster'}), 0, 2, 'fr');
   expect(html).toContain('src="/provider-poster"');
   expect(html).toContain('<h1>Nouveau film</h1>');
-  for (const action of ['play', 'info', 'next']) expect(html).toContain(`data-cmd="${action}"`);
+  for (const action of ['play', 'info', 'go:1']) expect(html).toContain(`data-cmd="${action}"`);
 });

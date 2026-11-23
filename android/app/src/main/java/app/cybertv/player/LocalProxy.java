@@ -46,7 +46,7 @@ public class LocalProxy {
     /** broken logos are remembered so they never hold one of the WebView's 6 connections again */
     private static final long IMG_ERROR_TTL = 12L * 3600 * 1000;
 
-    private final Semaphore imageSlots = new Semaphore(2, true);
+    private final Semaphore imageSlots = new Semaphore(5, true);
     private final Object[] imageLocks = new Object[32];
     private final File imgDir;
     private final ExecutorService pool = Executors.newFixedThreadPool(12);

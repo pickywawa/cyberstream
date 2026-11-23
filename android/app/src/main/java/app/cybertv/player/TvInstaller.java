@@ -264,6 +264,10 @@ final class TvInstaller {
         })) {
             String model = adb.model();
             p.step("upload", 0, model);
+            // the app is recorded as its own installer, so it can update itself silently later (Android 12+);
+            // Android ignores that on a first install, hence a second pass then (same APK, quick on Wi-Fi)
+            String pkg = c.getPackageName();
+            boolean wasInstalled = adb.exec("pm path " + pkg).contains("package:");
             String res = adb.install(apk, new AdbClient.Listener() {
                 @Override
                 public void waitingForApproval() {
@@ -279,8 +283,20 @@ final class TvInstaller {
                         p.step(pct >= 100 ? "install" : "upload", pct, model);
                     }
                 }
-            });
+            }, pkg);
             if (!res.contains("Success")) throw new IOException(res.isEmpty() ? "install failed" : res);
+            if (!wasInstalled) {
+                // best effort: the app works either way, it just asks before its first APK update
+                try {
+                    String again = adb.install(apk, new AdbClient.Listener() {
+                        @Override public void waitingForApproval() { }
+                        @Override public void uploaded(long sent, long total) { p.step("install", 100, model); }
+                    }, pkg);
+                    if (!again.contains("Success")) Log.d(TAG, "installer not recorded: " + again);
+                } catch (IOException e) {
+                    Log.d(TAG, "installer not recorded: " + e.getClass().getSimpleName());
+                }
+            }
             // start the app on the TV, with this phone's profile and sources when asked for
             p.step("launch", 0, model);
             String start = "am start -W -n " + c.getPackageName() + "/" + MainActivity.class.getName();

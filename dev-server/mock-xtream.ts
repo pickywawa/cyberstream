@@ -221,7 +221,7 @@ export function mockXtreamPlugin(): Plugin {
               const v = VODL.find((x) => String(x.stream_id) === q.get('vod_id'));
               if (!v) return json(res, {});
               return json(res, {
-                info: { tmdb_id: v.tmdb, name: v.name, plot: '', releasedate: `${v.year}-01-01`, duration_secs: 5400 + (v.stream_id % 40) * 60, genre: 'Science-Fiction, Aventure', age: '12+', director: 'Réalisateur démo', cast: 'Acteur Un, Actrice Deux' },
+                info: { tmdb_id: v.tmdb, name: v.name, plot: '', releasedate: `${v.year}-01-01`, duration_secs: 5400 + (v.stream_id % 40) * 60, genre: 'Science-Fiction, Aventure', age: '12+', director: 'Réalisateur démo', cast: 'Timothée Chalamet, Zendaya' },
                 movie_data: { stream_id: v.stream_id, name: v.name, added: v.added, container_extension: 'mp4' },
               });
             }

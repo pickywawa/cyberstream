@@ -20,7 +20,6 @@ import { langPrefs } from '@/core/prefs';
 import { openMovie, openSeries, playEpisode, playMovie, prioritizeEnrichment } from '../actions';
 import { loadVodInfoIfNeeded, loadXtreamEpisodesIfNeeded } from '../episodes';
 import { actorPhoto } from '@/core/enrich/people';
-import { openSearch } from '../voice/run';
 
 export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   const item = useLiveQuery(() => (kind === 'movie' ? db.movies.get(id) : db.series.get(id)), [kind, id]);
@@ -52,9 +51,8 @@ function CastRail({ people, names }: { people?: Person[]; names?: string[] }) {
   return <RustView className="cast-rail" html={html} onCommand={id => {
     const person = shown.find(p => p.id === Number(id));
     if (!person) return;
-    // TMDB person page; a name alone: their films in the catalogue (search covers the cast)
-    if (person.id > 0) push({ name:'person', id:person.id, title:person.name });
-    else openSearch(person.name);
+    // TMDB person page, or (name alone) the Wikipedia / Wikidata one
+    push({ name:'person', id: person.id > 0 ? person.id : 0, title: person.name });
   }} />;
 }
 

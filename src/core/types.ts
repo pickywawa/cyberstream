@@ -307,4 +307,6 @@ export interface PlayRequest {
   durationSec?: number;
   /** channel ids available for zapping (current TV list) */
   zapList?: string[];
+  /** sound only (web radio): the player shows the station's logo */
+  audio?: boolean;
 }

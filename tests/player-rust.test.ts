@@ -9,6 +9,12 @@ it('chooses preferred audio and external-language subtitles and remembers stream
   expect(player_watchdog('error','HTTP 429',0,2)).toBe('retry');
   expect(player_watchdog('error','HTTP 429',0,3)).toBe('next');
   expect(remote_command('ArrowRight', false, false, true, false, false)).toBe('right');
+  // live channel: Left / Right zap while the controls are hidden, Up / Down only show them
+  expect(remote_command('ArrowRight', false, false, false, true, false)).toBe('zap-next');
+  expect(remote_command('ArrowLeft', false, false, false, true, false)).toBe('zap-prev');
+  expect(remote_command('ArrowDown', false, false, false, true, false)).toBe('wake');
+  expect(remote_command('ArrowUp', false, false, false, true, false)).toBe('wake');
+  expect(remote_command('ArrowRight', false, true, false, true, false)).toBe('wake-pass');
 });
 it('seeks in the live buffer, provider catch-up, shifted programme and VOD', () => {
   const state={position:270,duration:0,buffered:300,seekableStart:100,seekableEnd:300};

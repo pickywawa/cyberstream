@@ -9,7 +9,7 @@ import { db } from '@/core/db';
 import type { Channel, PlayRequest, Program } from '@/core/types';
 import { catchupCandidates, nextEpisode, playChannelRequest, playEpisodeRequest } from '@/core/playback';
 import { canCatchup } from '@/core/sources/urls';
-import { nowNext, programsFor, saveProgress } from '@/core/repo';
+import { nowNext, programsFor, saveProgress, type NowNext } from '@/core/repo';
 import { fmtDuration, fmtTime, t, getLang } from '@/core/i18n';
 import { useApp } from '@/state/store';
 import { rememberServer } from '@/core/profiles';
@@ -37,6 +37,17 @@ type Panel = null | 'channels' | 'programs' | 'settings' | 'info';
 const HIDE_MS = 4500;
 /** distance to the live edge still shown as "live" (players stay a few segments behind) */
 const LIVE_SLACK = 8;
+const ZAP_NOW: { at: number; map: Map<string, NowNext> | null; running: Promise<Map<string, NowNext>> | null } = { at: 0, map: null, running: null };
+function refreshZapNow(): Promise<Map<string, NowNext>> {
+  if (ZAP_NOW.map && Date.now() - ZAP_NOW.at < 3 * 60000) return Promise.resolve(ZAP_NOW.map);
+  ZAP_NOW.running ??= nowNext().then((m) => {
+    ZAP_NOW.map = m;
+    ZAP_NOW.at = Date.now();
+    return m;
+  }).finally(() => { ZAP_NOW.running = null; });
+  return ZAP_NOW.running;
+}
+
 const isDvr = (mode: string, s: EngineState) => mode === 'live' && s.seekableEnd - s.seekableStart > 60;
 const STALL_MS = 14000;
 const FIRST_FRAME_MS = 9000;
@@ -254,9 +265,16 @@ export function Player({ req }: { req: PlayRequest }) {
     void db.channels.bulkGet(req.zapList).then((l) => setZapChannels(l.filter(Boolean) as Channel[]));
   }, [req.zapList]);
 
+  // what's on every channel: read in the background soon after playback starts and kept between
+  // players, so "Toutes les chaînes" opens at once (it used to read the whole guide on open)
   useEffect(() => {
-    if (panel === 'channels') void nowNext().then(setZapNow);
-  }, [panel]);
+    if (mode === 'vod') return;
+    if (ZAP_NOW.map) setZapNow(ZAP_NOW.map);
+    const fresh = Date.now() - ZAP_NOW.at < 3 * 60000;
+    if (fresh && panel !== 'channels') return;
+    const tm = setTimeout(() => void refreshZapNow().then(setZapNow), panel === 'channels' ? 0 : 2500);
+    return () => clearTimeout(tm);
+  }, [panel, mode]);
 
   // ───────── timeline ─────────
   const catchupOk = !!channel && canCatchup(channel);
@@ -386,7 +404,10 @@ export function Player({ req }: { req: PlayRequest }) {
     async (ch: Channel) => {
       if (!ch || ch.id === channel?.id) return;
       prevChannel.current = channel?.id || null;
-      const pn = (await nowNext()).get(ch.epgId || '')?.now;
+      // cached guide (a full read on every zap made zapping slow); that channel alone when stale
+      const at = Date.now();
+      let pn = (await refreshZapNow()).get(ch.epgId || '')?.now;
+      if (ch.epgId && !(pn && pn.start <= at && pn.stop > at)) pn = (await programsFor(ch.epgId, at - 6 * 3600000, at + 60000)).find((p) => p.start <= at && p.stop > at);
       const r = await playChannelRequest(ch, pn);
       setPanel(null);
       setBanner(true);
@@ -459,6 +480,8 @@ export function Player({ req }: { req: PlayRequest }) {
         case 'up': zapBy(-1); break;
         case 'down': zapBy(1); break;
         case 'digit': setNumBuf(b => (b + e.key).slice(-4)); break;
+        case 'zap-prev': zapBy(-1); break;
+        case 'zap-next': zapBy(1); break;
         case 'left': seekBy(-10); poke(); break;
         case 'right': seekBy(10); poke(); break;
         case 'forward': seekBy(30); poke(); break;
@@ -641,6 +664,12 @@ export function Player({ req }: { req: PlayRequest }) {
   return (
     <div className="player" ref={rootRef} data-scope onPointerMove={() => !touch && poke()}>
       {!isAndroidApp && <video ref={videoRef} playsInline autoPlay onPointerUp={onSurfaceTap} />}
+      {req.audio && (
+        <div className="radio-art" aria-hidden>
+          <span className="radio-logo"><Img srcs={[req.logo]} contain label={req.title} alt="" /></span>
+          <div className="radio-name">{req.title}</div>
+        </div>
+      )}
       <div className="ui-surface" style={{ position: 'absolute', inset: 0 }} onPointerUp={onSurfaceTap} />
       {ext.active && ext.cues.length > 0 && <SubtitleOverlay rate={rate} cues={ext.cues} offset={ext.offset} getTime={getTime} raised={uiVisible && !pip} />}
 
@@ -740,6 +769,7 @@ export function Player({ req }: { req: PlayRequest }) {
             onStep={(d) => seekBy(d)}
             onActivity={poke}
             label={(r) => (mode === 'vod' ? (vodDur ? fmtDuration(r * vodDur) : '') : fmtTime(winStart + r * (winEnd - winStart)))}
+            span={mode === 'vod' ? vodDur : (winEnd - winStart) / 1000}
             disabled={(mode === 'live' && !catchupOk && !dvr) || (mode === 'vod' && !vodDur)}
           />
           <div className="times">
@@ -898,12 +928,16 @@ function SeekBar(p: {
   onActivity: () => void;
   label: (r: number) => string;
   disabled?: boolean;
+  /** seconds covered by the whole bar (remote steps move the preview by that much) */
+  span?: number;
 }) {
-  const { ratio, buffered, onSeek, onStep, onActivity, label, disabled } = p;
+  const { ratio, buffered, onSeek, onStep, onActivity, label, disabled, span } = p;
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef(false);
   const [hover, setHover] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
+  const held = useRef(0);
+  const keyPos = useRef<number | null>(null);
   const at = (e: React.PointerEvent) => {
     const r = ref.current!.getBoundingClientRect();
     return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
@@ -930,8 +964,30 @@ function SeekBar(p: {
       role="slider"
       aria-valuenow={Math.round(ratio * 100)}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft') (onStep(-30), onActivity(), e.preventDefault(), e.stopPropagation());
-        if (e.key === 'ArrowRight') (onStep(30), onActivity(), e.preventDefault(), e.stopPropagation());
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        e.stopPropagation();
+        // held down: 30 s steps, then faster after 1 s (and again after 3 s) to get far quickly.
+        // The cursor moves ahead (preview) and the jump happens on release.
+        if (!e.repeat || !held.current) held.current = Date.now();
+        const t = Date.now() - held.current;
+        const step = (t > 3000 ? 300 : t > 1000 ? 90 : 30) * (e.key === 'ArrowLeft' ? -1 : 1);
+        onActivity();
+        if (!span) return onStep(step);
+        const next = Math.min(1, Math.max(0, (keyPos.current ?? ratio) + step / span));
+        keyPos.current = next;
+        setHover(next);
+      }}
+      onKeyUp={(e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        held.current = 0;
+        const target = keyPos.current;
+        keyPos.current = null;
+        if (target !== null) {
+          setHover(null);
+          onSeek(target);
+          onActivity();
+        }
       }}
       onPointerDown={(e) => {
         if (disabled) return;

@@ -174,10 +174,18 @@ final class AdbClient implements AutoCloseable {
 
     /** streams the APK to the package manager; returns its answer ("Success" or the reason) */
     String install(File apk, Listener l) throws IOException {
+        return install(apk, l, null);
+    }
+
+    /** `installer`: package recorded as the installer (the app itself, so it may update itself silently) */
+    String install(File apk, Listener l, String installer) throws IOException {
         long size = apk.length();
-        String out1 = installWith("exec:cmd package install -r -S " + size, apk, l);
+        String flags = "-r " + (installer != null ? "-i " + installer + " " : "") + "-S " + size;
+        String out1 = installWith("exec:cmd package install " + flags, apk, l);
         // very old systems: no "cmd package"
-        if (out1.contains("Unknown command") || out1.contains("not found")) out1 = installWith("exec:pm install -r -S " + size, apk, l);
+        if (out1.contains("Unknown command") || out1.contains("not found")) out1 = installWith("exec:pm install " + flags, apk, l);
+        // a system refusing the installer option: plain install
+        if (installer != null && !out1.contains("Success") && out1.toLowerCase().contains("installer")) return install(apk, l, null);
         return out1.trim();
     }
 
