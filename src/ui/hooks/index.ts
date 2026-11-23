@@ -138,8 +138,8 @@ export function useMediaQuery(q: string): boolean {
 }
 
 /**
- * Featured banner (Home, Replay): auto-advance every 8 s unless the remote is inside it, ‹ › buttons
- * and dots ("prev" / "next" / "go:N" commands), and swiping on touch screens.
+ * Featured banner (Home, Replay): auto-advance every 8 s unless the remote is inside it, the remote's
+ * Left on the first button / Right on the last one, dots ("go:N"), and swiping (touch or mouse drag).
  */
 export function useCarousel(count: number) {
   const [i, setI] = useState(0);
@@ -150,26 +150,50 @@ export function useCarousel(count: number) {
     return () => clearInterval(tm);
   }, [count, paused, i]);
   const step = (d: number) => setI((x) => (x + d + count) % count);
-  const touch = useRef<{ x: number; y: number } | null>(null);
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
+  const end = (x: number, y: number) => {
+    const start = drag.current;
+    drag.current = null;
+    if (!start || count < 2) return;
+    const dx = x - start.x;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(y - start.y)) {
+      dragged.current = true;
+      step(dx < 0 ? 1 : -1);
+    }
+  };
   const handlers = {
     onFocus: () => setPaused(true),
     onBlur: (e: React.FocusEvent<HTMLElement>) => setPaused(e.currentTarget.contains(e.relatedTarget)),
-    onTouchStart: (e: React.TouchEvent) => {
-      const t = e.touches[0];
-      touch.current = t ? { x: t.clientX, y: t.clientY } : null;
+    onPointerDown: (e: React.PointerEvent) => {
+      dragged.current = false;
+      drag.current = { x: e.clientX, y: e.clientY };
     },
-    onTouchEnd: (e: React.TouchEvent) => {
-      const start = touch.current;
-      const t = e.changedTouches[0];
-      touch.current = null;
-      if (!start || !t || count < 2) return;
-      const dx = t.clientX - start.x;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(t.clientY - start.y)) step(dx < 0 ? 1 : -1);
+    onPointerUp: (e: React.PointerEvent) => end(e.clientX, e.clientY),
+    onPointerCancel: () => { drag.current = null; },
+    // a drag that changed the slide is not a click on Lecture / Infos
+    onClickCapture: (e: React.MouseEvent) => {
+      if (dragged.current) {
+        dragged.current = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    },
+    onDragStart: (e: React.DragEvent) => e.preventDefault(),
+    onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+      if (count < 2 || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('.btn-row [data-f]'));
+      const at = buttons.indexOf(document.activeElement as HTMLElement);
+      if (at < 0) return;
+      const left = e.key === 'ArrowLeft';
+      if (left ? at !== 0 : at !== buttons.length - 1) return;
+      e.preventDefault();
+      e.stopPropagation();
+      step(left ? -1 : 1);
     },
   };
   /** true when the command moved the banner */
   const command = (cmd: string) => {
-    if (cmd === 'next' || cmd === 'prev') return (step(cmd === 'next' ? 1 : -1), true);
     if (cmd.startsWith('go:')) return (setI(Math.min(count - 1, Math.max(0, Number(cmd.slice(3)) || 0))), true);
     return false;
   };

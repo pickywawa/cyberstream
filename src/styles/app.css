@@ -311,6 +311,7 @@ html.tv .rail-head a, html.tv .rail-head button { display: none; }
 /* ───────────── Hero ───────────── */
 .hero { position: relative; height: min(72vh, 46vw); min-height: 340px; overflow: hidden; }
 .hero .bg { position: absolute; inset: 0; }
+.hero { touch-action: pan-y; user-select: none; }
 .hero .bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
 .hero .bg.poster-only { background: var(--surface); }
 /* no backdrop (no TMDB): the poster fills the whole width too */
@@ -363,6 +364,14 @@ html.tv .rail-head a, html.tv .rail-head button { display: none; }
 .tv-head .tab[data-f]:focus-visible, .kbd .tv-head .tab[data-f]:focus {
   background: var(--surface-hover); background: color-mix(in srgb, var(--accent) 36%, var(--surface));
   color: var(--text); box-shadow: inset 0 0 0 2px var(--accent);
+}
+/* series page "Épisodes / Similaires": same look as the TV tab's "Maintenant / Ce soir" (readable when focused) */
+.detail-tabs .tab { padding: 6px 14px; border-radius: 6px; color: var(--text-2); }
+.detail-tabs .tab.active { color: var(--text); background: var(--surface-2); background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+.detail-tabs .tab.active::after { display: none; }
+.detail-tabs .tab[data-f]:focus-visible, .kbd .detail-tabs .tab[data-f]:focus {
+  background: var(--surface-hover); background: color-mix(in srgb, var(--accent) 36%, var(--surface));
+  color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); transform: none;
 }
 .btn-guide { display: inline-flex; gap: 10px; align-items: center; height: 50px; padding: 0 20px; border-radius: 6px; background: var(--surface-2); font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; }
 .btn-guide svg { width: 22px; height: 22px; }
@@ -508,6 +517,9 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 .seekbar:focus { box-shadow: none; }
 .seekbar:focus .track { box-shadow: none; }
 .seekbar:focus .knob { transform: scale(1.4); background: var(--accent); }
+/* remote: a focused bar is unmistakable (thick track, ringed knob, time above) */
+.seekbar.focused .track, .seekbar.focused .buf, .seekbar.focused .fill { height: 8px; border-radius: 4px; }
+.seekbar.focused .knob { opacity: 1; width: 22px; height: 22px; margin-left: -11px; transform: none; background: #fff; box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 70%, transparent); }
 .times { display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(255, 255, 255, 0.85); }
 .player .center-spin { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
 .player .center-spin .spinner { border-color: rgba(255, 255, 255, 0.25); border-top-color: #fff; }
@@ -675,6 +687,17 @@ a.btn { text-decoration: none; }
 .update-banner .ic svg { width: 22px; height: 22px; }
 .update-banner .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .mobile .update-banner { bottom: calc(80px + var(--sab)); }
+/* TV / desktop: a strip at the top of the screen instead of a floating card (reached with Up from the tabs) */
+html:not(.mobile) .update-banner {
+  top: 0; bottom: auto; left: 0; right: 0; transform: none; width: auto; height: var(--update-h); border-radius: 0;
+  border: 0; border-bottom: 1px solid var(--border); box-shadow: none; padding: 0 var(--gutter); z-index: 31;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
+}
+html:not(.mobile) .update-banner .ic { width: 34px; height: 34px; }
+html:not(.mobile) .update-banner .txt { flex-direction: row; align-items: baseline; gap: 12px; }
+html.has-update:not(.mobile) { --update-h: 60px; }
+html.has-update:not(.mobile) .topnav { top: var(--update-h); }
+html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .mobile .guide-top { flex-wrap: wrap; row-gap: 8px; padding-top: calc(8px + var(--sat)); }
 .mobile .guide-top .section-title { font-size: 1.3rem; white-space: nowrap; }
 .mobile .guide-days { flex-basis: 100%; }

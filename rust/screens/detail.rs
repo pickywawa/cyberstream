@@ -157,7 +157,7 @@ pub fn series_panel(raw: &str, lang: &str) -> Result<String, String> {
     let state: HashMap<_, _> = data.watch.iter().map(|w| (w.item_id.as_str(), w)).collect();
     let t = |k| lookup(lang, k);
     let html=html!{
-       div.tabs.container data-tabs data-row style="margin-top:10px"{button.tab.active[data.tab=="episodes"] data-f data-cmd="episodes"{(t("detail.episodes"))}
+       div.tabs.detail-tabs.container data-tabs data-row style="margin-top:10px"{button.tab.active[data.tab=="episodes"] data-f data-cmd="episodes"{(t("detail.episodes"))}
          @if !data.similar.is_empty(){button.tab.active[data.tab=="similar"] data-f data-cmd="similar"{(t("detail.similar"))}}}
        @if data.tab=="episodes"{
            @if seasons.len()>1{div.season-btns data-tabs data-row{@for n in seasons{button.season-btn.active[Some(n)==season] data-f data-cmd=(format!("season:{n}")){"S"(n)}}}}

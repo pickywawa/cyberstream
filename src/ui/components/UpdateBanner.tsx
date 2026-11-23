@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { CyberNative } from '@/core/native';
@@ -11,7 +11,14 @@ export function UpdateBanner() {
   const dismissed = useApp((s) => s.updateDismissed);
   const toast = useApp((s) => s.toast);
   const [busy, setBusy] = useState(false);
-  if (update.kind === 'none' || dismissed) return null;
+  const playing = useApp((s) => !!s.player);
+  const shown = update.kind !== 'none' && !dismissed && !playing;
+  // TV / desktop: a strip above the navigation, which moves down to make room (see .has-update)
+  useEffect(() => {
+    document.documentElement.classList.toggle('has-update', shown);
+    return () => document.documentElement.classList.remove('has-update');
+  }, [shown]);
+  if (!shown) return null;
   const act = async () => {
     if (update.kind === 'web-ready') {
       await CyberNative.updateApplyWeb().catch(() => toast(t('update.failed')));

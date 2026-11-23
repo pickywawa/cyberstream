@@ -179,8 +179,7 @@ pub fn replay_banner(raw: &str, lang: &str, index: usize, count: usize) -> Resul
     Ok(html!{div.bg{(it.picture(false))}div.content{(it.tag())h1{(&it.title)}div.facts{(it.facts())}
         @if let Some(d)=text(&it.desc){p.clamp3{(d)}}
         div.btn-row data-row{button.btn.primary data-f data-autofocus data-cmd="play"{(icon("play",""))" "(lookup(lang,"home.play"))}
-            button.btn data-f data-cmd="info"{(icon("info",""))" "(lookup(lang,"home.info"))}
-            @if count>1{button.btn.ghost.small data-f data-cmd="prev" aria-label="previous"{"‹"}button.btn.ghost.small data-f data-cmd="next" aria-label="next"{"›"}}}
+            button.btn data-f data-cmd="info"{(icon("info",""))" "(lookup(lang,"home.info"))}}
     }(dots(index,count))}.into_string())
 }
 #[derive(Default, Deserialize)]

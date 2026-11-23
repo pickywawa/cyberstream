@@ -903,6 +903,7 @@ function SeekBar(p: {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef(false);
   const [hover, setHover] = useState<number | null>(null);
+  const [focused, setFocused] = useState(false);
   const at = (e: React.PointerEvent) => {
     const r = ref.current!.getBoundingClientRect();
     return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
@@ -919,7 +920,9 @@ function SeekBar(p: {
   return (
     <div
       ref={ref}
-      className={`seekbar ${hover !== null ? 'dragging' : ''}`}
+      className={`seekbar ${hover !== null ? 'dragging' : ''} ${focused ? 'focused' : ''}`}
+      onFocus={() => (setFocused(true), onActivity())}
+      onBlur={() => setFocused(false)}
       data-f={disabled ? undefined : ''}
       data-row
       data-row-lock
@@ -927,8 +930,8 @@ function SeekBar(p: {
       role="slider"
       aria-valuenow={Math.round(ratio * 100)}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft') (onStep(-30), e.preventDefault(), e.stopPropagation());
-        if (e.key === 'ArrowRight') (onStep(30), e.preventDefault(), e.stopPropagation());
+        if (e.key === 'ArrowLeft') (onStep(-30), onActivity(), e.preventDefault(), e.stopPropagation());
+        if (e.key === 'ArrowRight') (onStep(30), onActivity(), e.preventDefault(), e.stopPropagation());
       }}
       onPointerDown={(e) => {
         if (disabled) return;
@@ -956,6 +959,7 @@ function SeekBar(p: {
       <div className="fill" style={{ width: `${shown * 100}%` }} />
       <div className="knob" style={{ left: `${shown * 100}%` }} />
       {hover !== null && label(hover) && <div className="seek-tip" style={{ left: `${hover * 100}%` }}>{label(hover)}</div>}
+      {hover === null && focused && label(ratio) && <div className="seek-tip" style={{ left: `${ratio * 100}%` }}>{label(ratio)}</div>}
     </div>
   );
 }

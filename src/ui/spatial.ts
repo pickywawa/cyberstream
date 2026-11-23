@@ -96,6 +96,22 @@ export function move(dir: Dir): boolean {
     focusFirst(scope);
     return true;
   }
+  // Up from the main tabs: only to the update strip above them. Otherwise stay put (it used to
+  // jump to content scrolled out of view above, which looked like the navigation looping).
+  if (dir === 'up' && active.closest('.topnav')) {
+    const strip = Array.from(scope.querySelectorAll<HTMLElement>('.update-banner [data-f]')).filter(visible);
+    if (strip.length) focusEl(best(active, strip, 'up') || strip[0], false);
+    return true;
+  }
+  // and Down from that strip back to the current tab
+  if (dir === 'down' && active.closest('.update-banner')) {
+    const tabs = scope.querySelector('.topnav [data-tabs]');
+    const tab = tabs && currentTab(tabs);
+    if (tab) {
+      focusEl(tab, false);
+      return true;
+    }
+  }
   const row = active.closest('[data-row]');
   // 1. horizontal moves stay inside the row
   if (row && (dir === 'left' || dir === 'right')) {

@@ -22,6 +22,14 @@ export function takePendingSearch(): string | null {
   return q;
 }
 
+/** Search tab with this query (an actor's name from a film page…) */
+export function openSearch(query: string) {
+  closeOverlays();
+  pendingSearch = query;
+  useApp.getState().setTab('search');
+  window.dispatchEvent(new CustomEvent('cyber:voice-search'));
+}
+
 const compact = (s: string) => norm(s).replace(/\s+/g, '');
 
 async function hits(query: string) {

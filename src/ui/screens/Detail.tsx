@@ -19,6 +19,8 @@ import { flagOf } from '@/core/util/lang';
 import { langPrefs } from '@/core/prefs';
 import { openMovie, openSeries, playEpisode, playMovie, prioritizeEnrichment } from '../actions';
 import { loadVodInfoIfNeeded, loadXtreamEpisodesIfNeeded } from '../episodes';
+import { actorPhoto } from '@/core/enrich/people';
+import { openSearch } from '../voice/run';
 
 export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   const item = useLiveQuery(() => (kind === 'movie' ? db.movies.get(id) : db.series.get(id)), [kind, id]);
@@ -34,14 +36,25 @@ export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   return kind === 'movie' ? <MovieDetail m={item as Movie} /> : <SeriesDetail s={item as Series} />;
 }
 
-function CastRail({ people }: { people?: Person[] }) {
+function CastRail({ people, names }: { people?: Person[]; names?: string[] }) {
   const push = useApp(s => s.push);
   const lang = getLang();
-  const html = useMemo(() => people?.length ? cast_html(JSON.stringify(people), lang) : '', [people, lang]);
-  if (!html || !people) return null;
+  // no TMDB cast: the provider's names, with a Wikipedia photo when one is found
+  const fromNames = useAsync(async () => {
+    if (people?.length || !names?.length) return undefined;
+    const list = names.slice(0, 12);
+    const photos = await Promise.all(list.map(n => actorPhoto(n, lang)));
+    return list.map((name, i) => ({ id: -(i + 1), name, photo: photos[i] }));
+  }, [people?.length, names?.join('|'), lang]);
+  const shown = people?.length ? people : fromNames || names?.slice(0, 12).map((name, i) => ({ id: -(i + 1), name }));
+  const html = useMemo(() => shown?.length ? cast_html(JSON.stringify(shown), lang) : '', [shown, lang]);
+  if (!html || !shown) return null;
   return <RustView className="cast-rail" html={html} onCommand={id => {
-    const person = people.find(p => p.id === Number(id));
-    if (person) push({ name:'person', id:person.id, title:person.name });
+    const person = shown.find(p => p.id === Number(id));
+    if (!person) return;
+    // TMDB person page; a name alone: their films in the catalogue (search covers the cast)
+    if (person.id > 0) push({ name:'person', id:person.id, title:person.name });
+    else openSearch(person.name);
   }} />;
 }
 
@@ -258,7 +271,7 @@ function MovieDetail({ m }: { m: Movie }) {
         if (cmd === 'play' || cmd === 'restart') void playMovie(m.id, cmd === 'play' && canResume ? progress!.positionSec : 0);
       }} />
       <SagaRail m={m} />
-      <CastRail people={m.people} />
+      <CastRail people={m.people} names={m.cast} />
       {recos && recos.items.length > 2 && (
         <Rail title={recos.title}>
           {recos.items.map((x) => <PosterCard imdb={x.imdbRating} key={x.id} title={x.title} sub={x.year ? String(x.year) : undefined} image={x.poster} onClick={() => openMovie(x.id)} />)}
@@ -312,6 +325,6 @@ function SeriesDetail({ s }: { s: Series }) {
         void playEpisode(s.id,value,w && !w.completed ? w.positionSec : 0);
       }
     }} /></div>
-    <CastRail people={s.people} />
+    <CastRail people={s.people} names={s.cast} />
   </div>;
 }
