@@ -946,3 +946,15 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .radio-add svg { width: 26px; height: 26px; }
 .radio-form { display: flex; flex-direction: column; gap: 12px; min-width: min(460px, 86vw); }
 .mobile .tab-replay .hero-spacer { height: 4px; }
+
+/* ───────────── Service keys: "how to get it" ───────────── */
+.service-guide { margin-top: 8px; }
+.service-guide > .btn { padding-left: 0; color: var(--accent); }
+.service-guide .guide-body { display: flex; gap: 20px; align-items: flex-start; margin-top: 6px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); }
+.service-guide .guide-text { flex: 1; min-width: 0; }
+.service-guide ol { margin: 0 0 12px; padding-left: 20px; line-height: 1.5; color: var(--text-2); }
+.service-guide ol li + li { margin-top: 4px; }
+.service-guide .btn-row { margin-bottom: 8px; }
+.guide-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; max-width: 170px; }
+.trakt-code .guide-qr { margin-top: 12px; }
+.mobile .service-guide .guide-body { flex-direction: column; }

@@ -55,6 +55,12 @@ describe('QR enrolment', () => {
     expect(parsePayload('not json')).toBeNull();
     expect(parsePayload(JSON.stringify({ v: 1, sources: [] }))).toBeNull();
   });
+  it('carries the services keys, even without any source', () => {
+    const p = parsePayload(JSON.stringify({ v: 1, from: 'form', sources: [], os: { key: 'k', user: 'me' }, trakt: { id: 'i', secret: 's' }, evil: 1 }));
+    expect(p).toMatchObject({ sources: [], os: { key: 'k', user: 'me' }, trakt: { id: 'i', secret: 's' } });
+    expect((p as unknown as Record<string, unknown>).evil).toBeUndefined();
+    expect(parsePayload(JSON.stringify({ v: 1, sources: [], trakt: { id: 'i' } }))).toBeNull();
+  });
   it('only sends phone settings to a TV on the local network', () => {
     const tok = 'a'.repeat(36);
     expect(enrollTarget(`cyberstream://enroll?target=${encodeURIComponent(`http://192.168.1.20:4321/e/${tok}`)}`)).toBe(`http://192.168.1.20:4321/e/${tok}`);

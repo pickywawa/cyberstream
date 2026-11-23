@@ -59,6 +59,12 @@ export interface DeviceCode {
   interval: number;
 }
 
+/** the user's own Trakt API app, to hand to a TV (the account itself is linked there with a code) */
+export async function traktApp(profileId: string): Promise<{ id: string; secret: string } | null> {
+  const [id, secret] = await Promise.all([secureGet(idKey(profileId)), secureGet(secretKey(profileId))]);
+  return id && secret ? { id, secret } : null;
+}
+
 export async function traktSaveApp(profileId: string, clientId: string, secret: string) {
   await secureSet(idKey(profileId), clientId.trim());
   await secureSet(secretKey(profileId), secret.trim());

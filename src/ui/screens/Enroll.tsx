@@ -30,7 +30,7 @@ export function EnrollScreen() {
             useApp.getState().patchProfile(fresh);
             if (withPrefs && p.prefs?.lang) setLang(fresh.lang);
             applyTheme(fresh.theme, fresh.accent, useApp.getState().settings.performance);
-            toast(t('enroll.imported', { n: p.sources.length }));
+            toast(p.sources.length ? t('enroll.imported', { n: p.sources.length }) : t('enroll.keysImported'));
             pop();
             void runSync(profile.id).then(() => startEnrichment(fresh));
           }}
@@ -111,7 +111,7 @@ export function SendToTv({ target }: { target?: string }) {
               />
             ))}
           </div>
-          {profile.hasTmdb && <Toggle label={t('enroll.sendTmdb')} on={withTmdb} onChange={setWithTmdb} />}
+          <Toggle label={t('enroll.sendKeys')} on={withTmdb} onChange={setWithTmdb} />
           <Toggle label={t('enroll.sendPrefs')} sub={t('enroll.sendPrefsSub')} on={withPrefs} onChange={setWithPrefs} />
           <p className="small dim">{t('enroll.lanOnly')}</p>
           <div className="btn-row">

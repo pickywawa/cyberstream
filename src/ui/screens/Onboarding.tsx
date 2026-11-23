@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ServiceGuide } from '../components/ServiceGuide';
 import { t, setLang } from '@/core/i18n';
 import type { Lang, Profile } from '@/core/types';
 import { COLORS, EMOJIS, createProfile, saveSource, setTmdbToken } from '@/core/profiles';
@@ -207,7 +208,7 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
             <div className="field">
               <label>{t('onboard.tmdbToken')}</label>
               <input className="input" data-f data-autofocus type="password" value={token} onChange={(e) => (setToken(e.target.value), setTokenState('idle'))} autoComplete="off" spellCheck={false} />
-              <span className="small dim">{t('onboard.tmdbHelp')}</span>
+              <ServiceGuide site="themoviedb.org" url="https://www.themoviedb.org/settings/api" steps={['help.tmdb1', 'help.tmdb2', 'help.tmdb3']} open />
             </div>
             <div className="btn-row">
               <button className="btn" data-f disabled={!token.trim() || tokenState === 'busy'} onClick={() => void testToken()}>

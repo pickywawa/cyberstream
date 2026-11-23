@@ -68,7 +68,13 @@ pub fn enrollment_payload(raw: &str) -> Option<String> {
         .take(10)
         .filter_map(source)
         .collect();
-    if sources.is_empty() {
+    // service keys (OpenSubtitles, Trakt app): they may come alone, without any source
+    let o = &j["os"];
+    let os = text(&o["key"], 128).map(|key| compact(json!({"key":key,"user":text(&o["user"],128),"pass":text(&o["pass"],256)})));
+    let tr = &j["trakt"];
+    let trakt = text(&tr["id"], 128).zip(text(&tr["secret"], 128)).map(|(id, secret)| json!({"id":id,"secret":secret}));
+    let tmdb = text(&j["tmdb"], 512);
+    if sources.is_empty() && tmdb.is_none() && os.is_none() && trakt.is_none() {
         return None;
     }
     let p = &j["prefs"];
@@ -76,7 +82,7 @@ pub fn enrollment_payload(raw: &str) -> Option<String> {
     let pr = &j["profile"];
     let profile=text(&pr["name"],24).map(|name|json!({"name":name,"emoji":text(&pr["emoji"],8).unwrap_or("🍿"),
        "color":pr["color"].as_str().filter(|s|re!(r"(?i)^#[0-9a-f]{6}$").is_match(s)).unwrap_or("#e50914")}));
-    Some(compact(json!({"v":1,"profile":profile,"from":if j["from"]=="app"{"app"}else{"form"},"sources":sources,"tmdb":text(&j["tmdb"],512),"prefs":prefs})).to_string())
+    Some(compact(json!({"v":1,"profile":profile,"from":if j["from"]=="app"{"app"}else{"form"},"sources":sources,"tmdb":tmdb,"os":os,"trakt":trakt,"prefs":prefs})).to_string())
 }
 #[wasm_bindgen]
 pub fn enrollment_target(link: &str) -> Option<String> {

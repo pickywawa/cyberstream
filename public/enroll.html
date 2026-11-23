@@ -18,6 +18,7 @@
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
   .app-card { display: none; }
   .app-card.show { display: block; }
+  .hint a { color: var(--accent); font-weight: 600; }
   label { display: block; font-size: .85rem; color: var(--text-2); margin: 12px 0 6px; font-weight: 600; }
   input, textarea { width: 100%; background: #111216; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font: inherit; }
   textarea { min-height: 70px; resize: vertical; }
@@ -65,7 +66,25 @@
     <div class="card" style="margin-top:14px">
       <label for="tmdb" data-i="tmdb">Jeton TMDB (optionnel)</label>
       <input id="tmdb" autocomplete="off" autocapitalize="off" spellcheck="false" />
-      <div class="hint" data-i="tmdbHelp">Affiches, résumés et logos des films. Gratuit sur themoviedb.org.</div>
+      <div class="hint"><span data-i="tmdbHelp">Affiches, résumés et logos des films. Gratuit sur themoviedb.org.</span> <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noreferrer" data-i="getKey">Obtenir une clé</a></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <label for="os-key" data-i="osKey">Clé API OpenSubtitles (optionnel)</label>
+      <input id="os-key" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <div class="hint"><span data-i="osHelp">Sous-titres manquants. « API consumers » › « New consumer » sur opensubtitles.com.</span> <a href="https://www.opensubtitles.com/consumers" target="_blank" rel="noreferrer" data-i="getKey">Obtenir une clé</a></div>
+      <label for="os-user" data-i="osUser">Identifiant OpenSubtitles (facultatif)</label>
+      <input id="os-user" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <label for="os-pass" data-i="osPass">Mot de passe OpenSubtitles (facultatif)</label>
+      <input id="os-pass" type="password" autocomplete="off" />
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <label for="trakt-id">Trakt Client ID <span data-i="optional">(optionnel)</span></label>
+      <input id="trakt-id" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <label for="trakt-secret">Trakt Client Secret</label>
+      <input id="trakt-secret" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <div class="hint"><span data-i="traktHelp">Nouvelle application sur trakt.tv, Redirect uri : urn:ietf:wg:oauth:2.0:oob. Le compte se relie ensuite sur la TV avec un code.</span> <a href="https://trakt.tv/oauth/applications/new" target="_blank" rel="noreferrer" data-i="createApp">Créer l’application</a></div>
     </div>
 
     <button class="btn primary" id="send" type="button" data-i="send">Envoyer à la TV</button>
@@ -114,7 +133,10 @@
     title: 'Set up the TV', lead: 'Enter your source here: it is sent straight to the TV, over your local network.',
     appTitle: 'Cyberstream installed on this phone?', appText: 'Send its sources and settings to the TV without typing anything.',
     openApp: 'Open in the Cyberstream app', add: '+ Add another source', tmdb: 'TMDB token (optional)',
-    tmdbHelp: 'Posters, synopses and movie logos. Free on themoviedb.org.', send: 'Send to the TV', doneTitle: 'Sent!',
+    tmdbHelp: 'Posters, synopses and movie logos. Free on themoviedb.org.', getKey: 'Get a key', createApp: 'Create the app', optional: '(optional)',
+    osKey: 'OpenSubtitles API key (optional)', osHelp: 'Missing subtitles. “API consumers” › “New consumer” on opensubtitles.com.',
+    osUser: 'OpenSubtitles username (optional)', osPass: 'OpenSubtitles password (optional)',
+    traktHelp: 'New application on trakt.tv, Redirect uri: urn:ietf:wg:oauth:2.0:oob. The account is then linked on the TV with a code.', send: 'Send to the TV', doneTitle: 'Sent!',
     doneText: 'Confirm the import on the TV. You can close this page.', xtream: 'Xtream account', m3u: 'M3U link', label: 'Source name',
     server: 'Server (http://host:port)', username: 'Username', password: 'Password', m3uUrl: 'M3U playlist URL',
     backups: 'Backup servers / links (one per line, optional)', epg: 'XMLTV EPG URL (optional)', source: 'Source',
@@ -189,12 +211,18 @@
   document.getElementById('send').addEventListener('click', function () {
     var sources = collect();
     msg.className = 'msg';
+    var v = function (id) { return document.getElementById(id).value.trim(); };
+    var keys = {};
+    if (v('tmdb')) keys.tmdb = v('tmdb');
+    if (v('os-key')) keys.os = { key: v('os-key'), user: v('os-user') || undefined, pass: document.getElementById('os-pass').value || undefined };
+    if (v('trakt-id') && v('trakt-secret')) keys.trakt = { id: v('trakt-id'), secret: v('trakt-secret') };
+    // only keys: the empty source form is not required
+    if (!sources && Object.keys(keys).length && !list.querySelector('.src input[name="server"]').value.trim() && !list.querySelector('.src input[name="m3u"]').value.trim() && list.querySelectorAll('.src').length === 1) sources = [];
     if (!sources) { msg.textContent = en ? T.invalid : 'Renseigne le serveur, l’identifiant et le mot de passe (Xtream) ou le lien de la playlist (M3U).'; msg.classList.add('ko'); return; }
     var btn = this;
     btn.disabled = true;
     var body = { v: 1, from: 'form', sources: sources };
-    var tmdb = document.getElementById('tmdb').value.trim();
-    if (tmdb) body.tmdb = tmdb;
+    for (var k in keys) body[k] = keys[k];
     fetch(location.pathname, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { if (!r.ok) throw new Error(String(r.status)); })
       .then(function () { document.getElementById('form-view').hidden = true; document.getElementById('done-view').hidden = false; })

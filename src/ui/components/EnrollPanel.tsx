@@ -107,6 +107,8 @@ export function EnrollPanel({ onImport, onCancel, auto }: { onImport: (p: Enroll
             </li>
           ))}
           {payload.tmdb && <li><b>TMDB</b><span className="small muted">{t('enroll.tmdbIncluded')}</span></li>}
+          {payload.os && <li><b>OpenSubtitles</b><span className="small muted">{t('enroll.osIncluded')}</span></li>}
+          {payload.trakt && <li><b>Trakt</b><span className="small muted">{t('enroll.traktIncluded')}</span></li>}
         </ul>
         {payload.prefs && <Toggle label={t('enroll.withPrefs')} on={withPrefs} onChange={setWithPrefs} />}
         <div className="btn-row" data-row>

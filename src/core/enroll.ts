@@ -2,10 +2,11 @@ import { enrollment_payload, enrollment_target } from '../rust/generated/cyberst
 import { CapacitorHttp } from '@capacitor/core';
 import { isAndroidApp, isDesktop, isNative } from './platform';
 import { CyberNative } from './native';
-import { db } from './db';
+import { db, setMeta } from './db';
 import type { Profile, Source } from './types';
 import { loadSecrets } from './repo';
-import { secureGet, tmdbKey } from './secure';
+import { osKey, osPassKey, osUserKey, secureGet, secureSet, tmdbKey } from './secure';
+import { traktApp, traktSaveApp } from './trakt';
 import { normalizeServer } from './sources/xtream';
 import { createProfile, saveSource, setTmdbToken, updateProfile, type SourceInput } from './profiles';
 
@@ -30,6 +31,10 @@ export interface EnrollPayload {
   from: 'form' | 'app';
   sources: EnrollSource[];
   tmdb?: string;
+  /** OpenSubtitles API key (+ optional account) */
+  os?: { key: string; user?: string; pass?: string };
+  /** the user's Trakt API app (the account is then linked on the TV with a code) */
+  trakt?: { id: string; secret: string };
   prefs?: Pick<Profile, 'lang' | 'country' | 'audioLangs' | 'subLangs' | 'subMode' | 'subsOnline' | 'catalogAllLangs'>;
   /** the phone's profile itself (name, emoji, colour), so the TV gets the same one */
   profile?: Pick<Profile, 'name' | 'emoji' | 'color'>;
@@ -113,6 +118,13 @@ export async function stopEnroll() {
 export async function applyEnroll(profileId: string, p: EnrollPayload, opts: { prefs: boolean }) {
   for (const s of p.sources) await saveSource(profileId, toSourceInput(s));
   if (p.tmdb) await setTmdbToken(profileId, p.tmdb);
+  if (p.os) {
+    await secureSet(osKey(profileId), p.os.key);
+    await secureSet(osUserKey(profileId), p.os.user || null);
+    await secureSet(osPassKey(profileId), p.os.pass || null);
+    await setMeta(`os:token:${profileId}`, null);
+  }
+  if (p.trakt) await traktSaveApp(profileId, p.trakt.id, p.trakt.secret);
   if (opts.prefs && p.prefs) {
     const patch = Object.fromEntries(Object.entries(p.prefs).filter(([, v]) => v !== undefined)) as Partial<Profile>;
     if (Object.keys(patch).length) await updateProfile(profileId, patch);
@@ -130,6 +142,9 @@ export async function buildPhonePayload(profile: Profile, sourceIds: string[], w
   const secrets = await loadSecrets(profile.id, true);
   const sources = (await db.sources.bulkGet(sourceIds)).filter(Boolean) as Source[];
   const tmdb = withTmdb && profile.hasTmdb ? await secureGet(tmdbKey(profile.id)) : null;
+  // the other services' keys travel with the TMDB one ("Envoyer les clés des services")
+  const osk = withTmdb ? await secureGet(osKey(profile.id)) : null;
+  const tr = withTmdb ? await traktApp(profile.id) : null;
   return {
     v: 1,
     from: 'app',
@@ -141,6 +156,8 @@ export async function buildPhonePayload(profile: Profile, sourceIds: string[], w
       };
     }),
     tmdb: tmdb || undefined,
+    os: osk ? { key: osk, user: (await secureGet(osUserKey(profile.id))) || undefined, pass: (await secureGet(osPassKey(profile.id))) || undefined } : undefined,
+    trakt: tr || undefined,
     prefs: withPrefs
       ? { lang: profile.lang, country: profile.country, audioLangs: profile.audioLangs, subLangs: profile.subLangs, subMode: profile.subMode, subsOnline: profile.subsOnline, catalogAllLangs: profile.catalogAllLangs }
       : undefined,

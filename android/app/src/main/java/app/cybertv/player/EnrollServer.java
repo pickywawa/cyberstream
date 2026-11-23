@@ -160,7 +160,23 @@ final class EnrollServer {
     }
 
     private byte[] readAsset(String name) throws IOException {
+        // the web bundle downloaded by the self-update is newer than the APK's copy: serve its page
+        if (name.startsWith("public/") && Updater.activeWebVersion(ctx) != null) {
+            String base = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE).getString("serverBasePath", null);
+            java.io.File f = base == null ? null : new java.io.File(base, name.substring("public/".length()));
+            if (f != null && f.isFile()) {
+                try (InputStream is = new java.io.FileInputStream(f)) {
+                    return readAll(is);
+                }
+            }
+        }
         try (InputStream is = ctx.getAssets().open(name)) {
+            return readAll(is);
+        }
+    }
+
+    private static byte[] readAll(InputStream is) throws IOException {
+        {
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
             byte[] buf = new byte[16 * 1024];
             int n;

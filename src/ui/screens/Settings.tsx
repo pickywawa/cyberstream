@@ -16,6 +16,8 @@ import { runSync, runUpdateCheck, schedulePrefetch, startEnrichment } from '@/ap
 import { APP_VERSION, hasUpdateChannel, RELEASES_URL } from '@/core/updater';
 import { serverLabel } from '@/core/sources/servers';
 import { canEnroll } from '@/core/enroll';
+import { ServiceGuide } from '../components/ServiceGuide';
+import { QrCode } from '../components/EnrollPanel';
 import { setSmoothScroll } from '../spatial';
 import { isAndroidApp, isDesktop, isIOSApp, isTvMode } from '@/core/platform';
 import { CyberNative } from '@/core/native';
@@ -146,7 +148,7 @@ function OpenSubtitlesBox() {
       <div className="field">
         <label>{t('os.key')}</label>
         <input className="input" data-f type="password" value={key} onChange={(e) => (setKey(e.target.value), setState('idle'))} placeholder={has ? '••••••••••••' : ''} autoComplete="off" />
-        <span className="small dim">{t('os.keyHelp')}</span>
+        <ServiceGuide site="opensubtitles.com" url="https://www.opensubtitles.com/consumers" steps={['help.os1', 'help.os2', 'help.os3']} />
       </div>
       <div className="field">
         <label>{t('os.user')}</label>
@@ -237,6 +239,7 @@ function TraktBox() {
             <label>Client Secret</label>
             <input className="input" data-f type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={st?.hasApp ? '••••••••••••' : ''} autoComplete="off" />
             <span className="small dim">{t('trakt.help')}</span>
+            <ServiceGuide site="trakt.tv" url="https://trakt.tv/oauth/applications/new" copy="urn:ietf:wg:oauth:2.0:oob" steps={['help.trakt1', 'help.trakt2', 'help.trakt3']} />
           </div>
         </>
       )}
@@ -245,6 +248,12 @@ function TraktBox() {
           <div>{t('trakt.goTo', { url: code.verification_url })}</div>
           <strong>{code.user_code}</strong>
           <span className="small dim">{t('trakt.waiting')}</span>
+          {isTvMode() && (
+            <div className="guide-qr">
+              <span className="small dim">{t('trakt.scan')}</span>
+              <QrCode text={code.verification_url} size={150} />
+            </div>
+          )}
         </div>
       )}
       <div className="btn-row">
@@ -294,7 +303,7 @@ function ServicesSection() {
       <div className="field">
         <label>{t('onboard.tmdbToken')}</label>
         <input className="input" data-f type="password" value={token} onChange={(e) => (setToken(e.target.value), setState('idle'))} placeholder={profile.hasTmdb ? '••••••••••••' : ''} autoComplete="off" />
-        <span className="small dim">{t('onboard.tmdbHelp')}</span>
+        <ServiceGuide site="themoviedb.org" url="https://www.themoviedb.org/settings/api" steps={['help.tmdb1', 'help.tmdb2', 'help.tmdb3']} />
       </div>
       <div className="btn-row">
         <button className="btn primary" data-f disabled={!token.trim() || state === 'busy'} onClick={() => void save()}>{state === 'busy' ? t('common.testing') : t('common.save')}</button>
