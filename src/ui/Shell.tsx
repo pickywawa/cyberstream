@@ -69,9 +69,24 @@ export function Shell() {
     return () => el.removeEventListener('scroll', h);
   }, [shownTab]);
 
+  // a film / series / replay page: the tab bar stays see-through over its image (no black band)
+  // until the page scrolls, like Home
+  const overImage = !!route && ['movie', 'series', 'replay'].includes(route.name);
+  const [routeSolid, setRouteSolid] = useState(false);
+  useEffect(() => {
+    setRouteSolid(false);
+    if (!overImage) return;
+    const h = (e: Event) => {
+      const t = e.target as HTMLElement;
+      if (t instanceof HTMLElement && t.classList.contains('stack-page')) setRouteSolid(t.scrollTop > 40);
+    };
+    document.addEventListener('scroll', h, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', h, { capture: true });
+  }, [overImage, route]);
+
   return (
     <div className="app-shell" aria-hidden={!!player} inert={player ? true : undefined}>
-      {!mobile && <Navigation kind="desktop" tab={tab} solid={solid || !!route || tab !== 'home'} />}
+      {!mobile && <Navigation kind="desktop" tab={tab} solid={route ? !overImage || routeSolid : solid || tab !== 'home'} />}
       <div className={`page page-${shownTab}`} ref={pageRef} key={shownTab} inert={route ? true : undefined}>
         {mobile && <Navigation kind="mobile" tab={shownTab} />}
         <ErrorBoundary onReset={() => setTab('home')}>

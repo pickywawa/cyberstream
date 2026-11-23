@@ -151,6 +151,6 @@ function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
       if (command(cmd)) return;
       if (cmd === 'info') return h.kind === 'series' ? openSeries(h.item.id) : openMovie(h.item.id);
     }} />
-    <div className="hero-trailer"><TrailerBg urls={trailers} delay={2500} active={active} /></div>
+    <div className="hero-trailer"><TrailerBg urls={trailers} delay={700} active={active} /></div>
   </section>;
 }
