@@ -1032,3 +1032,5 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .home-shelves .rail.cat-rail { margin: clamp(10px, 1.4vw, 20px) 0 clamp(6px, 1vw, 14px); }
 .cat-wrap .cat-card .lb { font-weight: 400; }
 .cat-wrap .cat-card:hover .lb, .cat-wrap .cat-card[data-f]:focus-visible .lb, .kbd .cat-wrap .cat-card[data-f]:focus .lb { font-weight: 600; }
+/* as much room under the universes as above them (dots 16 px + margin + track padding) */
+.home-shelves .rail.cat-rail { margin-bottom: calc(clamp(10px, 1.4vw, 20px) + 16px); }
