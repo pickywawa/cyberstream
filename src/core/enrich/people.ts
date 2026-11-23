@@ -52,6 +52,17 @@ const sparql = async (query: string) => {
 };
 
 /**
+ * Trailers without a TMDB key: the YouTube videos Wikidata lists for the title (P1651), found by
+ * the TMDB id the provider gives (P4947 film, P4983 series). Several: some refuse to be embedded.
+ */
+export async function wikiTrailers(kind: 'movie' | 'series', tmdbId: number): Promise<string[]> {
+  const prop = kind === 'movie' ? 'P4947' : 'P4983';
+  const rows = await sparql(`SELECT ?yt WHERE { ?f wdt:${prop} "${Math.trunc(tmdbId)}"; wdt:P1651 ?yt }`);
+  return [...new Set(rows.map((r) => r.yt?.value).filter((v): v is string => !!v && /^[\w-]{11}$/.test(v)))]
+    .slice(0, 4).map((k) => `https://www.youtube.com/watch?v=${k}`);
+}
+
+/**
  * Actor / director page without TMDB: Wikipedia (photo, description, introduction) and Wikidata
  * (birth, death, birthplace, and the films / series they played in or directed, with their TMDB
  * ids so they can be found in the catalogue). Cached a week.

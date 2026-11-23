@@ -125,7 +125,9 @@ export interface Movie {
   director?: string;
   trailer?: string;
   /** last time a missing trailer was looked for */
-  trailerCheckedAt?: number;
+  trailerLookupAt?: number;
+  /** other trailers to try when YouTube refuses to embed the first one */
+  trailerAlts?: string[];
   tmdbId?: number;
   addedAt: number;
   ext: string;
@@ -183,7 +185,9 @@ export interface Series {
   cast?: string[];
   trailer?: string;
   /** last time a missing trailer was looked for */
-  trailerCheckedAt?: number;
+  trailerLookupAt?: number;
+  /** other trailers to try when YouTube refuses to embed the first one */
+  trailerAlts?: string[];
   tmdbId?: number;
   addedAt: number;
   categoryId?: string;

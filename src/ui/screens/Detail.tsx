@@ -19,7 +19,7 @@ import { flagOf } from '@/core/util/lang';
 import { langPrefs } from '@/core/prefs';
 import { openMovie, openSeries, playEpisode, playMovie, prioritizeEnrichment } from '../actions';
 import { loadVodInfoIfNeeded, loadXtreamEpisodesIfNeeded } from '../episodes';
-import { actorPhoto } from '@/core/enrich/people';
+import { actorPhoto, wikiTrailers } from '@/core/enrich/people';
 
 export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   const item = useLiveQuery(() => (kind === 'movie' ? db.movies.get(id) : db.series.get(id)), [kind, id]);
@@ -31,14 +31,22 @@ export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
     if (kind === 'movie') void loadVodInfoIfNeeded(id);
   }, [kind, id]);
   // enriched before trailers in every language were looked for: look once more (at most daily)
-  const needTrailer = !!item && !item.trailer && !!item.tmdbId && Date.now() - (item.trailerCheckedAt || 0) > 86400000;
+  // no trailer, or never looked for alternatives (YouTube refuses some videos in an embed)
+  const needTrailer = !!item && !!item.tmdbId && (!item.trailer || !item.trailerAlts) && Date.now() - (item.trailerLookupAt || 0) > 86400000;
   useEffect(() => {
     if (!needTrailer || !item?.tmdbId) return;
     const table = kind === 'movie' ? db.movies : db.series;
-    void dataWorker().tmdbTrailer(kind === 'movie' ? 'movie' : 'tv', item.tmdbId).then(async (trailer) => {
+    void (async () => {
+      // TMDB (with a key), then Wikidata (no key needed: the provider gives the TMDB id)
+      const [tm, wd] = await Promise.all([
+        dataWorker().tmdbTrailers(kind === 'movie' ? 'movie' : 'tv', item.tmdbId!).catch(() => [] as string[]),
+        wikiTrailers(kind, item.tmdbId!).catch(() => [] as string[]),
+      ]);
+      const list = [...new Set([item.trailer, ...tm, ...wd].filter((u): u is string => !!u))];
       const keys = await (table as typeof db.movies).where('groupKey').equals(item.groupKey).primaryKeys();
-      for (const k of new Set([item.id, ...keys])) await (table as typeof db.movies).update(k, trailer ? { trailer, trailerCheckedAt: Date.now() } : { trailerCheckedAt: Date.now() });
-    });
+      const patch = list.length ? { trailer: list[0], trailerAlts: list.slice(1), trailerLookupAt: Date.now() } : { trailerLookupAt: Date.now() };
+      for (const k of new Set([item.id, ...keys])) await (table as typeof db.movies).update(k, patch);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needTrailer, item?.tmdbId]);
   if (item === undefined) return <div className="spinner big" style={{ margin: '30vh auto' }} />;
@@ -121,11 +129,16 @@ function youtubeKey(url?: string): string | undefined {
  * Sound on by default; muting is remembered for the next trailers. If the browser refuses to
  * autoplay with sound, it plays muted instead (without changing the saved choice).
  */
-function TrailerBg({ url }: { url?: string }) {
+function TrailerBg({ urls }: { urls: (string | undefined)[] }) {
   const settings = useApp((s) => s.settings);
   const update = useApp((s) => s.updateSettings);
   const playing = useApp((s) => !!s.player);
-  const key = youtubeKey(url);
+  // YouTube refuses some videos in an embed (error 101 / 150): the next one is tried
+  const keys = [...new Set(urls.map(youtubeKey).filter((k): k is string => !!k))];
+  const [skip, setSkip] = useState(0);
+  const keysId = keys.join();
+  useEffect(() => setSkip(0), [keysId]);
+  const key = keys[skip];
   const [mount, setMount] = useState(false);
   const [on, setOn] = useState(false);
   const [muted, setMuted] = useState(settings.trailerMuted);
@@ -149,14 +162,21 @@ function TrailerBg({ url }: { url?: string }) {
 
   // YouTube IFrame API messages: reveal once the video really plays, fall back to muted if blocked
   useEffect(() => {
-    if (!mount) return;
+    if (!mount || !key) return;
     let playingSeen = false;
+    let failed = false;
     const onMsg = (e: MessageEvent) => {
       if (!/youtube(-nocookie)?\.com$/.test(new URL(e.origin).hostname) || e.source !== ref.current?.contentWindow) return;
       let d: any;
       try {
         d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
       } catch {
+        return;
+      }
+      if (d?.event === 'onError') {
+        failed = true;
+        setOn(false);
+        setSkip((n) => n + 1);
         return;
       }
       const state = d?.event === 'onStateChange' ? d.info : d?.info?.playerState;
@@ -168,7 +188,7 @@ function TrailerBg({ url }: { url?: string }) {
     };
     window.addEventListener('message', onMsg);
     const fallback = setTimeout(() => {
-      if (playingSeen) return;
+      if (playingSeen || failed) return;
       if (!startMuted.current) {
         cmd('mute');
         cmd('playVideo');
@@ -181,7 +201,7 @@ function TrailerBg({ url }: { url?: string }) {
       window.removeEventListener('message', onMsg);
       clearTimeout(fallback);
     };
-  }, [mount]);
+  }, [mount, key]);
 
   if (!enabled || !mount) return null;
   const params = new URLSearchParams({
@@ -253,7 +273,7 @@ function HeroBlock({ it, langs, fav, variants, series, resumeLabel, playable, pr
        profile.lang);
   }, [it, langs, fav, variants, series, resumeLabel, playable, progress, profile]);
   return <section className="detail-hero"><div className="bg">
-    <Img srcs={[resizeTmdb(it.backdrop, 'w1280'), it.poster]} eager label={it.title} /><TrailerBg url={it.trailer} />
+    <Img srcs={[resizeTmdb(it.backdrop, 'w1280'), it.poster]} eager label={it.title} /><TrailerBg urls={[it.trailer, ...(it.trailerAlts || [])]} />
   </div><RustView className="content" html={html} onCommand={select} /></section>;
 }
 

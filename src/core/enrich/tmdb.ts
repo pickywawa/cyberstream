@@ -144,14 +144,18 @@ export class Tmdb {
 
   /** a YouTube trailer in any language (the profile's and English first) */
   async trailer(kind: Kind, id: number): Promise<string | undefined> {
+    return (await this.trailers(kind, id))[0];
+  }
+
+  /** YouTube videos of the title, best first: trailers, teasers, then the rest; the profile's language, English, then any */
+  async trailers(kind: Kind, id: number): Promise<string[]> {
     const langShort = this.lang.slice(0, 2);
-    const pick = (list: any[]) =>
-      list.find((v) => v.site === 'YouTube' && v.type === 'Trailer') || list.find((v) => v.site === 'YouTube' && v.type === 'Teaser') || list.find((v) => v.site === 'YouTube');
-    const ranked = (list: any[]) => pick(list.filter((v) => v.iso_639_1 === langShort)) || pick(list.filter((v) => v.iso_639_1 === 'en')) || pick(list);
-    const r = await this.get<any>(`/${kind}/${id}/videos`, { language: '' , include_video_language: `${langShort},en,null,fr,es,de,it,ja,ko,pt,hi,zh` });
-    let v = ranked(r.results || []);
-    if (!v) v = ranked((await this.get<any>(`/${kind}/${id}/videos`, { language: 'en-US' })).results || []);
-    return v?.key ? `https://www.youtube.com/watch?v=${v.key}` : undefined;
+    const r = await this.get<any>(`/${kind}/${id}/videos`, { include_video_language: `${langShort},en,null,fr,es,de,it,ja,ko,pt,hi,zh` });
+    let list: any[] = (r.results || []).filter((v: any) => v.site === 'YouTube' && v.key);
+    if (!list.length) list = ((await this.get<any>(`/${kind}/${id}/videos`, { language: 'en-US' })).results || []).filter((v: any) => v.site === 'YouTube' && v.key);
+    const type = (v: any) => (v.type === 'Trailer' ? 0 : v.type === 'Teaser' ? 1 : 2);
+    const lang = (v: any) => (v.iso_639_1 === langShort ? 0 : v.iso_639_1 === 'en' ? 1 : 2);
+    return [...new Set(list.sort((a, b) => type(a) - type(b) || lang(a) - lang(b)).map((v) => `https://www.youtube.com/watch?v=${v.key}`))].slice(0, 5);
   }
 
   async collection(id: number): Promise<TmdbCollection> {

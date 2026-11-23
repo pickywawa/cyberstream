@@ -107,9 +107,9 @@ export const api = {
   },
 
   /** a trailer for a title TMDB enriched without one (any language) */
-  async tmdbTrailer(kind: 'movie' | 'tv', id: number): Promise<string | undefined> {
-    if (!tmdb) return undefined;
-    return tmdb.trailer(kind, id).catch(() => undefined);
+  async tmdbTrailers(kind: 'movie' | 'tv', id: number): Promise<string[]> {
+    if (!tmdb) return [];
+    return tmdb.trailers(kind, id).catch(() => []);
   },
 
   /** saga parts (cached a week) */
