@@ -93,7 +93,7 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
         // (--cat: a colour per tile, unused while they share the main colour, see app.css)
         section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
             div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){button.card.cat-card data-f data-cmd=(format!("tile:{id}")) aria-label=(t(key)){
-                span.ic{(icon(id,""))}span.txt{span.lb{(t(key))}}
+                span.ic{(icon(&format!("u-{id}"),""))}span.txt{span.lb{(t(key))}}
             }}
         }}}
         @if !h.cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &h.cont{(w.card(true,true).outer("land"))}}))}
