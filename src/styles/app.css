@@ -990,3 +990,9 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .cat-wrap .cat-card .ic { display: none; }
 .cat-wrap .cat-card .txt { align-items: center; }
 .mobile .cat-wrap .cat-card { height: 48px; padding: 0 18px; min-width: 0; }
+/* taller universes; a long name on two lines, its second part slightly indented */
+.cat-wrap .cat-card { height: 84px; min-width: clamp(140px, 12vw, 180px); }
+.cat-wrap .cat-card .lb { white-space: normal; line-height: 1.15; text-align: left; }
+.cat-wrap .cat-card .lb .l1, .cat-wrap .cat-card .lb .l2 { display: block; }
+.cat-wrap .cat-card .lb .l2 { padding-left: .9em; }
+.mobile .cat-wrap .cat-card { height: 64px; }

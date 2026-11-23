@@ -45,6 +45,22 @@ struct Trakt {
     watchlist: Vec<Mixed>,
     lists: Vec<List>,
 }
+/**
+ * A long one-word name over two lines ("Documen- / taires"): cut between two consonants (French
+ * syllables), the cut nearest the middle; short names stay on one line.
+ */
+fn two_lines(label: &str) -> Option<(String, String)> {
+    let c: Vec<char> = label.chars().collect();
+    if c.len() <= 10 || label.contains(' ') {
+        return None;
+    }
+    let vowel = |x: char| "aeiouyàâäéèêëîïôöùûü".contains(x.to_ascii_lowercase());
+    let mid = c.len() as i32 / 2;
+    (3..c.len() - 3)
+        .filter(|&i| !vowel(c[i - 1]) && !vowel(c[i]) && vowel(c[i - 2]) && vowel(c[i + 1]))
+        .min_by_key(|&i| ((i as i32 - mid).abs(), -(i as i32)))
+        .map(|i| (c[..i].iter().collect(), c[i..].iter().collect()))
+}
 fn poster(item: &Media, kind: &str) -> Markup {
     Card {
         sub: item.credited(item.genres.as_ref().and_then(|g| g.first())),
@@ -92,7 +108,9 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
         // universes: films / series grids, Sport / Info / Musique open the TV tab on that category;
         // each its colour (blue, red, green, yellow, purple, other blue, orange, then again)
         section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
-            div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){(Card{title:t(key).into(),cmd:format!("tile:{id}"),icon:id.into(),..Default::default()}.outer("tile"))}
+            div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){button.card.cat-card data-f data-cmd=(format!("tile:{id}")) aria-label=(t(key)){
+                span.ic{(icon(id,""))}span.txt{span.lb{@if let Some((a,b))=two_lines(t(key)){span.l1{(a)"-"}span.l2{(b)}}@else{(t(key))}}}
+            }}
         }}}
         @if !h.cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &h.cont{(w.card(true,true).outer("land"))}}))}
         @if !h.has_vod{div.empty{h3{(t("home.emptyTitle"))}p{(t("home.emptyText"))}button.btn.primary data-f data-cmd="tile:live"{(t("nav.tv"))}}}
