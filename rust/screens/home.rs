@@ -106,7 +106,7 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
     let mut seen = HashSet::new();
     Ok(html!{
         // universes: films / series grids, Sport / Info / Musique open the TV tab on that category;
-        // each its colour (blue, red, green, yellow, purple, other blue, orange, then again)
+        // (--cat: a colour per tile, unused while they share the main colour, see app.css)
         section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
             div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){button.card.cat-card data-f data-cmd=(format!("tile:{id}")) aria-label=(t(key)){
                 span.ic{(icon(id,""))}span.txt{span.lb{@if let Some((a,b))=two_lines(t(key)){span.l1{(a)}span.l2{(b)}}@else{(t(key))}}}
