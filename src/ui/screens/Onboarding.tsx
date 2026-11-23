@@ -21,12 +21,13 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
   const firstProfile = useApp((s) => s.screen) === 'onboarding';
   // a phone that installed the app here already created the profile: straight to its download
   const importedProfile = useApp((s) => s.importedProfile);
-  const [step, setStep] = useState(importedProfile ? 3 : 0);
+  const [manualStep, setStep] = useState(0);
+  const step = importedProfile ? 3 : manualStep;
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState(EMOJIS[0]);
   const [color, setColor] = useState(COLORS[0]);
   const [lang, setLangState] = useState<Lang>(() => {
-    const l: Lang = navigator.language.startsWith('fr') ? 'fr' : 'en';
+    const l: Lang = importedProfile?.lang || (navigator.language.startsWith('fr') ? 'fr' : 'en');
     setLang(l);
     return l;
   });
@@ -34,7 +35,8 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
   const [draft, setDraft] = useState<SourceDraft>(emptyDraft());
   const [token, setToken] = useState(DEV_TMDB);
   const [tokenState, setTokenState] = useState<'idle' | 'busy' | 'ok' | 'ko'>('idle');
-  const [profile, setProfile] = useState<Profile | null>(importedProfile || null);
+  const [manualProfile, setProfile] = useState<Profile | null>(null);
+  const profile = importedProfile || manualProfile;
   // TV: the phone is the easiest way to enter credentials, so it is offered first
   const [qr, setQr] = useState(false);
   const [phonePrefs, setPhonePrefs] = useState<EnrollPayload['prefs'] | undefined>();

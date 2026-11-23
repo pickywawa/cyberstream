@@ -283,10 +283,15 @@ final class TvInstaller {
             if (!res.contains("Success")) throw new IOException(res.isEmpty() ? "install failed" : res);
             // start the app on the TV, with this phone's profile and sources when asked for
             p.step("launch", 0, model);
-            String start = "am start -n app.cyberstream.player/app.cybertv.player.MainActivity";
-            if (launchUri != null && launchUri.matches("cyberiptv://import/[A-Za-z0-9_-]+")) start += " -a android.intent.action.VIEW -d " + launchUri;
+            String start = "am start -W -n " + c.getPackageName() + "/" + MainActivity.class.getName();
+            if (launchUri != null) {
+                if (!launchUri.matches("(cyberstream|cyberiptv)://import/[A-Za-z0-9_-]+")) {
+                    throw new IOException("profile export failed");
+                }
+                start += " -a android.intent.action.VIEW -d " + launchUri;
+            }
             String out = adb.exec(start);
-            if (out.contains("Error")) Log.w(TAG, "Activity launch failed");
+            if (!out.contains("Status: ok")) throw new IOException("Activity launch failed");
             return model;
         } finally {
             //noinspection ResultOfMethodCallIgnored

@@ -56,7 +56,7 @@
   "tvi.err.unsupported": "This needs Android 8 or later on the phone.",
   "tvi.err.other": "The installation failed",
   "tvi.success": "Cyberstream is installed on {name}",
-  "tvi.successText": "You will find it in the TV’s apps. Its updates are then automatic.",
+  "tvi.successText": "You’ll find Cyberstream in the TV’s apps.",
   "tvi.disable": "Recommended: turn debugging off",
   "tvi.disableText": "On the TV: Settings › System › Developer options › turn off “USB debugging” (or the whole developer mode). It is no longer needed, and leaving it on lets other devices of the network ask for access to the TV.",
   "tvi.another": "Install on another TV",
@@ -491,7 +491,7 @@
   "tvi.withConfig": "Also send my profile and sources",
   "tvi.withConfigHint": "The TV opens straight on your profile, with your sources (credentials included) and preferences: nothing to type again.",
   "tvi.p.launch": "Launching the app on the TV",
-  "tvi.successConfig": "The app just opened on the TV with your profile and sources; the catalogue is loading. Its updates are then automatic.",
+  "tvi.successConfig": "Cyberstream is opening on the TV. You can follow the profile import and catalogue download on its screen.",
   "player.launchTimeout": "Playback does not start: try again or pick another version.",
   "profiles.allLangs": "Download every language",
   "profiles.allLangsHint": "Off: only categories in your audio languages (and multi-language ones) are downloaded, syncing is much faster.",
@@ -506,5 +506,8 @@
   "enroll.profileIncluded": "profile and preferences",
   "enroll.importAll": "Import from my phone (profile and sources)",
   "enroll.fromPhoneDone": "Profile “{name}” and sources imported from the phone",
-  "sync.items": "items"
+  "sync.items": "items",
+  "tvi.err.profileExport": "The profile could not be sent. Check that it has active sources with valid credentials.",
+  "tvi.err.launch": "Cyberstream was installed, but the TV did not confirm that it opened. Retry, or open the app on the TV to transfer the profile by QR code.",
+  "enroll.importFailed": "The received profile could not be imported. Start the transfer again on your phone."
 }

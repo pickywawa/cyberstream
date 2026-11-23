@@ -6,13 +6,14 @@ import { db } from './db';
 import type { Profile, Source } from './types';
 import { loadSecrets } from './repo';
 import { secureGet, tmdbKey } from './secure';
+import { normalizeServer } from './sources/xtream';
 import { createProfile, saveSource, setTmdbToken, updateProfile, type SourceInput } from './profiles';
 
 /**
  * QR-code enrolment.
  * TV: starts a local HTTP server (Android EnrollServer, Vite middleware in dev) and shows its url as a QR code.
  * Phone without the app: the page served by the TV (public/enroll.html) posts a form.
- * Phone with the app: the page opens cyberiptv://enroll?target=<tv url>, the app posts its own settings.
+ * Phone with the app: the page opens cyberstream://enroll?target=<tv url>, the app posts its own settings.
  */
 export interface EnrollSource {
   type: 'xtream' | 'm3u';
@@ -29,7 +30,7 @@ export interface EnrollPayload {
   from: 'form' | 'app';
   sources: EnrollSource[];
   tmdb?: string;
-  prefs?: Pick<Profile, 'lang' | 'country' | 'audioLangs' | 'subLangs' | 'subMode' | 'subsOnline'>;
+  prefs?: Pick<Profile, 'lang' | 'country' | 'audioLangs' | 'subLangs' | 'subMode' | 'subsOnline' | 'catalogAllLangs'>;
   /** the phone's profile itself (name, emoji, colour), so the TV gets the same one */
   profile?: Pick<Profile, 'name' | 'emoji' | 'color'>;
 }
@@ -44,13 +45,13 @@ export function parsePayload(raw: string): EnrollPayload | null {
 const b64url = (s: string) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64url = (s: string) => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
 
-/** the link the phone opens on the TV through adb (the payload travels in the path, never logged) */
+/** the link the phone opens on the TV through adb (the payload travels in the path) */
 export function importLink(p: EnrollPayload): string {
-  return `cyberiptv://import/${b64url(JSON.stringify(p))}`;
+  return `cyberstream://import/${b64url(JSON.stringify(p))}`;
 }
 
 export function parseImportLink(url: string): EnrollPayload | null {
-  const m = url.match(/^cyberiptv:\/\/import\/([A-Za-z0-9_-]+)$/);
+  const m = url.match(/^(?:cyberstream|cyberiptv):\/\/import\/([A-Za-z0-9_-]+)$/);
   if (!m) return null;
   try {
     return parsePayload(unb64url(m[1]));
@@ -66,10 +67,16 @@ export async function importAsProfile(p: EnrollPayload): Promise<Profile> {
   const prof =
     existing ||
     (await createProfile({ name, emoji: p.profile?.emoji || '🍿', color: p.profile?.color || '#e50914', lang: p.prefs?.lang || 'fr' }));
-  // sources already on this profile (same address and user) are not added twice
+  // Update the same account on import, even if it is currently using a backup server.
   const have = await db.sources.where('profileId').equals(prof.id).toArray();
-  const fresh = { ...p, sources: p.sources.filter((s) => !have.some((h) => h.url === s.url && (h.username || '') === (s.username || ''))) };
-  await applyEnroll(prof.id, fresh, { prefs: true });
+  for (const source of p.sources) {
+    const url = source.type === 'xtream' ? normalizeServer(source.url) : source.url.trim();
+    const same = have.find(s => s.type === source.type && (s.username || '') === (source.username || '') &&
+      (s.servers?.[0] || s.url) === url);
+    const saved = await saveSource(prof.id, toSourceInput(source), same?.id);
+    if (!same) have.push(saved);
+  }
+  await applyEnroll(prof.id, { ...p, sources: [] }, { prefs: true });
   return (await db.profiles.get(prof.id))!;
 }
 
@@ -114,7 +121,7 @@ export async function applyEnroll(profileId: string, p: EnrollPayload, opts: { p
 
 // ─────────── phone side (CyberIPTV app) ───────────
 
-/** "cyberiptv://enroll?target=http://192.168.1.20:41234/e/<token>" → the TV url (LAN only) */
+/** "cyberstream://enroll?target=http://192.168.1.20:41234/e/<token>" → the TV url (LAN only) */
 export function enrollTarget(deepLink: string): string | null {
   return enrollment_target(deepLink) ?? null;
 }
@@ -135,7 +142,7 @@ export async function buildPhonePayload(profile: Profile, sourceIds: string[], w
     }),
     tmdb: tmdb || undefined,
     prefs: withPrefs
-      ? { lang: profile.lang, country: profile.country, audioLangs: profile.audioLangs, subLangs: profile.subLangs, subMode: profile.subMode, subsOnline: profile.subsOnline }
+      ? { lang: profile.lang, country: profile.country, audioLangs: profile.audioLangs, subLangs: profile.subLangs, subMode: profile.subMode, subsOnline: profile.subsOnline, catalogAllLangs: profile.catalogAllLangs }
       : undefined,
     profile: withPrefs ? { name: profile.name, emoji: profile.emoji, color: profile.color } : undefined,
   };

@@ -1,7 +1,7 @@
 use crate::replay::{arr, compact};
 use serde_json::{Value, json};
 use wasm_bindgen::prelude::*;
-use web_sys::Url;
+use web_sys::{Url, UrlSearchParams};
 
 fn text(value: &Value, max: usize) -> Option<&str> {
     value
@@ -72,7 +72,7 @@ pub fn enrollment_payload(raw: &str) -> Option<String> {
         return None;
     }
     let p = &j["prefs"];
-    let prefs=(!p.is_null()).then(||compact(json!({"lang":p["lang"].as_str().filter(|s|matches!(*s,"en"|"fr")),"country":p["country"].as_str().filter(|s|s.len()==2 && s.bytes().all(|b|b.is_ascii_uppercase())),"audioLangs":langs(&p["audioLangs"]),"subLangs":langs(&p["subLangs"]),"subMode":p["subMode"].as_str().filter(|s|matches!(*s,"off"|"auto"|"always")),"subsOnline":p["subsOnline"].as_bool()})));
+    let prefs=(!p.is_null()).then(||compact(json!({"lang":p["lang"].as_str().filter(|s|matches!(*s,"en"|"fr")),"country":p["country"].as_str().filter(|s|s.len()==2 && s.bytes().all(|b|b.is_ascii_uppercase())),"audioLangs":langs(&p["audioLangs"]),"subLangs":langs(&p["subLangs"]),"subMode":p["subMode"].as_str().filter(|s|matches!(*s,"off"|"auto"|"always")),"subsOnline":p["subsOnline"].as_bool(),"catalogAllLangs":p["catalogAllLangs"].as_bool()})));
     let pr = &j["profile"];
     let profile=text(&pr["name"],24).map(|name|json!({"name":name,"emoji":text(&pr["emoji"],8).unwrap_or("🍿"),
        "color":pr["color"].as_str().filter(|s|re!(r"(?i)^#[0-9a-f]{6}$").is_match(s)).unwrap_or("#e50914")}));
@@ -80,11 +80,12 @@ pub fn enrollment_payload(raw: &str) -> Option<String> {
 }
 #[wasm_bindgen]
 pub fn enrollment_target(link: &str) -> Option<String> {
-    let outer = Url::new(link).ok()?;
-    if outer.protocol() != "cyberiptv:" || outer.hostname() != "enroll" {
-        return None;
-    }
-    let dest = Url::new(&outer.search_params().get("target")?).ok()?;
+    // Older Android WebViews parse custom schemes as opaque URLs with no hostname.
+    let query = link
+        .strip_prefix("cyberstream://enroll?")
+        .or_else(|| link.strip_prefix("cyberiptv://enroll?"))?;
+    let params = UrlSearchParams::new_with_str(query.split('#').next()?).ok()?;
+    let dest = Url::new(&params.get("target")?).ok()?;
     let host = dest.hostname();
     let local = host == "localhost"
         || host

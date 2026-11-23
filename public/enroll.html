@@ -130,11 +130,11 @@
   }
   tr(document);
 
-  // "Open in the app": Android Chrome intent link, back to this page when the app isn't installed
+  // Android browsers target Cyberstream by package. The scheme also works with older phone builds.
   if (/Android/i.test(navigator.userAgent)) {
     var here = location.href.split('#')[0];
     var link = 'intent://enroll?target=' + encodeURIComponent(here) +
-      '#Intent;scheme=cyberiptv;package=app.cybertv.player;S.browser_fallback_url=' + encodeURIComponent(here + '#noapp') + ';end';
+      '#Intent;scheme=cyberiptv;package=app.cyberstream.player;S.browser_fallback_url=' + encodeURIComponent(here + '#noapp') + ';end';
     document.getElementById('open-app').href = link;
     if (location.hash !== '#noapp') document.getElementById('app-card').classList.add('show');
   }

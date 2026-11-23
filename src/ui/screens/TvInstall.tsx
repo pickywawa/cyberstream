@@ -5,7 +5,7 @@ import { proxify } from '@/core/net/http';
 import { IcCheck, IcRefresh, IcTv } from '../icons';
 import { useApp } from '@/state/store';
 import { db } from '@/core/db';
-import { buildPhonePayload, importLink } from '@/core/enroll';
+import { buildPhonePayload, importLink, parsePayload } from '@/core/enroll';
 import { Toggle } from '../components/Overlay';
 
 /**
@@ -143,12 +143,14 @@ function Pick({ onPick, onBack, withConfig, setWithConfig }: { onPick: (d: TvDev
 }
 
 /** this phone's profile + enabled sources (+ TMDB key), opened by the TV right after the install */
-async function configLink(): Promise<string | undefined> {
+async function configLink(): Promise<string> {
   const profile = useApp.getState().profile;
-  if (!profile) return undefined;
+  if (!profile) throw new Error("profile export failed");
   const sources = (await db.sources.where('profileId').equals(profile.id).toArray()).filter((s) => s.enabled);
-  if (!sources.length) return undefined;
-  return importLink(await buildPhonePayload(profile, sources.map((s) => s.id), true, true));
+  const payload = await buildPhonePayload(profile, sources.map(s => s.id), true, true);
+  const validated = parsePayload(JSON.stringify(payload));
+  if (!validated || validated.sources.length !== sources.length) throw new Error("profile export failed");
+  return importLink(validated);
 }
 
 function Install({ tv, withConfig, onDone, onBack }: { tv: TvDevice; withConfig: boolean; onDone: (model?: string) => void; onBack: () => void }) {
@@ -266,6 +268,8 @@ function PairForm({ tv, onPaired }: { tv: TvDevice; onPaired: () => void }) {
 }
 
 function explain(e: string): string {
+  if (/profile export failed/i.test(e)) return t('tvi.err.profileExport');
+  if (/activity launch failed/i.test(e)) return t('tvi.err.launch');
   if (/not approved|timed out|timeout/i.test(e)) return t('tvi.err.approve');
   if (/refused|ECONNREFUSED|connect|unreachable|No route/i.test(e)) return t('tvi.err.connect');
   if (/INSTALL_FAILED_UPDATE_INCOMPATIBLE|signatures/i.test(e)) return t('tvi.err.signature');

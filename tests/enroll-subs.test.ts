@@ -57,9 +57,11 @@ describe('QR enrolment', () => {
   });
   it('only sends phone settings to a TV on the local network', () => {
     const tok = 'a'.repeat(36);
+    expect(enrollTarget(`cyberstream://enroll?target=${encodeURIComponent(`http://192.168.1.20:4321/e/${tok}`)}`)).toBe(`http://192.168.1.20:4321/e/${tok}`);
     expect(enrollTarget(`cyberiptv://enroll?target=${encodeURIComponent(`http://192.168.1.20:4321/e/${tok}`)}`)).toBe(`http://192.168.1.20:4321/e/${tok}`);
     expect(enrollTarget(`cyberiptv://enroll?target=${encodeURIComponent(`http://evil.com/e/${tok}`)}`)).toBeNull();
     expect(enrollTarget(`cyberiptv://enroll?target=${encodeURIComponent('http://192.168.1.20/e/short')}`)).toBeNull();
+    expect(enrollTarget(`cyberstream://enroll.example?target=${encodeURIComponent(`http://192.168.1.20:4321/e/${tok}`)}`)).toBeNull();
   });
 });
 
@@ -69,15 +71,16 @@ describe('settings sent to a TV after install', () => {
     const p = {
       v: 1 as const, from: 'app' as const,
       sources: [{ type: 'xtream' as const, label: 'Mon fournisseur', url: 'http://line.example.xyz', backups: ['http://vpn.example.xyz'], username: 'u', password: 'p@ss é', epgUrls: [] }],
-      tmdb: 'eyJ.tok', prefs: { lang: 'fr' as const, country: 'FR', audioLangs: ['fr'], subLangs: ['fr'], subMode: 'auto' as const, subsOnline: true },
+      tmdb: 'eyJ.tok', prefs: { lang: 'fr' as const, country: 'FR', audioLangs: ['fr'], subLangs: ['fr'], subMode: 'auto' as const, subsOnline: true, catalogAllLangs: true },
       profile: { name: 'Picky', emoji: '🍿', color: '#e11d48' },
     };
     const link = importLink(p);
-    expect(link).toMatch(/^cyberiptv:\/\/import\/[A-Za-z0-9_-]+$/);
+    expect(link).toMatch(/^cyberstream:\/\/import\/[A-Za-z0-9_-]+$/);
+    expect(parseImportLink(link.replace('cyberstream:', 'cyberiptv:'))).toEqual(parseImportLink(link));
     const back = parseImportLink(link)!;
     expect(back.profile).toEqual(p.profile);
     expect(back.sources[0]).toMatchObject({ url: 'http://line.example.xyz', username: 'u', password: 'p@ss é' });
-    expect(back.prefs?.country).toBe('FR');
+    expect(back.prefs).toMatchObject({ country: 'FR', catalogAllLangs: true });
     expect(parseImportLink('cyberiptv://import/!!')).toBeNull();
     expect(parseImportLink('https://evil.example/import/abc')).toBeNull();
   });

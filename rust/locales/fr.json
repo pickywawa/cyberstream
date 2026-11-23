@@ -56,7 +56,7 @@
   "tvi.err.unsupported": "Cette fonction nécessite Android 8 ou plus sur le téléphone.",
   "tvi.err.other": "L’installation a échoué",
   "tvi.success": "Cyberstream est installé sur {name}",
-  "tvi.successText": "Tu le trouveras dans les applications de la TV. Ses mises à jour se feront ensuite automatiquement.",
+  "tvi.successText": "Tu trouveras Cyberstream dans les applications de la TV.",
   "tvi.disable": "Conseillé : désactiver le débogage",
   "tvi.disableText": "Sur la TV : Paramètres › Système › Options pour les développeurs › désactiver « Débogage USB » (ou tout le mode développeur). Il ne sert plus, et le laisser actif permet à d’autres appareils du réseau de demander l’accès à la TV.",
   "tvi.another": "Installer sur une autre TV",
@@ -491,7 +491,7 @@
   "tvi.withConfig": "Envoyer aussi mon profil et mes sources",
   "tvi.withConfigHint": "La TV s’ouvre directement sur ton profil, avec tes sources (identifiants compris) et tes préférences : rien à ressaisir.",
   "tvi.p.launch": "Lancement de l’app sur la TV",
-  "tvi.successConfig": "L’app vient de s’ouvrir sur la TV avec ton profil et tes sources ; le catalogue se charge. Ses mises à jour se feront ensuite automatiquement.",
+  "tvi.successConfig": "Cyberstream s’ouvre sur la TV. Tu peux suivre l’import du profil et le téléchargement du catalogue sur son écran.",
   "player.launchTimeout": "La lecture ne démarre pas : réessaie ou choisis une autre version.",
   "profiles.allLangs": "Télécharger toutes les langues",
   "profiles.allLangsHint": "Désactivé : seules les catégories dans vos langues audio (et multi-langues) sont téléchargées, la synchro est bien plus rapide.",
@@ -506,5 +506,8 @@
   "enroll.profileIncluded": "profil et préférences",
   "enroll.importAll": "Importer depuis mon téléphone (profil et sources)",
   "enroll.fromPhoneDone": "Profil « {name} » et sources importés depuis le téléphone",
-  "sync.items": "éléments"
+  "sync.items": "éléments",
+  "tvi.err.profileExport": "Le profil ne peut pas être envoyé. Vérifie que ses sources sont actives et que leurs identifiants sont renseignés.",
+  "tvi.err.launch": "Cyberstream est installé, mais la TV n’a pas confirmé son lancement. Réessaie, ou ouvre l’app sur la TV pour transférer le profil par QR code.",
+  "enroll.importFailed": "Le profil reçu n’a pas pu être importé. Relance le transfert depuis le téléphone."
 }

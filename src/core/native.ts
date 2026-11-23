@@ -83,7 +83,7 @@ export interface CyberNativePlugin {
   addListener(event: 'tvInstall', cb: (e: TvInstallEvent) => void): Promise<PluginListenerHandle>;
   /** install on a TV: TVs of the network (adb = network debugging reachable) */
   tvScan(): Promise<{ devices: TvDevice[]; ownIp?: string }>;
-  /** launch: cyberiptv://import/<payload> opened on the TV right after the install */
+  /** launch: cyberstream://import/<payload> opened on the TV right after the install */
   tvInstall(o: { ip: string; port?: number; url: string; launch?: string }): Promise<{ model?: string }>;
   /** pairing with the TV's 6-digit code (port: found on the network when omitted) */
   tvPair(o: { ip: string; code: string; port?: number }): Promise<void>;

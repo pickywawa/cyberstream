@@ -18,9 +18,11 @@ import { enrollTarget, importAsProfile, parseImportLink, type EnrollPayload } fr
 let periodic: number | null = null;
 let lastEnrichBump = 0;
 let enrichBumpTimer: number | null = null;
+let startupLink: string | undefined;
 
 export async function boot() {
   const st = useApp.getState();
+  let launchUrl: string | undefined;
   if (isNative) {
     try {
       const info = await CyberNative.getInfo();
@@ -41,9 +43,9 @@ export async function boot() {
       // leaving the app: the right moment for a silent APK update (never during playback)
       if (useApp.getState().update.kind === 'apk-silent' && !useApp.getState().player) void installSilentNow().catch(() => {});
     });
-    // QR enrolment: the TV's page opened cyberiptv://enroll?target=… on this phone
-    CapApp.addListener('appUrlOpen', ({ url }) => openDeepLink(url));
-    void CapApp.getLaunchUrl().then((r) => r?.url && openDeepLink(r.url)).catch(() => {});
+    // Capacitor can also emit the cold-start URL as an event. Consume it once, before choosing a screen.
+    await CapApp.addListener('appUrlOpen', ({ url }) => openDeepLink(url));
+    launchUrl = (await CapApp.getLaunchUrl().catch(() => undefined))?.url;
     // this web bundle started: keep it; then look for a newer one in the background
     reportBootOk();
     setTimeout(() => void runUpdateCheck(), 8000);
@@ -65,6 +67,13 @@ export async function boot() {
 
   setSmoothScroll(!st.settings.performance);
   const profiles = await db.profiles.toArray();
+  const link = startupLink || launchUrl;
+  startupLink = undefined;
+  if (link) {
+    const imported = parseImportLink(link);
+    if (imported && await applyImportLink(imported)) return;
+    if (enrollTarget(link)) pendingLink = link;
+  }
   if (!profiles.length) {
     applyTheme('night');
     useApp.setState({ screen: 'onboarding', booted: true });
@@ -102,6 +111,10 @@ let pendingLink: string | null = null;
 
 /** routes a deep link once a profile is active (the profile's sources are what gets sent) */
 export function openDeepLink(url: string) {
+  if (!useApp.getState().booted) {
+    startupLink = url;
+    return;
+  }
   // settings sent by a phone that just installed the app on this TV
   const imported = parseImportLink(url);
   if (imported) return void applyImportLink(imported);
@@ -119,25 +132,25 @@ export function openDeepLink(url: string) {
 let importing = false;
 /** the phone's profile and sources: created (or completed) and opened, then synced */
 async function applyImportLink(p: EnrollPayload) {
-  if (importing) return;
+  if (importing) return true;
   importing = true;
   try {
-    // boot first (database, profiles list)
-    for (let i = 0; i < 100 && !useApp.getState().booted && useApp.getState().screen === 'boot'; i++) await new Promise((r) => setTimeout(r, 100));
-    const first = (await db.profiles.count()) === 0 || useApp.getState().screen !== 'app';
+    const first = useApp.getState().screen !== 'app';
     const prof = await importAsProfile(p);
     if (first) {
       // first start of the TV: the setup screen follows the download (counts, time left)
       useApp.setState({ screen: 'onboarding', importedProfile: prof, booted: true });
       setLang(prof.lang);
       void runSync(prof.id);
-      return;
+      return true;
     }
     await selectProfile(prof);
     useApp.getState().toast(t('enroll.fromPhoneDone', { name: prof.name }));
     void runSync(prof.id);
-  } catch (e) {
-    console.warn('[import]', e);
+    return true;
+  } catch {
+    useApp.getState().toast(t('enroll.importFailed'));
+    return false;
   } finally {
     importing = false;
   }
