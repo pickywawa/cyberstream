@@ -14,8 +14,10 @@ import { search_results_html } from '@/rust/generated/cyberstream';
 import { RustView, readCommand } from '../components/RustView';
 import { IcMic, IcSearch, IcClose } from '../icons';
 import { takePendingSearch } from '../voice/run';
-import { openChannel, openMovie, openSeries, playChannel, prioritizeEnrichment } from '../actions';
+import { openMovie, openSeries, playChannel, prioritizeEnrichment } from '../actions';
 import { ProgramSheet } from './Guide';
+import { ChannelMenu } from './LiveTv';
+import { TitleMenu } from '../components/TitleMenu';
 
 interface Results {
   channels: Channel[];
@@ -161,15 +163,22 @@ export function Search() {
     update({ recentPicks: [entry, ...mine, ...all.filter((x) => x.profileId !== profile.id)] });
     remember();
   };
+  // long press: the same menus as on Home (titles) and in the TV tab (channels)
+  const [titleMenu, setTitleMenu] = useState<{ kind: 'movie' | 'series'; id: string } | null>(null);
+  const [chMenu, setChMenu] = useState<{ ch: Channel; fav: boolean } | null>(null);
+  const openChannelMenu = (ch: Channel) =>
+    void db.favorites.get([profile.id, `live:${ch.groupKey}`]).then((f) => setChMenu({ ch, fav: !!f }));
   const openPick = async (kind: string, id: string, hold: boolean) => {
     const it = picks.find((x) => x.kind === kind && x.id === id);
     if (!it) return;
     pick(it);
-    if (kind === 'movie') return openMovie(id);
-    if (kind === 'series') return openSeries(id);
+    if (kind === 'movie' || kind === 'series') {
+      if (hold) return setTitleMenu({ kind, id });
+      return kind === 'movie' ? openMovie(id) : openSeries(id);
+    }
     const ch = await db.channels.get(kind === 'channel' ? id : it.chId!);
     if (!ch) return toast(t('search.pickGone'));
-    if (kind === 'channel') return hold ? openChannel(id) : void playChannel(ch);
+    if (kind === 'channel') return hold ? openChannelMenu(ch) : void playChannel(ch);
     const p = it.epgId && it.start != null ? await db.programs.where('[epgId+start]').equals([it.epgId, it.start]).first() : undefined;
     if (p) setProg({ p, ch });
     else void playChannel(ch);
@@ -185,18 +194,18 @@ export function Search() {
     if (action === 'movie') {
       const m = res?.movies.find((x) => x.id === id);
       if (m) pick({ kind: 'movie', id, title: m.title, image: m.poster, sub: m.year ? String(m.year) : undefined });
-      openMovie(id);
+      hold ? setTitleMenu({ kind: 'movie', id }) : openMovie(id);
     }
     if (action === 'series') {
       const m = res?.series.find((x) => x.id === id);
       if (m) pick({ kind: 'series', id, title: m.title, image: m.poster, sub: t('search.series') });
-      openSeries(id);
+      hold ? setTitleMenu({ kind: 'series', id }) : openSeries(id);
     }
     if (action === 'channel') {
       const ch = res?.channels.find(x => x.id === id);
       if (ch) {
         pick({ kind: 'channel', id, title: ch.name, logo: [ch.logoAlt, ch.logo] });
-        hold ? openChannel(id) : void playChannel(ch);
+        hold ? openChannelMenu(ch) : void playChannel(ch);
       }
     }
     if (action === 'program') {
@@ -238,6 +247,8 @@ export function Search() {
 
       <RustView className="search-results" html={html} onCommand={select} onHold={cmd => select(cmd, true)} />
       {prog && <ProgramSheet ch={prog.ch} p={prog.p} onClose={() => setProg(null)} />}
+      {titleMenu && <TitleMenu kind={titleMenu.kind} id={titleMenu.id} onClose={() => setTitleMenu(null)} />}
+      {chMenu && <ChannelMenu ch={chMenu.ch} isFav={chMenu.fav} onClose={() => setChMenu(null)} />}
     </div>
   );
 }

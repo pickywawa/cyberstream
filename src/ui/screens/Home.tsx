@@ -1,5 +1,5 @@
 import { dataWorker } from '@/core/workers';
-import { useContext, useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { db, setMeta } from '@/core/db';
@@ -9,9 +9,10 @@ import {
 import type { Movie, Series } from '@/core/types';
 import { ScreenActive, useAsync, useCarousel } from '../hooks';
 import { TrailerBg, useTrailers } from '../components/Trailer';
+import { TitleMenu } from '../components/TitleMenu';
 import { RustView, readCommand } from '../components/RustView';
 import { home_html, hero_html } from '@/rust/generated/cyberstream';
-import { openMovie, openSeries, playMovie, prioritizeEnrichment, resume } from '../actions';
+import { openMovie, openSeries, prioritizeEnrichment, resume } from '../actions';
 import { langPrefs } from '@/core/prefs';
 import { sortByLang, type LangPrefs } from '@/core/util/lang';
 import { traktLists } from '@/core/trakt';
@@ -31,7 +32,7 @@ function saveHomeSnapshot(profileId: string, key: string, data: unknown) {
   void setMeta(`snapshot:home:${profileId}`, { key, data, at: Date.now() }).catch(() => {});
 }
 
-const SHELF_FIELDS = ['cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','durationSec','positionSec'];
+const SHELF_FIELDS = ['cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','rating','durationSec','positionSec'];
 
 function featured<T extends Movie | Series>(pool: T[], prefs: LangPrefs, hideAdult: boolean): T[] {
   const eligible = sortByLang(pool.filter(m => !hideAdult || m.universe !== 'adult'), prefs);
@@ -49,6 +50,7 @@ export function Home() {
   const hideAdult = settings.hideAdult || (profile.parental.enabled && !useApp.getState().unlockedAdult);
 
   const prefsKey = homePrefsKey(profile);
+  const [menu, setMenu] = useState<{ kind: 'movie' | 'series'; id: string } | null>(null);
   const data = useAsync(async () => {
     const prefs = langPrefs(profile);
     const [catalog,cont,favs] = await Promise.all([
@@ -109,7 +111,9 @@ export function Home() {
 
   const select = (cmd: string, hold = false) => {
     const [action, id] = readCommand(cmd);
-    if (action === 'movie') return hold ? void playMovie(id) : openMovie(id);
+    // long press: watch / favourite / page
+    if ((action === 'movie' || action === 'series') && hold) return setMenu({ kind: action, id });
+    if (action === 'movie') return openMovie(id);
     if (action === 'series') return openSeries(id);
     if (action === 'remove' || action === 'resume') {
       const key = action === 'remove' ? readCommand(id)[1] : id;
@@ -133,6 +137,7 @@ export function Home() {
   return <div>
     {hero.length ? <Hero items={hero} lang={profile.lang} /> : <div className="hero-spacer" />}
     <RustView className="home-shelves" html={shelves} onCommand={select} onHold={cmd => select(cmd, true)} />
+    {menu && <TitleMenu kind={menu.kind} id={menu.id} onClose={() => setMenu(null)} />}
   </div>;
 }
 

@@ -59,6 +59,7 @@ impl Item {
             title: self.title.clone(),
             image: self.image.clone(),
             cmd: format!("item:{}", self.id),
+            long_press: true,
             ..Default::default()
         };
         if self.provider == "youtube" {

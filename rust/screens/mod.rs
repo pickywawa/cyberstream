@@ -42,6 +42,8 @@ struct Media {
     year: Option<i32>,
     genres: Option<Vec<String>>,
     imdb_rating: Option<f64>,
+    /** TMDB vote average */
+    rating: Option<f64>,
 }
 impl Media {
     fn card(&self, kind: &str) -> Card {
@@ -50,6 +52,8 @@ impl Media {
             image: self.poster.clone(),
             imdb: self.imdb_rating,
             cmd: format!("{kind}:{}", self.id),
+            // long press: watch / favourite menu (see TitleMenu.tsx)
+            long_press: true,
             ..Card::default()
         }
     }
@@ -127,6 +131,17 @@ struct Library {
     movies: Vec<Media>,
     series: Vec<Media>,
     hist: Vec<Watch>,
+    /** "Contenus" titles kept in favourites (long press) */
+    #[serde(default)]
+    replays: Vec<ReplayFav>,
+}
+#[derive(Deserialize)]
+struct ReplayFav {
+    id: String,
+    title: String,
+    image: Option<String>,
+    subtitle: Option<String>,
+    channel: Option<String>,
 }
 #[wasm_bindgen]
 pub fn library_html(raw: &str, lang: &str) -> Result<String, String> {
@@ -136,12 +151,13 @@ pub fn library_html(raw: &str, lang: &str) -> Result<String, String> {
         .iter()
         .filter(|w| w.kind != "live" && w.completed)
         .collect();
-    let favorites = !data.movies.is_empty() || !data.series.is_empty();
+    let favorites = !data.movies.is_empty() || !data.series.is_empty() || !data.replays.is_empty();
     Ok(html!{
         div.container.tab-h1{h1 style="font-size:2rem;font-weight:700"{(lookup(lang,"nav.myvideos"))}}
         @if data.cont.is_empty()&&!favorites&&history.is_empty(){div.empty{(lookup(lang,"myvideos.empty"))}}
         @if !data.cont.is_empty(){(rail("continue",lookup(lang,"home.continue"),None,html!{@for w in &data.cont{(w.card(true,false).outer("land"))}}))}
-        @if favorites{(rail("favorites",lookup(lang,"home.myList"),None,html!{@for (kind,list) in [("movie",&data.movies),("series",&data.series)]{@for m in list{(m.card(kind).outer("poster"))}}}))}
+        @if favorites{(rail("favorites",lookup(lang,"home.myList"),None,html!{@for (kind,list) in [("movie",&data.movies),("series",&data.series)]{@for m in list{(m.card(kind).outer("poster"))}}
+            @for r in &data.replays{(Card{title:r.title.clone(),sub:r.channel.clone().or(r.subtitle.clone()),image:r.image.clone(),cmd:format!("replay:{}",r.id),..Default::default()}.outer("land"))}}))}
         @if !history.is_empty(){(rail("history",lookup(lang,"myvideos.history"),None,html!{@for w in history{(w.card(false,false).outer("land"))}}))}
     }.into_string())
 }

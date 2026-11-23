@@ -72,7 +72,7 @@ pub fn search_results_html(
                     (Card{title:p.title.clone(),cmd:cmd(p),logo:Some(p.logo.clone().unwrap_or_default()),long_press:true,..Default::default()}.outer("logo"))
                 }}))}
                 @if !media.is_empty(){(rail("pick-media",&format!("{} & {}",t("search.movies"),t("search.series")),None,html!{@for p in &media{
-                    (Card{title:p.title.clone(),sub:p.sub.clone(),image:p.image.clone(),cmd:cmd(p),..Default::default()}.outer("poster"))
+                    (Card{title:p.title.clone(),sub:p.sub.clone(),image:p.image.clone(),cmd:cmd(p),long_press:true,..Default::default()}.outer("poster"))
                 }}))}
                 @if !programs.is_empty(){(rail("pick-programs",t("search.programs"),None,html!{@for p in &programs{
                     (Card{title:p.title.clone(),sub:p.sub.clone(),image:p.image.clone(),center_logo:p.logo.clone(),cmd:cmd(p),..Default::default()}.outer("land"))

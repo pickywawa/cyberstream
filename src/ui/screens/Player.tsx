@@ -9,7 +9,8 @@ import { db } from '@/core/db';
 import type { Channel, PlayRequest, Program } from '@/core/types';
 import { catchupCandidates, nextEpisode, playChannelRequest, playEpisodeRequest } from '@/core/playback';
 import { canCatchup } from '@/core/sources/urls';
-import { programsFor, saveProgress, type NowNext } from '@/core/repo';
+import { programsFor, saveProgress, toggleFavorite, type NowNext } from '@/core/repo';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { dataWorker } from '@/core/workers';
 import { fmtDuration, fmtTime, t, getLang } from '@/core/i18n';
 import { useApp } from '@/state/store';
@@ -29,7 +30,7 @@ import { rememberWorkingVariant } from '@/core/playback';
 import { RustView, readCommand } from '../components/RustView';
 import {
   IcBack10, IcClose, IcFwd10, IcHistory, IcInfo, IcPause, IcPip, IcPlay, IcRestart, IcSubtitles, IcTv,
-  IcFullscreen, IcExitFullscreen,
+  IcFullscreen, IcExitFullscreen, IcHeart, IcHeartFill,
 } from '../icons';
 
 type Mode = 'live' | 'shift' | 'vod';
@@ -896,6 +897,7 @@ export function Player({ req }: { req: PlayRequest }) {
           )}
           {panel === 'info' && (
             <div>
+              {channel && <ChannelFavButton ch={channel} />}
               <h3>{title}</h3>
               {mode !== 'vod' && progAtHead && (
                 <p className="small" style={{ opacity: 0.8 }}>
@@ -917,6 +919,26 @@ export function Player({ req }: { req: PlayRequest }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Info tab of a channel: add it to / remove it from the favourites (the TV tab's "Favoris") */
+function ChannelFavButton({ ch }: { ch: Channel }) {
+  const profileId = useApp((s) => s.profile)!.id;
+  const toast = useApp((s) => s.toast);
+  const fav = useLiveQuery(() => db.favorites.get([profileId, `live:${ch.groupKey}`]), [profileId, ch.groupKey]);
+  return (
+    <button
+      className="btn small player-fav"
+      data-f
+      data-autofocus
+      onClick={async () => {
+        const on = await toggleFavorite(profileId, 'live', ch.groupKey, ch.id);
+        toast(on ? t('tv.addFav') : t('tv.removeFav'));
+      }}
+    >
+      {fav ? <IcHeartFill /> : <IcHeart />} {fav ? t('tv.removeFav') : t('tv.addFav')}
+    </button>
   );
 }
 

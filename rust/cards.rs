@@ -21,6 +21,8 @@ pub(crate) struct Card {
     pub progress_light: bool,
     pub hide_meta: bool,
     pub imdb: Option<f64>,
+    /** TMDB rating (/10), a small discreet mark in the picture's corner (Home) */
+    pub score: Option<f64>,
     pub rank: usize,
     pub icon: String,
     pub menu: Option<String>,
@@ -44,6 +46,9 @@ fn image(srcs: Vec<Option<String>>, label: &str, contain: bool) -> Markup {
     }
     .markup()
 }
+fn score(value: f64) -> Markup {
+    html! {span.score aria-label=(format!("TMDB {value:.1}")){"★ "(format!("{value:.1}"))}}
+}
 pub(crate) fn rating(value: f64) -> Markup {
     html! {span.imdb{b{"IMDb"}(format!("{value:.1}"))}}
 }
@@ -66,6 +71,7 @@ impl Card {
             @if !poster && let Some(logo)=&self.logo{span.ch-logo-badge{(image(logo.clone(),"",true))}}
             @if let Some(b)=&self.badge{span.badge.live[self.badge_live]{(b)}}
             @if poster && let Some(r)=self.imdb.filter(|v|*v!=0.){(rating(r))}
+            @if poster && let Some(s)=self.score.filter(|v|*v>0.){(score(s))}
             @if let Some(p)=self.progress{
                 div.progress.light[self.progress_light]{i style=(format!("width:{}%",(p*100.).clamp(if poster{2.}else{1.},100.))){}}
             }
@@ -101,7 +107,8 @@ impl Card {
                 }}
             },
             "top10" => {
-                html! {span.num{(self.rank)}div.thumb{(image(vec![self.image.as_deref().map(|s|tmdb(s,"w342"))],&self.title,false))}}
+                html! {span.num{(self.rank)}div.thumb{(image(vec![self.image.as_deref().map(|s|tmdb(s,"w342"))],&self.title,false))
+                    @if let Some(s)=self.score.filter(|v|*v>0.){(score(s))}}}
             }
             "tile" => {
                 html! {span.ic{(icon(&self.icon,""))}span.txt{span.lb{(&self.title)}@if let Some(s)=&self.sub{span.sb{(s)}}}}

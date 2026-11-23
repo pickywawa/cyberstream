@@ -9,6 +9,7 @@ import { RustView, readCommand } from '../components/RustView';
 import { replay_shelves, replay_filters, replay_page } from '@/rust/generated/cyberstream';
 import { openReplay, playReplay } from '../actions';
 import { Radios } from './Radios';
+import { ReplayMenu } from '../components/TitleMenu';
 
 const MEM = new Map<string, ReplayCatalog>();
 type Filter = 'all' | ReplayProvider | 'kids';
@@ -31,6 +32,7 @@ export function Replay() {
   const [cat, setCat] = useState<ReplayCatalog | null | undefined>(() => MEM.get(memKey));
   const [filter, setFilter] = useState<Filter>('all');
   const [reload, setReload] = useState(0);
+  const [menu, setMenu] = useState<ReplayItem | null>(null);
 
   useEffect(() => {
     let off = false;
@@ -67,7 +69,12 @@ export function Replay() {
         const [action, id] = readCommand(cmd);
         if (action === 'retry') setReload(n => n+1);
         if (action === 'item') { const item = lookup.get(id); if (item) openReplay(item); }
+      }} onHold={cmd => {
+        const [action, id] = readCommand(cmd);
+        const item = action === 'item' ? lookup.get(id) : undefined;
+        if (item) setMenu(item);
       }} />
+      {menu && <ReplayMenu item={menu} onClose={() => setMenu(null)} onOpen={() => openReplay(menu)} />}
     </div>
   );
 }

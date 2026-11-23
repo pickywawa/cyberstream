@@ -38,11 +38,11 @@ struct Trakt {
     watchlist: Vec<Mixed>,
     lists: Vec<List>,
 }
-fn poster(item: &Media, kind: &str, long_press: bool) -> Markup {
+fn poster(item: &Media, kind: &str) -> Markup {
     Card {
         sub: item.credited(item.genres.as_ref().and_then(|g| g.first())),
         fallback: item.backdrop.as_ref().map(|s| tmdb(s, "w780")),
-        long_press,
+        score: item.rating,
         ..item.card(kind)
     }
     .outer("poster")
@@ -62,7 +62,7 @@ fn standard<'a>(
         all.unwrap_or(title),
         title,
         all.map(|cmd| (cmd, lookup(lang, "common.all"))),
-        html! {@for m in items{(poster(m,kind,kind=="movie"))}},
+        html! {@for m in items{(poster(m,kind))}},
     )
 }
 fn mixed(key: &str, title: &str, items: &[Mixed]) -> Markup {
@@ -73,7 +73,7 @@ fn mixed(key: &str, title: &str, items: &[Mixed]) -> Markup {
         key,
         title,
         None,
-        html! {@for m in items.iter().take(40){(poster(&m.item,&m.kind,false))}},
+        html! {@for m in items.iter().take(40){(poster(&m.item,&m.kind))}},
     )
 }
 #[wasm_bindgen]
@@ -90,15 +90,15 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
         @if let Some(tr)=&h.trakt{(mixed("for-you",t("trakt.forYou"),&tr.for_you))}
         (standard(lang,t("home.fresh"),"movie",h.fresh.iter(),Some("all:fresh")))
         @if h.top.len()>=3{(rail("top",t("home.top10"),None,html!{@for (i,m) in h.top.iter().enumerate(){
-            (Card{rank:i+1,..m.card("movie")}.outer("top10"))
+            (Card{rank:i+1,score:m.rating,..m.card("movie")}.outer("top10"))
         }}))}
         (standard(lang,t("home.nowPlaying"),"movie",h.now_playing.iter(),None))
         (standard(lang,t("home.newSeries"),"series",h.new_series.iter(),Some("all:newSeries")))
         (standard(lang,t("home.popularSeries"),"series",h.trending_tv.iter().chain(&h.popular_tv).filter(|s|seen.insert(s.group_key.as_str())),None))
         (standard(lang,t("home.mustSee"),"movie",h.must_see.iter(),Some("all:mustSee")))
         @if !h.fav_movies.is_empty()||!h.fav_series.is_empty(){(rail("favorites",t("home.myList"),None,html!{
-            @for m in &h.fav_movies{(Card{sub:m.credited(None),..m.card("movie")}.outer("poster"))}
-            @for s in &h.fav_series{(s.card("series").outer("poster"))}
+            @for m in &h.fav_movies{(Card{sub:m.credited(None),score:m.rating,..m.card("movie")}.outer("poster"))}
+            @for s in &h.fav_series{(Card{score:s.rating,..s.card("series")}.outer("poster"))}
         }))}
         @if let Some(tr)=&h.trakt{(mixed("watchlist",t("trakt.watchlist"),&tr.watchlist))
             @for (i,l) in tr.lists.iter().enumerate(){(mixed(&format!("trakt-{i}"),&l.name,&l.items))}
