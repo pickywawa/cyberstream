@@ -40,7 +40,7 @@ adb -d install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 Le paquet Android est `app.cyberstream.player`. Le même APK s’installe sur mobile et apparaît dans le lanceur Android TV. Le minimum déclaré dans le projet est Android 7 (API 24). L’interface nécessite un WebView compatible WebAssembly et modules JavaScript. La version du système seule ne garantit pas cette compatibilité.
 
-Le profil et les sources se configurent sur l’appareil. Pour tester le web avec les données fictives, lancer `npm run dev -- --host 127.0.0.1` et sélectionner la source de démonstration pendant la configuration. Les clés de services facultatifs se renseignent dans les paramètres du profil. Le canal de mise à jour se configure explicitement avec `CYBER_UPDATE_URL` lors du build.
+Le profil et les sources se configurent sur l’appareil. Pour tester le web avec les données fictives, lancer `npm run dev -- --host 127.0.0.1` et sélectionner la source de démonstration pendant la configuration. Les clés de services facultatifs se renseignent dans les paramètres du profil. Depuis la version 0.16.3, le lecteur vérifie les publications GitHub de Cyberstream, préversions comprises. Chaque publication Android doit joindre son manifeste `update.json` et l’APK qu’il référence. Pour tester un autre canal, définir `CYBER_UPDATE_URL` avec l’URL d’un manifeste lors du build. Les utilisateurs des versions 0.16.1 et 0.16.2 doivent installer manuellement une première fois un APK plus récent.
 
 ## Ressources sur Android TV
 

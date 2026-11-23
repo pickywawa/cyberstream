@@ -1,7 +1,7 @@
 {
   "name": "cyberstream",
   "private": true,
-  "version": "0.16.2",
+  "version": "0.16.3",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -57,7 +57,7 @@
     "vitest": "^5.1.1"
   },
   "cyber": {
-    "updateUrl": "",
+    "updateUrl": "https://github.com/pickywawa/cyberstream/releases",
     "minNativeCode": 19
   },
   "main": "dist-electron/main.cjs",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { t } from '@/core/i18n';
 import { CyberNative, type TvDevice, type TvInstallEvent } from '@/core/native';
-import { proxify } from '@/core/net/http';
+import { fetchManifest } from '@/core/updater';
 import { IcCheck, IcRefresh, IcTv } from '../icons';
 import { useApp } from '@/state/store';
 import { db } from '@/core/db';
@@ -14,14 +14,6 @@ import { Toggle } from '../components/Overlay';
  * to allow this phone), 4. done, with the advice to turn debugging off again.
  */
 type Step = 'intro' | 'pick' | 'install' | 'done';
-
-async function latestApkUrl(): Promise<string> {
-  if (!__UPDATE_URL__) return '';
-  const res = await fetch(proxify(`${__UPDATE_URL__}?t=${Date.now()}`), { cache: 'no-store' });
-  const m = (await res.json()) as { apk?: string };
-  if (!m.apk) throw new Error('no apk');
-  return m.apk;
-}
 
 export function TvInstall() {
   const [step, setStep] = useState<Step>('intro');
@@ -167,7 +159,8 @@ function Install({ tv, withConfig, onDone, onBack }: { tv: TvDevice; withConfig:
     const h = CyberNative.addListener('tvInstall', (e) => !off && setEv(e));
     void (async () => {
       try {
-        const url = await latestApkUrl();
+        // The installer can send this phone's APK when the release channel is offline.
+        const url = (await fetchManifest())?.apk || '';
         const launch = withConfig ? await configLink() : undefined;
         const r = await CyberNative.tvInstall({ ip: tv.ip, port, url, launch });
         if (!off) onDone(r.model);

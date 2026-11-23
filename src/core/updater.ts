@@ -52,10 +52,25 @@ export function decide(m: UpdateManifest, installed: { versionCode: number; webV
 export async function fetchManifest(): Promise<UpdateManifest | null> {
   if (!__UPDATE_URL__) return null;
   try {
-    // GitHub release assets send no CORS headers: go through the native proxy
-    const res = await fetchWithTimeout(__UPDATE_URL__, { cache: 'no-store', timeoutMs: 10000 });
-    if (!res.ok) return null;
-    return (await res.json()) as UpdateManifest;
+    const options = { cache: 'no-store', timeoutMs: 10000 } as const;
+    let url: string = __UPDATE_URL__;
+    let expectedVersion: string | undefined;
+    const repo = url.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases\/?$/)?.[1];
+    if (repo) {
+      // /releases/latest skips prereleases, including the Android TV preview channel.
+      const res = await fetchWithTimeout(`https://api.github.com/repos/${repo}/releases?per_page=30`, options);
+      const releases: { tag_name: string; draft: boolean; assets: { name: string; browser_download_url: string }[] }[] = await res.json();
+      const newest = releases.filter(r => !r.draft && /^v\d+\.\d+\.\d+$/.test(r.tag_name))
+        .sort((a, b) => cmpVersion(b.tag_name.slice(1), a.tag_name.slice(1)))[0];
+      const manifest = newest?.assets.find(asset => asset.name === 'update.json');
+      if (!manifest) return null;
+      url = manifest.browser_download_url;
+      expectedVersion = newest.tag_name.slice(1);
+    }
+    const res = await fetchWithTimeout(url, options);
+    const manifest: UpdateManifest = await res.json();
+    if (typeof manifest?.version !== 'string' || !Number.isInteger(manifest.versionCode) || !Number.isInteger(manifest.minVersionCode)) return null;
+    return expectedVersion && expectedVersion !== manifest.version ? null : manifest;
   } catch {
     return null;
   }
@@ -76,9 +91,7 @@ async function checkInstalledVersion(): Promise<UpdateCheck> {
   if (!hasUpdateChannel || (!isAndroidApp && !isDesktop)) return { status: 'unconfigured' };
   try {
     const m = await fetchManifest();
-    if (!m || typeof m.version !== 'string' || !Number.isInteger(m.versionCode) || !Number.isInteger(m.minVersionCode)) {
-      return { status: 'unavailable' };
-    }
+    if (!m) return { status: 'unavailable' };
     if (isDesktop) {
       const repo = __UPDATE_URL__.match(/github\.com\/([^/]+\/[^/]+)\//)?.[1];
       const url = repo ? `https://github.com/${repo}/releases/tag/v${m.version}` : __UPDATE_URL__;
