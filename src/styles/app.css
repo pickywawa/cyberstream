@@ -1034,3 +1034,8 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .cat-wrap .cat-card:hover .lb, .cat-wrap .cat-card[data-f]:focus-visible .lb, .kbd .cat-wrap .cat-card[data-f]:focus .lb { font-weight: 600; }
 /* as much room under the universes as above them (dots 16 px + margin + track padding) */
 .home-shelves .rail.cat-rail { margin-bottom: calc(clamp(10px, 1.4vw, 20px) + 16px); }
+/* TV tab header (Maintenant / Ce soir / Programme TV): lower, smaller type */
+.tv-head { padding: 12px var(--gutter) 10px; }
+.tv-head .tab { font-size: 1.05rem; padding: 4px 12px; }
+.btn-guide { height: 38px; padding: 0 14px; gap: 8px; font-size: .95rem; }
+.btn-guide svg { width: 18px; height: 18px; }
