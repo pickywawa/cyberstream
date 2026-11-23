@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { GridCatalog, artwork_failed, artwork_html, home_html, library_html, person_html, search_results_html } from '../src/rust/generated/cyberstream';
+import { GridCatalog, artwork_failed, artwork_html, hero_html, home_html, library_html, person_html, search_results_html } from '../src/rust/generated/cyberstream';
 
 it('selects the right version and stable order for each catalogue sort and genre', () => {
   const index = new GridCatalog('{}', true, ['fr','en'], [], JSON.stringify([['c','Comédie']]));
@@ -48,4 +48,11 @@ it('uses the next image once a candidate fails and displays a label if every can
   expect(artwork_html(data)).toContain('src="/first-test"');
   expect(artwork_failed('/first-test',data)).toContain('src="/second-test"');
   expect(artwork_failed('/second-test',data)).toContain('Illustration &lt;2&gt;');
+});
+
+it('renders a featured movie with provider artwork before TMDB enrichment', () => {
+  const html = hero_html(JSON.stringify({title:'Nouveau film', poster:'/provider-poster'}), 0, 2, 'fr');
+  expect(html).toContain('src="/provider-poster"');
+  expect(html).toContain('<h1>Nouveau film</h1>');
+  for (const action of ['play', 'info', 'next']) expect(html).toContain(`data-cmd="${action}"`);
 });

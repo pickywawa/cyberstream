@@ -13,7 +13,7 @@ import { dataWorker, proxyCb } from '@/core/workers';
 import { loadSecrets } from '@/core/repo';
 import { useApp, applyTheme, type SettingsSection } from '@/state/store';
 import { runSync, runUpdateCheck, schedulePrefetch, startEnrichment } from '@/app/services';
-import { APP_VERSION } from '@/core/updater';
+import { APP_VERSION, hasUpdateChannel, RELEASES_URL } from '@/core/updater';
 import { serverLabel } from '@/core/sources/servers';
 import { canEnroll } from '@/core/enroll';
 import { setSmoothScroll } from '../spatial';
@@ -557,10 +557,15 @@ function AboutSection() {
   }, []);
   const check = async () => {
     setChecking(true);
-    await runUpdateCheck(true);
-    setChecking(false);
-    if (useApp.getState().update.kind === 'none') toast(t('update.upToDate'));
-    else useApp.setState({ updateDismissed: false });
+    try {
+      const result = await runUpdateCheck(true);
+      if (result?.status === 'unconfigured') toast(t('update.channelMissing'));
+      else if (result?.status === 'unavailable') toast(t('update.checkUnavailable'));
+      else if (useApp.getState().update.kind === 'none') toast(t('update.upToDate'));
+      else useApp.setState({ updateDismissed: false });
+    } finally {
+      setChecking(false);
+    }
   };
   return (
     <div className="form">
@@ -579,6 +584,10 @@ function AboutSection() {
       ) : (
         <p className="small dim">{t('update.webOnly')}</p>
       )}
+      {(isAndroidApp || isDesktop) && <div className="btn-row">
+        {!hasUpdateChannel && <span className="small muted">{t('update.channelMissing')}</span>}
+        <a className="btn" data-f href={RELEASES_URL} target="_blank" rel="noreferrer">{t('update.releases')}</a>
+      </div>}
       <button className="btn" data-f onClick={async () => {
         if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k);
         if (isAndroidApp) await CyberNative.clearImageCache().catch(() => {});

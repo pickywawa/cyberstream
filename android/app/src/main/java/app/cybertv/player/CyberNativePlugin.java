@@ -822,6 +822,7 @@ public class CyberNativePlugin extends Plugin {
         r.put("playing", player.isPlaying());
         r.put("positionMs", Math.max(0, player.getCurrentPosition()));
         r.put("durationMs", dur == C.TIME_UNSET ? 0 : dur);
+        r.put("seekable", player.isCurrentMediaItemSeekable());
         r.put("bufferedMs", Math.max(0, player.getBufferedPosition()));
         r.put("isLive", live || player.isCurrentMediaItemLive());
         if (lastError != null) r.put("error", lastError);

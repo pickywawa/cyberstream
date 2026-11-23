@@ -1,7 +1,7 @@
 {
   "name": "cyberstream",
   "private": true,
-  "version": "0.16.1",
+  "version": "0.16.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -58,7 +58,7 @@
   },
   "cyber": {
     "updateUrl": "",
-    "minNativeCode": 11
+    "minNativeCode": 19
   },
   "main": "dist-electron/main.cjs",
   "description": "Lecteur IPTV pour vos propres sources (Android, Android TV, iOS, ordinateur)",

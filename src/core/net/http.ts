@@ -60,7 +60,8 @@ export class HttpError extends Error {
 export async function fetchWithTimeout(url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<Response> {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), init.timeoutMs ?? 30000);
-  if (init.signal) init.signal.addEventListener('abort', () => ac.abort());
+  if (init.signal?.aborted) ac.abort();
+  else init.signal?.addEventListener('abort', () => ac.abort(), { once: true });
   try {
     const res = await fetch(proxify(url), { ...init, signal: ac.signal });
     if (!res.ok) throw new HttpError(res.status, url);
@@ -87,12 +88,12 @@ export function takePrefetchHits(): number {
   return n;
 }
 
-export async function prefetched(url: string): Promise<Response | null> {
-  if (prefetchSince === null || !proxyBase || !proxyBase.startsWith('http://127.0.0.1:')) return null;
+export async function prefetched(url: string, since = prefetchSince, signal?: AbortSignal): Promise<Response | null> {
+  if (since === null || !proxyBase || !proxyBase.startsWith('http://127.0.0.1:')) return null;
   // Only the native loopback service implements /cached. A web dev server may return its HTML shell.
   if (typeof location !== 'undefined' && new URL(proxyBase).origin === location.origin) return null;
   try {
-    const res = await fetch(`${proxyBase.replace('/proxy?u=', '/cached?u=')}${encodeURIComponent(url)}&since=${prefetchSince}`);
+    const res = await fetch(`${proxyBase.replace('/proxy?u=', '/cached?u=')}${encodeURIComponent(url)}&since=${since}`, { signal });
     if (res.status !== 200 || !res.body || res.headers.get('content-type')?.includes('text/html')) return null;
     prefetchHits++;
     return res;

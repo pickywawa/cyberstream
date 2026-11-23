@@ -77,12 +77,33 @@ function loadSettings(): GlobalSettings {
   }
 }
 
+type SyncEntry = SyncProgress & { since: number; sinceDone: number };
+
 export interface SyncState {
+  entries: Record<string, SyncEntry>;
   running: boolean;
   /** local sync from pre-downloaded files: no progress pill */
   quiet?: boolean;
   progress?: SyncProgress;
   lastError?: string;
+}
+
+/** Keep each concurrent download's latest event, even when React batches notifications. */
+function syncEntries(entries: SyncState['entries'], p: SyncProgress) {
+  if (p.step === 'start' || p.step === 'error') {
+    if (!p.sourceId) return {};
+    return Object.fromEntries(Object.entries(entries).filter(([, e]) => e.sourceId !== p.sourceId));
+  }
+  if (p.step === 'done' || p.step === 'enrich') return entries;
+  const key = `${p.step}:${p.sourceId || ''}`;
+  const old = entries[key];
+  const reset = !old || old.total !== p.total || (p.done ?? 0) < (old.done ?? 0);
+  return { ...entries, [key]: {
+    ...p,
+    since: reset ? Date.now() : old.since,
+    sinceDone: reset ? p.done ?? 0 : old.sinceDone,
+    count: p.step === 'epg' ? (old?.count || 0) + (p.count || 0) : p.count,
+  } };
 }
 
 export interface Toast {
@@ -140,7 +161,7 @@ export const useApp = create<AppState>((set, get) => ({
   player: null,
   launching: false,
   setLaunching: (launching) => set({ launching }),
-  sync: { running: false },
+  sync: { running: false, entries: {} },
   catalogVersion: 0,
   epgVersion: 0,
   toasts: [],
@@ -184,7 +205,10 @@ export const useApp = create<AppState>((set, get) => ({
   resetStack: () => set({ stack: [] }),
   // closing the player refreshes views (continue watching, progress bars)
   play: (player) => set(player ? { player, launching: false } : { player: null, launching: false, catalogVersion: get().catalogVersion + 1 }),
-  setSync: (s) => set({ sync: { ...get().sync, ...s } }),
+  setSync: (s) => set(({ sync }) => {
+    const entries = s.running ? {} : sync.entries;
+    return { sync: { ...sync, ...s, entries: s.progress ? syncEntries(entries, s.progress) : entries } };
+  }),
   bumpCatalog: () => set({ catalogVersion: get().catalogVersion + 1 }),
   bumpEpg: () => set({ epgVersion: get().epgVersion + 1 }),
   toast: (text) => {

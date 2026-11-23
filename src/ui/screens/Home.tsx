@@ -12,7 +12,7 @@ import { RustView, readCommand } from '../components/RustView';
 import { home_html, hero_html } from '@/rust/generated/cyberstream';
 import { openMovie, openSeries, playMovie, prioritizeEnrichment, resume } from '../actions';
 import { langPrefs } from '@/core/prefs';
-import { sortByLang } from '@/core/util/lang';
+import { sortByLang, type LangPrefs } from '@/core/util/lang';
 import { traktLists } from '@/core/trakt';
 import type { TmdbListItem } from '@/core/types';
 
@@ -31,6 +31,14 @@ function saveHomeSnapshot(profileId: string, key: string, data: unknown) {
 }
 
 const SHELF_FIELDS = ['cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','durationSec','positionSec'];
+
+function featured<T extends Movie | Series>(pool: T[], prefs: LangPrefs, hideAdult: boolean): T[] {
+  const eligible = sortByLang(pool.filter(m => !hideAdult || m.universe !== 'adult'), prefs);
+  const artworkRank = (m: T) => m.backdrop ? 0 : m.poster ? 1 : 2;
+  eligible.sort((a, b) => artworkRank(a) - artworkRank(b));
+  const seen = new Set<string>();
+  return eligible.filter(m => !seen.has(m.groupKey) && seen.add(m.groupKey)).slice(0, 6);
+}
 
 export function Home() {
   const profile = useApp((s) => s.profile)!;
@@ -86,17 +94,11 @@ export function Home() {
 
   const hero = useMemo<HeroItem[]>(() => {
     if (!data) return [];
-    const pool: HeroItem[] = [
-      ...data.top.map((m) => ({ kind: 'movie' as const, item: m })),
-      ...data.trendingTv.slice(0, 3).map((s) => ({ kind: 'series' as const, item: s })),
-      ...data.fresh.map((m) => ({ kind: 'movie' as const, item: m })),
-    ];
-    const seen = new Set<string>();
     const prefs = langPrefs(profile);
-    const ok = pool.filter((h) => h.item.backdrop && !seen.has(h.item.groupKey) && seen.add(h.item.groupKey));
-    return sortByLang(ok.map((h) => ({ ...h, langs: h.item.langs, subs: h.item.subs, origLang: h.item.origLang })), prefs).slice(0, 6);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    const movies = featured([...data.top, ...data.nowPlaying, ...data.popularMovies, ...data.fresh, ...data.mustSee], prefs, hideAdult);
+    if (movies.length) return movies.map(item => ({ kind: 'movie', item }));
+    return featured([...data.trendingTv, ...data.newSeries], prefs, hideAdult).map(item => ({ kind: 'series', item }));
+  }, [data, profile, hideAdult]);
 
   const shelves = useMemo(() => data && home_html(JSON.stringify({
     ...data, genres: data.genres.map(([genre, rows]) => [genre, rows.slice(0, 30)]),
@@ -138,7 +140,7 @@ function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
     return () => clearInterval(tm);
   }, [items.length, paused]);
   const h = items[Math.min(i, items.length - 1)];
-  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','logo','year','rating','plot','genres']), Math.min(i, items.length - 1), items.length, lang), [h.item, i, items.length, lang]);
+  const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','plot','genres']), Math.min(i, items.length - 1), items.length, lang), [h.item, i, items.length, lang]);
   return <section className="hero" onFocus={() => setPaused(true)} onBlur={e => setPaused(e.currentTarget.contains(e.relatedTarget))}>
     <RustView className="hero-inner" html={html} onCommand={cmd => {
       if (cmd === 'next') return setI(x => (x + 1) % items.length);

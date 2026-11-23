@@ -26,7 +26,7 @@ export class NativeEngine implements PlayerEngine {
           duration: s.isLive ? 0 : dur,
           buffered: s.bufferedMs / 1000,
           seekableStart: 0,
-          seekableEnd: s.isLive ? dur : dur,
+          seekableEnd: s.seekable === false ? 0 : dur,
           isLive: s.isLive,
           error: s.error,
         });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cmpVersion, decide } from '../src/core/updater';
+import { checkForUpdate, cmpVersion, decide } from '../src/core/updater';
 import { isFinished } from '../src/core/repo';
 
 describe('self-update decision', () => {
@@ -13,6 +13,9 @@ describe('self-update decision', () => {
   });
   it('asks for the APK when the web bundle needs a newer native side', () => {
     expect(decide(m, { versionCode: 2, webVersion: '0.2.0' })).toBe('apk');
+  });
+  it('reports an unconfigured update channel separately from up to date', async () => {
+    expect(await checkForUpdate()).toEqual({ status: 'unconfigured' });
   });
   it('does nothing when up to date', () => {
     expect(decide(m, { versionCode: 3, webVersion: '0.3.1' })).toBe('none');

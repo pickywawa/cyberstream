@@ -12,7 +12,7 @@ import { applyTheme, useApp } from '@/state/store';
 import { installSpatialNav, setBackHandler, setSmoothScroll } from '@/ui/spatial';
 import type { Profile, SyncProgress } from '@/core/types';
 import { primeCache } from '@/ui/hooks';
-import { checkForUpdate, installSilentNow, reportBootOk } from '@/core/updater';
+import { checkForUpdate, installSilentNow, reportBootOk, type UpdateCheck } from '@/core/updater';
 import { enrollTarget, importAsProfile, parseImportLink, type EnrollPayload } from '@/core/enroll';
 
 let periodic: number | null = null;
@@ -330,14 +330,17 @@ export async function runSync(profileId: string, withEpg = true, opts: { quiet?:
 }
 
 let lastUpdateCheck = 0;
-export async function runUpdateCheck(force = false): Promise<void> {
+export async function runUpdateCheck(force = false): Promise<UpdateCheck | undefined> {
   if (!force && Date.now() - lastUpdateCheck < 30 * 60000) return;
   lastUpdateCheck = Date.now();
-  const r = await checkForUpdate();
+  const result = await checkForUpdate();
+  if (result.status !== 'checked') return result;
   const cur = useApp.getState().update;
-  // a ready web bundle stays announced until restart even if a later check finds nothing new
-  if (r.kind === 'none' && cur.kind !== 'none') return;
-  useApp.setState({ update: r, updateDismissed: false });
+  // Keep a prepared update visible until restart.
+  if (result.update.kind !== 'none' || cur.kind === 'none') {
+    useApp.setState({ update: result.update, updateDismissed: false });
+  }
+  return result;
 }
 
 async function loadHomeSnapshot(profileId: string) {

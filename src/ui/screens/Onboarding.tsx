@@ -230,15 +230,6 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
   );
 }
 
-interface StepProgress {
-  done?: number;
-  total?: number;
-  /** first time items were counted (rate → time left) */
-  since?: number;
-  unit?: 'bytes' | 'categories'; items?: number; sinceDone?: number;
-  count?: number;
-}
-
 const fmtSecs = (sec: number) => {
   const s = Math.max(0, Math.round(sec));
   return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')}`;
@@ -250,36 +241,13 @@ const fmtSecs = (sec: number) => {
  */
 function SyncStep({ profile }: { profile: Profile }) {
   const sync = useApp((s) => s.sync);
-  const [steps, setSteps] = useState<Record<string, StepProgress>>({});
   const [startedAt] = useState(Date.now());
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const tm = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(tm);
   }, []);
-  useEffect(() => {
-    const p = sync.progress;
-    if (!p || !['live', 'vod', 'series', 'logos', 'epg'].includes(p.step)) return;
-    setSteps((all) => {
-      const cur = { ...(all[p.step] || {}) };
-      cur.items = p.items;
-      cur.unit = p.unit;
-      if (p.total !== undefined) {
-        cur.total = p.total;
-        cur.done = p.done ?? 0;
-        if (cur.since === undefined || (p.done ?? 0) === 0) {
-          cur.since = Date.now();
-          cur.sinceDone = p.done ?? 0;
-        }
-      }
-      if (p.step === 'epg' && p.count) cur.count = (cur.count || 0) + p.count;
-      else if (p.count !== undefined) cur.count = (cur.count || 0) + p.count;
-      return { ...all, [p.step]: cur };
-    });
-  }, [sync.progress]);
-  const active = sync.running ? sync.progress?.step : undefined;
   const order = ['live', 'vod', 'series', 'logos', 'epg'] as const;
-  const activeIdx = order.indexOf(active as (typeof order)[number]);
   // blocking: the app opens once everything it needs is saved (a half-filled first start
   // downloaded the rest again behind the user's back)
   const finished = !sync.running && !!sync.progress;
@@ -297,14 +265,16 @@ function SyncStep({ profile }: { profile: Profile }) {
       <h2>{t('onboard.syncing')}</h2>
       <p className="small muted">{t('sync.elapsed', { t: fmtSecs((now - startedAt) / 1000) })}</p>
       <div className="list">
-        {order.map((s, i) => {
-          const st = steps[s] || {};
-          const isActive = s === active;
-          const done = !isActive && (st.count !== undefined || (activeIdx > i && activeIdx >= 0) || (!sync.running && !!sync.progress));
+        {order.map(s => {
+          const rows = Object.values(sync.entries).filter(e => e.step === s);
+          const active = sync.running && rows.find(e => s === 'epg' || e.count === undefined);
+          const st = active || rows[rows.length - 1];
+          const count = rows.reduce((n, e) => n + (e.count || 0), 0);
+          const done = !active && rows.some(e => e.count !== undefined);
           let detail = '';
           let left = '';
           let pct: number | undefined;
-          if (isActive && st.total) {
+          if (active && st.total) {
             pct = Math.min(1, (st.done || 0) / st.total);
             detail = `${nf.format(st.done || 0)} / ${nf.format(st.total)}`;
             if (st.unit === 'bytes') detail = `${nf.format(Math.round((st.done || 0)/1024))} / ${nf.format(Math.round(st.total/1024))} KiB`;
@@ -312,12 +282,12 @@ function SyncStep({ profile }: { profile: Profile }) {
             const elapsed = (Date.now() - (st.since || Date.now())) / 1000;
             const rate = elapsed > 2 ? ((st.done || 0) - (st.sinceDone || 0)) / elapsed : 0;
             if (rate > 0) left = t('sync.left', { t: fmtSecs((st.total - (st.done || 0)) / rate) });
-          } else if (isActive && s === 'epg' && st.count) detail = t('sync.programs', { n: nf.format(st.count) });
-          else if (isActive) detail = st.items ? `${nf.format(st.items)} ${t('sync.items')}` : t('sync.downloading');
-          else if (done && st.count !== undefined) detail = s === 'logos' ? '' : nf.format(st.count);
+          } else if (active && s === 'epg' && count) detail = t('sync.programs', { n: nf.format(count) });
+          else if (active) detail = st.items ? `${nf.format(st.items)} ${t('sync.items')}` : t('sync.downloading');
+          else if (done) detail = s === 'logos' ? '' : nf.format(count);
           return (
-            <div key={s} className={`list-item sync-row ${isActive ? 'on' : ''}`}>
-              {isActive ? <span className="spinner" /> : done ? <IcCheck width={20} height={20} color="var(--ok)" /> : <span style={{ width: 20 }} />}
+            <div key={s} className={`list-item sync-row ${active ? 'on' : ''}`}>
+              {active ? <span className="spinner" /> : done ? <IcCheck width={20} height={20} color="var(--ok)" /> : <span style={{ width: 20 }} />}
               <span className="grow">
                 <span className="sync-row-top">
                   <span>{t(`sync.${s}` as 'sync.live')}</span>

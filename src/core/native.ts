@@ -12,6 +12,7 @@ export interface NativePlayerState {
   positionMs: number;
   durationMs: number;
   bufferedMs: number;
+  seekable?: boolean;
   isLive: boolean;
   error?: string;
   width?: number;

@@ -122,7 +122,11 @@ pub fn hero_html(raw: &str, index: usize, count: usize, lang: &str) -> Result<St
     let h: Hero = serde_json::from_str(raw).map_err(|_| "Bannière invalide")?;
     let m = h.item;
     Ok(html!{
-        div.bg{(Image{srcs:vec![m.backdrop.map(|s|tmdb(&s,"w1280"))],label:m.title.clone(),eager:true,..Default::default()}.markup())}
+        div.bg.poster-only[m.backdrop.as_deref().unwrap_or("").is_empty()]{
+            @if m.backdrop.is_some() || m.poster.is_some() {
+                (Image{srcs:vec![m.backdrop.map(|s|tmdb(&s,"w1280")), m.poster.map(|s|tmdb(&s,"w780"))],label:m.title.clone(),eager:true,..Default::default()}.markup())
+            }
+        }
         div.content{
             @if let Some(logo)=h.logo.filter(|s|!s.is_empty()){
                 (Image{srcs:vec![Some(tmdb(&logo,"w500"))],class:"title-logo".into(),label:m.title.clone(),alt:m.title.clone(),eager:true,..Default::default()}.markup())

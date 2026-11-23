@@ -97,14 +97,15 @@ async function dropExcluded(source: string, kind: ListKind, ids: string[]) {
   await setMeta(meta, signature);
 }
 
-/** Read one catalogue at a time. Only primary keys survive between committed batches.
+/** Stream one catalogue in bounded batches. Only primary keys survive between committed batches.
  * A malformed or truncated response may add rows, but never authorises deletion. */
-async function importList(src: Source, kind: ListKind, cats: unknown[], load: (category?:string) => Promise<Response>, parts: string[], excluded:string[], progress: Progress) {
+async function importList(src: Source, kind: ListKind, cats: unknown[], load: (category?:string) => Promise<Response>, parts: string[], excluded:string[], progress: Progress, liveReady?: Promise<void>) {
   const parser = new XtreamList(kind, src.id, src.profileId, JSON.stringify(cats));
   const keep = new Set<string>();
   const table = kind === 'live' ? db.channels : kind === 'vod' ? db.movies : db.series;
   let pending: (Movie | Series | Channel)[] = [];
   const flush = async () => {
+    await liveReady;
     const batch = pending;
     pending = [];
     if (kind !== 'live') await mergeExisting(table, batch as (Movie | Series)[], !src.lastSyncAt);
@@ -156,6 +157,7 @@ async function importList(src: Source, kind: ListKind, cats: unknown[], load: (c
         }
       } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
+    await liveReady;
     if (pending.length) await flush();
     const categories: Category[] = JSON.parse(parser.categories());
     await db.categories.bulkPut(categories);
@@ -178,7 +180,7 @@ async function syncXtream(src: Source, password: string, progress: Progress) {
   const categories = new Set<string>();
   const missing: string[] = [];
   let completeCats = true;
-  for (const kind of ['live', 'vod', 'series'] as const) {
+  const importKind = async (kind: ListKind, liveReady?: Promise<void>) => {
     progress({ sourceId: src.id, step: kind });
     const rawCats = await x.categories(kind).catch(() => null);
     const cats = asArray<{category_name?: string; category_id:string|number}>(rawCats).filter(c => c && c.category_id != null);
@@ -193,20 +195,27 @@ async function syncXtream(src: Source, password: string, progress: Progress) {
     const load = (category?:string) => fetchWithTimeout(x.listUrl(kind,category),{timeoutMs:180000});
     try {
       const local = await prefetched(x.listUrl(kind));
-      let result = local ? await importList(src,kind,active,async () => local,[],excluded,progress).catch(() => null) : null;
+      let result = local ? await importList(src,kind,active,async () => local,[],excluded,progress,liveReady).catch(() => null) : null;
       if (!result && ids.length && ids.length <= 40) {
         // A provider ignoring category_id is detected by Rust on its first mismatched record.
-        result = await importList(src,kind,active,load,ids,excluded,progress).catch(() => null);
+        result = await importList(src,kind,active,load,ids,excluded,progress,liveReady).catch(() => null);
       }
-      result ??= await importList(src,kind,active,load,[],excluded,progress);
+      result ??= await importList(src,kind,active,load,[],excluded,progress,liveReady);
       counts[kind] = result.count;
       for (const id of result.categories) categories.add(id);
     } catch (error) {
-      if (kind === 'live') throw new Error(error instanceof Error ? error.message : String(error));
+      if (kind === 'live') throw error;
       missing.push(kind === 'vod' ? 'films' : 'séries');
       counts[kind] = await (kind === 'vod' ? db.movies : db.series).where('sourceId').equals(src.id).count();
     }
     progress({ sourceId: src.id, step: kind, count: counts[kind] });
+  };
+  // Download all three lists immediately. Only publish VOD from a server with a valid live list.
+  const live = importKind('live');
+  const imports = [live, importKind('vod', live), importKind('series', live)];
+  // A backup server must never write alongside an unfinished import from the previous one.
+  for (const result of await Promise.allSettled(imports)) {
+    if (result.status === 'rejected') throw result.reason;
   }
   src.counts = counts;
   if (missing.length) throw new PartialSync(missing.join(' et '));
@@ -320,7 +329,15 @@ const DEFAULT_EPG: Record<string, string> = {
 /** "tf1.fr@sd" → "tf1.fr" (iptv-org feed suffix) */
 const epgBase = (id: string) => id.split('@')[0];
 
-export async function syncEpg(profileId: string, secrets: Record<string, string | undefined>, progress: Progress) {
+async function openGuide(url: string, since: number, signal?: AbortSignal) {
+  const cached = await prefetched(url, since, signal);
+  if (cached) return { response: cached, cached: true };
+  return { response: await fetchWithTimeout(url, { timeoutMs: 300000, signal }), cached: false };
+}
+
+type EarlyGuide = { url: string; download: Promise<Awaited<ReturnType<typeof openGuide>> | null> };
+
+export async function syncEpg(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, early?: EarlyGuide) {
   const urls = await epgUrlsForProfile(profileId, secrets);
   if (!urls.length) return;
   const channels = await db.channels.where('profileId').equals(profileId).toArray();
@@ -339,12 +356,8 @@ export async function syncEpg(profileId: string, secrets: Record<string, string 
   const from = Date.now() - Math.min(maxCatchup, 7) * 86400000 - 3600000;
   const to = Date.now() + 3 * 86400000;
   const covered = new Set<string>();
-  setPrefetchSince((await getMeta<number>(`epg:last:${profileId}`)) || 0);
-  try {
-    await syncEpgUrls(urls, byEpg, byBase, byName, covered, from, to, progress);
-  } finally {
-    setPrefetchSince(null);
-  }
+  const since = (await getMeta<number>(`epg:last:${profileId}`)) || 0;
+  await syncEpgUrls(urls, byEpg, byBase, byName, covered, from, to, progress, since, early);
   await db.programs.where('start').below(Date.now() - 8 * 86400000).delete();
   await fillMissingEpgIds(profileId);
   if (covered.size) await setMeta(`epg:last:${profileId}`, Date.now());
@@ -386,7 +399,7 @@ export async function fillMissingEpgIds(profileId: string): Promise<number> {
 
 async function syncEpgUrls(
   urls: string[], byEpg: Set<string>, byBase: Map<string, Channel[]>, byName: Map<string, Channel[]>, covered: Set<string>,
-  from: number, to: number, progress: Progress,
+  from: number, to: number, progress: Progress, since: number, early?: EarlyGuide,
 ) {
   await GuideImport.clearAbandoned();
   for (const url of urls) {
@@ -445,11 +458,15 @@ async function syncEpgUrls(
       }
     };
     try {
-      const cached = await prefetched(url);
-      if (cached) {
-        try { await importDocument(cached); continue; } catch { /* Fetch a fresh copy after an incomplete background download. */ }
+      // Recheck the URL list after sync: a failover or an M3U header can change the guides.
+      const ready = early?.url === url ? await early.download : null;
+      const guide = ready ?? await openGuide(url, since);
+      try {
+        await importDocument(guide.response);
+      } catch (error) {
+        if (!guide.cached) throw error;
+        await importDocument(await fetchWithTimeout(url, { timeoutMs: 300000 }));
       }
-      await importDocument(await fetchWithTimeout(url, { timeoutMs: 300000 }));
     } catch (e) {
       progress({ step: 'epg', message: `EPG ignoré : ${e instanceof Error ? e.message : String(e)}` });
     }
@@ -531,18 +548,33 @@ async function syncSourceLocked(src: Source, password: string | undefined, progr
 export async function syncProfile(profileId: string, secrets: Record<string, string | undefined>, progress: Progress, withEpg = true) {
   const sources = (await db.sources.where('profileId').equals(profileId).toArray()).filter((s) => s.enabled).sort((a, b) => a.priority - b.priority);
   const org = refreshIptvOrg(false, true).catch(() => false);
-  for (const s of sources) await syncSource(s, secrets[s.id], progress);
-  progress({ step: 'logos' });
-  try {
-    if ((await org) === false && !(await getMeta('iptvorg:index'))) await refreshIptvOrg(true);
-    progress({ step: 'logos', count: await applyIptvOrg(profileId) });
-  } catch {
-    /* offline: next sync */
-    progress({ step: 'logos', count: 0 });
+  const controller = new AbortController();
+  let early: EarlyGuide | undefined;
+  if (withEpg) {
+    const [url] = await epgUrlsForProfile(profileId, secrets);
+    if (url) {
+      const since = (await getMeta<number>(`epg:last:${profileId}`)) || 0;
+      progress({ step: 'epg' });
+      early = { url, download: openGuide(url, since, controller.signal).catch(() => null) };
+    }
   }
-  if (withEpg) await syncEpg(profileId, secrets, progress);
-  // channels were rewritten: versions without a guide id take their sibling's again
-  else await fillMissingEpgIds(profileId);
+  try {
+    for (const s of sources) await syncSource(s, secrets[s.id], progress);
+    progress({ step: 'logos' });
+    try {
+      if ((await org) === false && !(await getMeta('iptvorg:index'))) await refreshIptvOrg(true);
+      progress({ step: 'logos', count: await applyIptvOrg(profileId) });
+    } catch {
+      /* offline: next sync */
+      progress({ step: 'logos', count: 0 });
+    }
+    if (withEpg) await syncEpg(profileId, secrets, progress, early);
+    // channels were rewritten: versions without a guide id take their sibling's again
+    else await fillMissingEpgIds(profileId);
+  } finally {
+    // Also releases an unused response body if its source switched to a backup.
+    controller.abort();
+  }
   await db.profiles.update(profileId, { lastSyncAt: Date.now() });
   await setMeta(`catalog:version:${profileId}`, Date.now());
   progress({ step: 'done' });
