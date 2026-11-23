@@ -184,7 +184,7 @@ export function LiveTv() {
           <VirtualGrid
             className="vgrid"
             items={shown}
-            minWidth={narrow ? 150 : 165}
+            minWidth={narrow ? 160 : 190}
             aspect={16 / 9}
             extraHeight={narrow ? 64 : 60}
             gap={narrow ? 8 : 10}
