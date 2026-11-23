@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/state/store';
-import { isAndroidApp } from '@/core/platform';
 import { t } from '@/core/i18n';
 import { db } from '@/core/db';
 import { dataWorker } from '@/core/workers';
@@ -61,10 +60,10 @@ function youtubeKey(url?: string): string | undefined {
  */
 /**
  * How long the video plays hidden before it shows, while YouTube's start overlay fades out. Its
- * mobile player (Android WebView, phones) also puts previous / pause / next over the picture at
- * start, whatever the embed options: they need a longer wait.
+ * player also puts previous / pause / next over the picture at start, whatever the embed options
+ * (phones and desktop alike): the wait covers them.
  */
-const REVEAL_MS = isAndroidApp || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 3400 : 1600;
+const REVEAL_MS = 3400;
 
 export function TrailerBg({ urls, delay = 300, active = true }: {
   urls: (string | undefined)[];
