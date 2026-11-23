@@ -106,6 +106,12 @@ export const api = {
     if (tmdb) await enrichSeason(tmdb, seriesId, season);
   },
 
+  /** a trailer for a title TMDB enriched without one (any language) */
+  async tmdbTrailer(kind: 'movie' | 'tv', id: number): Promise<string | undefined> {
+    if (!tmdb) return undefined;
+    return tmdb.trailer(kind, id).catch(() => undefined);
+  },
+
   /** saga parts (cached a week) */
   async tmdbCollection(id: number): Promise<TmdbCollection | null> {
     const key = `tmdb:collection:${id}`;

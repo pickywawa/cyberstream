@@ -60,7 +60,7 @@ export function focusEl(el: HTMLElement | null | undefined, scroll = true) {
   el.focus({ preventScroll: true });
   if (!scroll) return;
   // the featured banner sits at the top of its page: show it whole (back up from the rows below)
-  if (el.closest('.hero')) {
+  if (el.closest('.hero, .detail-hero')) {
     const box = scrollParent(el);
     if (box) return box.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
   }
@@ -148,7 +148,10 @@ export function move(dir: Dir): boolean {
   }
   const all = scopeItems(scope);
   const others = row && (dir === 'up' || dir === 'down') ? all.filter((e) => !row.contains(e)) : all;
-  let target = best(active, others, dir);
+  // the floating Back button (always shown, top left) is reached from the page's header only:
+  // lower down, Up goes to the row above (it used to grab the focus as soon as the page was scrolled)
+  const nearBack = !!active.closest('.hero, .detail-hero, .page-header');
+  let target = (nearBack ? null : best(active, others.filter((e) => !e.classList.contains('back-btn')), dir)) || best(active, others, dir);
   // a tab row lying between here and the target is never skipped (the closest wins)
   if (target && (dir === 'up' || dir === 'down')) {
     const a = active.getBoundingClientRect();

@@ -153,7 +153,16 @@ export async function resume(w: WatchState) {
     const item = await replayInfo(w.itemId, lang).catch(() => null);
     return playReplay(item || { id: w.itemId, provider: w.itemId.startsWith('arte') ? 'arte' : 'francetv', kind: 'video', title: w.title, subtitle: w.subtitle, image: w.image }, w.positionSec);
   }
-  if (w.kind === 'movie') return playMovie(w.itemId, w.positionSec);
+  if (w.kind === 'movie') {
+    // the film's id can change (source added again, imported from the phone): same title in the profile
+    let id = w.itemId;
+    if (!(await db.movies.get(id))) {
+      const same = await db.movies.where('profileId').equals(w.profileId).filter((m) => m.title === w.title).first();
+      if (!same) return useApp.getState().toast(t('search.pickGone'));
+      id = same.id;
+    }
+    return playMovie(id, w.positionSec);
+  }
   if (w.kind === 'episode' && w.seriesId) {
     await loadXtreamEpisodesIfNeeded(w.seriesId);
     return playEpisode(w.seriesId, w.itemId, w.positionSec);

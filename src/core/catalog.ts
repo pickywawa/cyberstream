@@ -99,8 +99,17 @@ export async function latestSeries(profileId: string, limit = 40, hideAdult = tr
   return dedupLang(rows.filter((m) => !(hideAdult && m.universe === 'adult')), prefs).slice(0, limit);
 }
 
+/**
+ * Films for the genre / kids / must-see rails: those TMDB already enriched (genres, ratings) first,
+ * then the rest of the catalogue. Taking the first rows of the table instead left those rails
+ * empty on a big catalogue, where few of those rows were enriched yet.
+ */
 export async function moviesSample(profileId: string, limit = 3000): Promise<Movie[]> {
-  return db.movies.where('profileId').equals(profileId).limit(limit).toArray();
+  const enriched = await db.movies.where('enrichedAt').above(0).filter((m) => m.profileId === profileId).limit(limit).toArray();
+  if (enriched.length >= limit) return enriched;
+  const seen = new Set(enriched.map((m) => m.id));
+  const rest = await db.movies.where('profileId').equals(profileId).filter((m) => !seen.has(m.id)).limit(limit - enriched.length).toArray();
+  return [...enriched, ...rest];
 }
 
 export async function similarByGenre(profileId: string, kind: 'movie'|'series', groupKey: string, genre: string | undefined, prefs: LangPrefs, categoryId?: string) {

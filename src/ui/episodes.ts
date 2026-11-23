@@ -30,7 +30,7 @@ export function loadVodInfoIfNeeded(movieId: string): Promise<void> {
     const m = await db.movies.get(movieId);
     if (!m || (m.providerInfoAt && Date.now() - m.providerInfoAt < 7 * 86400000)) return;
     // TMDB already gave the essentials
-    if ((m.enrichedAt || 0) > 0 && m.durationSec && m.genres?.length && m.certAge !== undefined) return;
+    if ((m.enrichedAt || 0) > 0 && m.durationSec && m.genres?.length && m.certAge !== undefined && m.trailer) return;
     const src = await db.sources.get(m.sourceId);
     if (!src || src.type !== 'xtream') return;
     const secrets = await loadSecrets(m.profileId);

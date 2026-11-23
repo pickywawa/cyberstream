@@ -30,6 +30,17 @@ export function Detail({ kind, id }: { kind: 'movie' | 'series'; id: string }) {
   useEffect(() => {
     if (kind === 'movie') void loadVodInfoIfNeeded(id);
   }, [kind, id]);
+  // enriched before trailers in every language were looked for: look once more (at most daily)
+  const needTrailer = !!item && !item.trailer && !!item.tmdbId && Date.now() - (item.trailerCheckedAt || 0) > 86400000;
+  useEffect(() => {
+    if (!needTrailer || !item?.tmdbId) return;
+    const table = kind === 'movie' ? db.movies : db.series;
+    void dataWorker().tmdbTrailer(kind === 'movie' ? 'movie' : 'tv', item.tmdbId).then(async (trailer) => {
+      const keys = await (table as typeof db.movies).where('groupKey').equals(item.groupKey).primaryKeys();
+      for (const k of new Set([item.id, ...keys])) await (table as typeof db.movies).update(k, trailer ? { trailer, trailerCheckedAt: Date.now() } : { trailerCheckedAt: Date.now() });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needTrailer, item?.tmdbId]);
   if (item === undefined) return <div className="spinner big" style={{ margin: '30vh auto' }} />;
   if (!item) return <div className="empty">{t('common.empty')}</div>;
   return kind === 'movie' ? <MovieDetail m={item as Movie} /> : <SeriesDetail s={item as Series} />;

@@ -124,6 +124,8 @@ export interface Movie {
   cast?: string[];
   director?: string;
   trailer?: string;
+  /** last time a missing trailer was looked for */
+  trailerCheckedAt?: number;
   tmdbId?: number;
   addedAt: number;
   ext: string;
@@ -180,6 +182,8 @@ export interface Series {
   genres?: string[];
   cast?: string[];
   trailer?: string;
+  /** last time a missing trailer was looked for */
+  trailerCheckedAt?: number;
   tmdbId?: number;
   addedAt: number;
   categoryId?: string;

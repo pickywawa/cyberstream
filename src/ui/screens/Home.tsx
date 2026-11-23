@@ -4,7 +4,7 @@ import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { db, setMeta } from '@/core/db';
 import {
-  continueWatching, favoritesOf, hideFromContinue, matchMovies, matchSeries,
+  continueWatching, favoritesOf, getProgress, hideFromContinue, matchMovies, matchSeries,
 } from '@/core/repo';
 import type { Movie, Series } from '@/core/types';
 import { useAsync, useCarousel } from '../hooks';
@@ -56,7 +56,8 @@ export function Home() {
     const favMovies = (await db.movies.bulkGet(favs.filter((f) => f.kind === 'movie').map((f) => f.itemId))).filter(Boolean) as Movie[];
     const favSeries = (await db.series.bulkGet(favs.filter((f) => f.kind === 'series').map((f) => f.itemId))).filter(Boolean) as Series[];
     // Trakt: recommendations, watchlist and personal lists, only what the sources carry
-    const tr = await traktLists(profile.id).catch(() => null);
+    // never wait long for Trakt: the rails below would stay on the saved copy meanwhile
+    const tr = await Promise.race([traktLists(profile.id).catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 4000))]);
     const mixed = async (movies: TmdbListItem[], shows: TmdbListItem[]) => {
       const [m, sr] = await Promise.all([matchMovies(profile.id, movies), matchSeries(profile.id, shows)]);
       const out: MixItem[] = [];
@@ -111,8 +112,11 @@ export function Home() {
     if (action === 'series') return openSeries(id);
     if (action === 'remove' || action === 'resume') {
       const key = action === 'remove' ? readCommand(id)[1] : id;
-      const w = data.cont.find(w => w.key === key);
-      if (w) action === 'remove' ? void hideFromContinue(w).then(() => useApp.getState().bumpCatalog()) : void resume(w);
+      // the rail may come from the saved copy of Home: the position is read again
+      void getProgress(profile.id, key).then((fresh) => {
+        const w = fresh || data.cont.find(w => w.key === key);
+        if (w) action === 'remove' ? void hideFromContinue(w).then(() => useApp.getState().bumpCatalog()) : void resume(w);
+      });
     }
     if (action === 'tile') {
       if (id === 'live') return setTab('tv');
