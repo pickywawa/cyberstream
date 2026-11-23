@@ -517,6 +517,7 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 .seekbar:focus { box-shadow: none; }
 .seekbar:focus .track { box-shadow: none; }
 .seekbar:focus .knob { transform: scale(1.4); background: var(--accent); }
+.player .pbtn.dim { opacity: .45; }
 /* remote: a focused bar is unmistakable (thick track, ringed knob, time above) */
 .seekbar.focused .track, .seekbar.focused .buf, .seekbar.focused .fill { height: 8px; border-radius: 4px; }
 .seekbar.focused .knob { opacity: 1; width: 22px; height: 22px; margin-left: -11px; transform: none; background: #fff; box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 70%, transparent); }
@@ -530,7 +531,7 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 .zap-list { display: flex; flex-direction: column; gap: 6px; }
 .zap-item { display: grid; grid-template-columns: 34px 64px 1fr; gap: 10px; align-items: center; padding: 8px; border-radius: 8px; text-align: left; }
 /* hundreds of channels: only the rows on screen are laid out and painted */
-.zap-item { content-visibility: auto; contain-intrinsic-size: auto 56px; }
+.zap-item { height: 56px; flex: none; overflow: hidden; }
 .zap-item img { max-width: 64px; max-height: 36px; object-fit: contain; }
 .zap-item.cur { background: rgba(255, 255, 255, 0.1); }
 .zap-item .n { color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; text-align: right; }
@@ -597,6 +598,8 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 .zap-item .name-tile .nm { display: none; }
 .zap-item .name-tile .mono { width: 26px; height: 26px; font-size: 0.7rem; border-radius: 7px; }
 .ch-logo-badge .name-tile, .player .ch-logo + .name-tile { display: none; }
+/* a channel logo that fails to load: no name tile (absolute, it covered the whole player with a "?") */
+.player .ui .top .name-tile, .zap-banner .name-tile { display: none; }
 
 /* ───────────── Home categories (app style) ───────────── */
 .cat-rail .rail-track { gap: 12px; }
@@ -696,7 +699,9 @@ html:not(.mobile) .update-banner {
   background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
 }
 html:not(.mobile) .update-banner .ic { width: 34px; height: 34px; }
-html:not(.mobile) .update-banner .txt { flex-direction: row; align-items: baseline; gap: 12px; }
+html:not(.mobile) .update-banner .txt { flex: 0 1 auto; flex-direction: row; align-items: baseline; gap: 12px; }
+/* the install button right after the text (not far right, a long way with the remote); close at the end */
+html:not(.mobile) .update-banner .icon-btn { margin-left: auto; }
 html.has-update:not(.mobile) { --update-h: 60px; }
 html.has-update:not(.mobile) .topnav { top: var(--update-h); }
 html.has-update:not(.mobile) .app-shell { top: var(--update-h); }

@@ -46,17 +46,30 @@ export async function directoryRadios(country: string): Promise<Radio[]> {
   }
 }
 
-export async function radioPrefs(profileId: string) {
-  const [fav, custom] = await Promise.all([getMeta<string[]>(favKey(profileId)), getMeta<Radio[]>(customKey(profileId))]);
-  return { fav: fav || [], custom: custom || [] };
+const recentKey = (pid: string) => `radio:recent:${pid}`;
+
+export interface RadioPrefs { fav: string[]; custom: Radio[]; recent: string[] }
+
+export async function radioPrefs(profileId: string): Promise<RadioPrefs> {
+  const [fav, custom, recent] = await Promise.all([getMeta<string[]>(favKey(profileId)), getMeta<Radio[]>(customKey(profileId)), getMeta<string[]>(recentKey(profileId))]);
+  return { fav: fav || [], custom: custom || [], recent: recent || [] };
 }
 
-/** favourites first (in the order they were added), then the user's stations, then the directory */
-export function orderRadios(directory: Radio[], custom: Radio[], fav: string[]): Radio[] {
+/** favourites first (in the order they were added), then the last ones played, the user's stations, the directory */
+export function orderRadios(directory: Radio[], custom: Radio[], fav: string[], recent: string[] = []): Radio[] {
   const all = [...custom, ...directory.filter((d) => !custom.some((c) => c.url === d.url))];
   const byId = new Map(all.map((r) => [r.id, r]));
-  const favs = fav.map((id) => byId.get(id)).filter(Boolean) as Radio[];
-  return [...favs, ...all.filter((r) => !fav.includes(r.id))];
+  const first = [...new Set([...fav, ...recent])];
+  const head = first.map((id) => byId.get(id)).filter(Boolean) as Radio[];
+  return [...head, ...all.filter((r) => !first.includes(r.id))];
+}
+
+/** most recent first, 12 kept */
+export async function rememberRadio(profileId: string, id: string): Promise<string[]> {
+  const recent = (await getMeta<string[]>(recentKey(profileId))) || [];
+  const next = [id, ...recent.filter((x) => x !== id)].slice(0, 12);
+  await setMeta(recentKey(profileId), next);
+  return next;
 }
 
 export async function toggleRadioFav(profileId: string, id: string): Promise<boolean> {

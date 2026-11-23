@@ -8,7 +8,7 @@ import { Tmdb } from '@/core/enrich/tmdb';
 import { Enricher, enrichSeason, refreshLists } from '@/core/enrich/enrich';
 import { db, getMeta, setMeta } from '@/core/db';
 import type { TmdbCollection, TmdbPerson } from '@/core/enrich/tmdb';
-import type { Source, SyncProgress } from '@/core/types';
+import type { Program, Source, SyncProgress } from '@/core/types';
 
 type Secrets = Record<string, string | undefined>;
 let enricher: Enricher | null = null;
@@ -62,6 +62,16 @@ export const api = {
 
   loadEpisodes(seriesId: string, password: string) {
     return loadXtreamEpisodes(seriesId, password);
+  },
+
+  /** what is on air on these guide ids (the player's channel list): read here, only the result crosses */
+  async onAirFor(epgIds: string[], at = Date.now()) {
+    const want = new Set(epgIds);
+    const out = new Map<string, { now?: Program }>();
+    await db.programs.where('start').between(at - 6 * 3600000, at + 1).each((p) => {
+      if (p.stop > at && want.has(p.epgId)) out.set(p.epgId, { now: p });
+    });
+    return out;
   },
 
   loadVodInfo(movieId: string, password: string) {

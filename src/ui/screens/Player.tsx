@@ -9,7 +9,8 @@ import { db } from '@/core/db';
 import type { Channel, PlayRequest, Program } from '@/core/types';
 import { catchupCandidates, nextEpisode, playChannelRequest, playEpisodeRequest } from '@/core/playback';
 import { canCatchup } from '@/core/sources/urls';
-import { nowNext, programsFor, saveProgress, type NowNext } from '@/core/repo';
+import { programsFor, saveProgress, type NowNext } from '@/core/repo';
+import { dataWorker } from '@/core/workers';
 import { fmtDuration, fmtTime, t, getLang } from '@/core/i18n';
 import { useApp } from '@/state/store';
 import { rememberServer } from '@/core/profiles';
@@ -37,15 +38,19 @@ type Panel = null | 'channels' | 'programs' | 'settings' | 'info';
 const HIDE_MS = 4500;
 /** distance to the live edge still shown as "live" (players stay a few segments behind) */
 const LIVE_SLACK = 8;
-const ZAP_NOW: { at: number; map: Map<string, NowNext> | null; running: Promise<Map<string, NowNext>> | null } = { at: 0, map: null, running: null };
-function refreshZapNow(): Promise<Map<string, NowNext>> {
-  if (ZAP_NOW.map && Date.now() - ZAP_NOW.at < 3 * 60000) return Promise.resolve(ZAP_NOW.map);
-  ZAP_NOW.running ??= nowNext().then((m) => {
+// what's on each channel of the player's list: read by the data worker (the whole guide window
+// was read on the UI thread, which froze "Toutes les chaînes" on TVs), kept between players
+const ZAP_NOW: { at: number; key: string; map: Map<string, NowNext> | null; running: Promise<Map<string, NowNext>> | null } = { at: 0, key: '', map: null, running: null };
+function refreshZapNow(epgIds: string[]): Promise<Map<string, NowNext>> {
+  const key = epgIds.length + ':' + epgIds.slice(0, 50).join(',');
+  if (ZAP_NOW.map && ZAP_NOW.key === key && Date.now() - ZAP_NOW.at < 3 * 60000) return Promise.resolve(ZAP_NOW.map);
+  ZAP_NOW.running ??= dataWorker().onAirFor(epgIds).then((m: Map<string, NowNext>) => {
     ZAP_NOW.map = m;
+    ZAP_NOW.key = key;
     ZAP_NOW.at = Date.now();
     return m;
   }).finally(() => { ZAP_NOW.running = null; });
-  return ZAP_NOW.running;
+  return ZAP_NOW.running!;
 }
 
 const isDvr = (mode: string, s: EngineState) => mode === 'live' && s.seekableEnd - s.seekableStart > 60;
@@ -81,6 +86,7 @@ export function Player({ req }: { req: PlayRequest }) {
   const [zapNow, setZapNow] = useState<Map<string, { now?: Program }>>(new Map());
   const [numBuf, setNumBuf] = useState('');
   const [banner, setBanner] = useState(false);
+  const quietZap = useRef(false);
   const [fit, setFit] = useState<'fit' | 'fill' | 'zoom'>('fit');
   const [rate, setRate] = useState(1);
   const [nextEp, setNextEp] = useState<{ count: number } | null>(null);
@@ -267,14 +273,13 @@ export function Player({ req }: { req: PlayRequest }) {
 
   // what's on every channel: read in the background soon after playback starts and kept between
   // players, so "Toutes les chaînes" opens at once (it used to read the whole guide on open)
+  const zapEpgIds = useMemo(() => [...new Set(zapChannels.map((c) => c.epgId).filter(Boolean) as string[])], [zapChannels]);
   useEffect(() => {
-    if (mode === 'vod') return;
+    if (mode === 'vod' || !zapEpgIds.length) return;
     if (ZAP_NOW.map) setZapNow(ZAP_NOW.map);
-    const fresh = Date.now() - ZAP_NOW.at < 3 * 60000;
-    if (fresh && panel !== 'channels') return;
-    const tm = setTimeout(() => void refreshZapNow().then(setZapNow), panel === 'channels' ? 0 : 2500);
+    const tm = setTimeout(() => void refreshZapNow(zapEpgIds).then(setZapNow), panel === 'channels' ? 0 : 2500);
     return () => clearTimeout(tm);
-  }, [panel, mode]);
+  }, [panel, mode, zapEpgIds]);
 
   // ───────── timeline ─────────
   const catchupOk = !!channel && canCatchup(channel);
@@ -406,7 +411,7 @@ export function Player({ req }: { req: PlayRequest }) {
       prevChannel.current = channel?.id || null;
       // cached guide (a full read on every zap made zapping slow); that channel alone when stale
       const at = Date.now();
-      let pn = (await refreshZapNow()).get(ch.epgId || '')?.now;
+      let pn = ZAP_NOW.map?.get(ch.epgId || '')?.now;
       if (ch.epgId && !(pn && pn.start <= at && pn.stop > at)) pn = (await programsFor(ch.epgId, at - 6 * 3600000, at + 60000)).find((p) => p.start <= at && p.stop > at);
       const r = await playChannelRequest(ch, pn);
       setPanel(null);
@@ -421,6 +426,9 @@ export function Player({ req }: { req: PlayRequest }) {
       if (!zapChannels.length || !channel) return;
       const i = zapChannels.findIndex((c) => c.groupKey === channel.groupKey);
       const n = zapChannels[(i + d + zapChannels.length) % zapChannels.length];
+      // remote zapping: only the channel banner, the controls would be in the way of the next zap
+      quietZap.current = true;
+      setUiVisible(false);
       void zapTo(n);
     },
     [zapChannels, channel, zapTo],
@@ -428,6 +436,7 @@ export function Player({ req }: { req: PlayRequest }) {
 
   // ───────── UI visibility ─────────
   const poke = useCallback(() => {
+    quietZap.current = false;
     setUiVisible(true);
     clearTimeout(hideTimer.current);
     hideTimer.current = window.setTimeout(() => {
@@ -439,6 +448,11 @@ export function Player({ req }: { req: PlayRequest }) {
     return () => clearTimeout(hideTimer.current);
   }, [poke]);
   useEffect(() => {
+    // after a remote zap the controls stay hidden while the channel loads and once it plays
+    if (quietZap.current) {
+      if (st.status === 'playing') quietZap.current = false;
+      return;
+    }
     if (st.status !== 'playing') setUiVisible(true);
     else poke();
   }, [st.status, poke]);
@@ -656,6 +670,7 @@ export function Player({ req }: { req: PlayRequest }) {
     rightLabel = fmtTime(winEnd);
   }
   const atLive = mode === 'live' && behind <= LIVE_SLACK;
+  const canRewind = !(mode === 'live' && !catchupOk && !(st.seekableEnd > st.seekableStart));
   const title = mode === 'vod' ? req.title : progAtHead?.title || req.title;
   const liveScore = mode !== 'vod' ? matchEvent(progAtHead, scores) : undefined;
   const subtitle = mode === 'vod' ? req.subtitle : [channel?.name, progAtHead?.subTitle].filter(Boolean).join(' · ') || req.subtitle;
@@ -718,7 +733,8 @@ export function Player({ req }: { req: PlayRequest }) {
 
         <div className="bottom" onPointerUp={onSurfaceTap}>
           <div className="controls" data-row data-row-lock>
-            <button className="pbtn" data-f onClick={() => seekBy(-10)} aria-label="-10s" disabled={mode === 'live' && !catchupOk && !(st.seekableEnd > st.seekableStart)}>
+            {/* always reachable with the remote: says why when the channel can't be rewound */}
+            <button className={`pbtn ${canRewind ? '' : 'dim'}`} data-f onClick={() => (canRewind ? seekBy(-10) : toast(t('player.noRewind')))} aria-label="-10s">
               <IcBack10 />
             </button>
             <button className="pbtn big" data-f data-play onClick={togglePlay} aria-label="play/pause">
@@ -770,7 +786,9 @@ export function Player({ req }: { req: PlayRequest }) {
             onActivity={poke}
             label={(r) => (mode === 'vod' ? (vodDur ? fmtDuration(r * vodDur) : '') : fmtTime(winStart + r * (winEnd - winStart)))}
             span={mode === 'vod' ? vodDur : (winEnd - winStart) / 1000}
-            disabled={(mode === 'live' && !catchupOk && !dvr) || (mode === 'vod' && !vodDur)}
+            disabled={mode === 'vod' && !vodDur}
+            locked={mode === 'live' && !catchupOk && !dvr}
+            onLocked={() => toast(t('player.noRewind'))}
           />
           <div className="times">
             <span>{leftLabel}</span>
@@ -832,20 +850,7 @@ export function Player({ req }: { req: PlayRequest }) {
           {panel === 'channels' && (
             <>
               <h3>{t('player.allChannels')}</h3>
-              <div className="zap-list">
-                {zapChannels.map((c) => (
-                  <button key={c.id} className={`zap-item ${c.groupKey === channel?.groupKey ? 'cur' : ''}`} data-f data-autofocus={c.groupKey === channel?.groupKey || undefined} onClick={() => void zapTo(c)}>
-                    <span className="n">{c.num}</span>
-                    <span className="zap-logo">
-                      <Img srcs={[c.logoAlt, c.logo]} contain label={c.name} alt="" />
-                    </span>
-                    <span style={{ minWidth: 0 }}>
-                      <div className="ellipsis" style={{ fontWeight: 600 }}>{c.name}</div>
-                      <div className="xs ellipsis" style={{ opacity: 0.7 }}>{zapNow.get(c.epgId || '')?.now?.title || ''}</div>
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <ZapList channels={zapChannels} current={channel?.groupKey} now={zapNow} onPick={(c) => void zapTo(c)} />
             </>
           )}
           {panel === 'programs' && (
@@ -930,8 +935,11 @@ function SeekBar(p: {
   disabled?: boolean;
   /** seconds covered by the whole bar (remote steps move the preview by that much) */
   span?: number;
+  /** nothing to seek in (live channel without catch-up or buffer): focusable, explains why */
+  locked?: boolean;
+  onLocked?: () => void;
 }) {
-  const { ratio, buffered, onSeek, onStep, onActivity, label, disabled, span } = p;
+  const { ratio, buffered, onSeek, onStep, onActivity, label, disabled, span, locked, onLocked } = p;
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef(false);
   const [hover, setHover] = useState<number | null>(null);
@@ -964,9 +972,16 @@ function SeekBar(p: {
       role="slider"
       aria-valuenow={Math.round(ratio * 100)}
       onKeyDown={(e) => {
+        if (locked && (e.key === 'Enter' || ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.repeat))) {
+          e.preventDefault();
+          e.stopPropagation();
+          onActivity();
+          return onLocked?.();
+        }
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
         e.preventDefault();
         e.stopPropagation();
+        if (locked) return;
         // held down: 30 s steps, then faster after 1 s (and again after 3 s) to get far quickly.
         // The cursor moves ahead (preview) and the jump happens on release.
         if (!e.repeat || !held.current) held.current = Date.now();
@@ -991,6 +1006,7 @@ function SeekBar(p: {
       }}
       onPointerDown={(e) => {
         if (disabled) return;
+        if (locked) return (e.stopPropagation(), onLocked?.());
         e.stopPropagation();
         drag.current = true;
         // capture on the bar itself so the drag survives leaving it (and the UI never auto-hides mid-drag)
@@ -1060,4 +1076,59 @@ function SettingsPanel(p: {
       case 'later': ext.shift(0.5); break;
     }
   }} />;
+}
+
+const ZAP_ROW = 62; // .zap-item height (56) + gap (6)
+const ZAP_SPAN = 24; // rows rendered on each side of the window's centre
+
+/**
+ * "Toutes les chaînes": hundreds of rows (each with a logo) took seconds to build on a TV, so only
+ * the rows around the current channel exist; the window follows the remote's focus and scrolling.
+ */
+function ZapList({ channels, current, now, onPick }: { channels: Channel[]; current?: string; now: Map<string, { now?: Program }>; onPick: (c: Channel) => void }) {
+  const curIdx = Math.max(0, channels.findIndex((c) => c.groupKey === current));
+  const [center, setCenter] = useState(curIdx);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => setCenter(curIdx), [curIdx]);
+  // touch / mouse scrolling: recentre on the rows in view
+  useEffect(() => {
+    const panel = ref.current?.closest<HTMLElement>('.panel');
+    const list = ref.current;
+    if (!panel || !list) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const top = panel.scrollTop - list.offsetTop + panel.clientHeight / 2;
+        const i = Math.min(channels.length - 1, Math.max(0, Math.round(top / ZAP_ROW)));
+        setCenter((c) => (Math.abs(c - i) > ZAP_SPAN / 2 ? i : c));
+      });
+    };
+    panel.addEventListener('scroll', onScroll, { passive: true });
+    return () => (panel.removeEventListener('scroll', onScroll), cancelAnimationFrame(raf));
+  }, [channels.length]);
+  const from = Math.max(0, center - ZAP_SPAN);
+  const to = Math.min(channels.length, center + ZAP_SPAN);
+  return (
+    <div className="zap-list" ref={ref}>
+      {from > 0 && <div style={{ height: from * ZAP_ROW - 6, flex: 'none' }} />}
+      {channels.slice(from, to).map((c, k) => {
+        const i = from + k;
+        return (
+          <button key={c.id} className={`zap-item ${i === curIdx ? 'cur' : ''}`} data-f data-autofocus={i === curIdx || undefined}
+            onFocus={() => (i - from < 6 || to - i <= 6) && setCenter(i)} onClick={() => onPick(c)}>
+            <span className="n">{c.num}</span>
+            <span className="zap-logo">
+              <Img srcs={[c.logoAlt, c.logo]} contain label={c.name} alt="" />
+            </span>
+            <span style={{ minWidth: 0 }}>
+              <div className="ellipsis" style={{ fontWeight: 600 }}>{c.name}</div>
+              <div className="xs ellipsis" style={{ opacity: 0.7 }}>{now.get(c.epgId || '')?.now?.title || ''}</div>
+            </span>
+          </button>
+        );
+      })}
+      {to < channels.length && <div style={{ height: (channels.length - to) * ZAP_ROW - 6, flex: 'none' }} />}
+    </div>
+  );
 }

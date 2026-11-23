@@ -526,5 +526,6 @@
   "radio.added": "Radio ajoutée",
   "radio.favAdded": "Ajoutée aux favoris",
   "radio.favRemoved": "Retirée des favoris",
-  "radio.hint": "Appui long sur une radio : favoris. Les favoris passent en premier."
+  "radio.hint": "Appui long sur une radio : favoris. Les favoris passent en premier.",
+  "player.noRewind": "Retour arrière impossible sur cette chaîne : pas de replay chez le fournisseur. Active « Aussi pour les chaînes de ma source IPTV » dans Paramètres › Lecteur pour pouvoir revenir en arrière."
 }

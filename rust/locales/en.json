@@ -526,5 +526,6 @@
   "radio.added": "Station added",
   "radio.favAdded": "Added to favourites",
   "radio.favRemoved": "Removed from favourites",
-  "radio.hint": "Long press a station for favourites. Favourites come first."
+  "radio.hint": "Long press a station for favourites. Favourites come first.",
+  "player.noRewind": "Can't rewind this channel: the provider has no catch-up. Turn on “Also for my IPTV source's channels” in Settings › Player to be able to rewind."
 }

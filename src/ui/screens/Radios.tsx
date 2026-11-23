@@ -1,32 +1,48 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { profileCountry } from '@/core/prefs';
-import { addCustomRadio, directoryRadios, orderRadios, radioPlayRequest, radioPrefs, removeCustomRadio, toggleRadioFav, type Radio } from '@/core/radio';
+import { addCustomRadio, directoryRadios, orderRadios, radioPlayRequest, radioPrefs, rememberRadio, removeCustomRadio, toggleRadioFav, type Radio, type RadioPrefs } from '@/core/radio';
 import { useLongPress } from '../hooks';
 import { Img } from '../components/Img';
 import { Rail } from '../components/Rail';
 import { Menu, Sheet } from '../components/Overlay';
 import { IcHeart, IcHeartFill, IcPlay, IcPlus, IcStar, IcClose } from '../icons';
 
+const DIR_MEM = new Map<string, Radio[]>();
+const PREFS_MEM = new Map<string, RadioPrefs>();
+
+/** at profile start: the saved directory and preferences in memory before the tab opens */
+export async function preloadRadios(profileId: string, country: string) {
+  const [list, prefs] = await Promise.all([directoryRadios(country).catch(() => [] as Radio[]), radioPrefs(profileId)]);
+  if (list.length) DIR_MEM.set(country, list);
+  PREFS_MEM.set(profileId, prefs);
+}
+
 /** "Radios" rail at the top of the Contenus tab: favourites first, long press for the menu */
 export function Radios() {
   const profile = useApp((s) => s.profile)!;
   const toast = useApp((s) => s.toast);
   const country = profileCountry(profile);
-  const [directory, setDirectory] = useState<Radio[]>([]);
-  const [prefs, setPrefs] = useState<{ fav: string[]; custom: Radio[] }>({ fav: [], custom: [] });
+  // last lists shown, kept in memory: the rail is there at once when coming back to the tab
+  const [directory, setDirectory] = useState<Radio[]>(() => DIR_MEM.get(country) || []);
+  const [prefs, setPrefsState] = useState<RadioPrefs>(() => PREFS_MEM.get(profile.id) || { fav: [], custom: [], recent: [] });
+  const setPrefs = (p: RadioPrefs) => (PREFS_MEM.set(profile.id, p), setPrefsState(p));
   const [menu, setMenu] = useState<Radio | null>(null);
   const [adding, setAdding] = useState(false);
   const reloadPrefs = () => void radioPrefs(profile.id).then(setPrefs);
   useEffect(reloadPrefs, [profile.id]);
   useEffect(() => {
     let off = false;
-    void directoryRadios(country).then((l) => !off && setDirectory(l), () => {});
+    void directoryRadios(country).then((l) => (DIR_MEM.set(country, l), !off && setDirectory(l)), () => {});
     return () => { off = true; };
   }, [country]);
-  const list = orderRadios(directory, prefs.custom, prefs.fav);
-  const play = (r: Radio) => useApp.getState().play(radioPlayRequest(r));
+  const list = useMemo(() => orderRadios(directory, prefs.custom, prefs.fav, prefs.recent), [directory, prefs]);
+  const play = (r: Radio) => {
+    useApp.getState().play(radioPlayRequest(r));
+    // shown right after the favourites next time
+    void rememberRadio(profile.id, r.id).then((recent) => setPrefs({ ...(PREFS_MEM.get(profile.id) || prefs), recent }));
+  };
   const fav = async (r: Radio) => {
     const on = await toggleRadioFav(profile.id, r.id);
     toast(on ? t('radio.favAdded') : t('radio.favRemoved'));

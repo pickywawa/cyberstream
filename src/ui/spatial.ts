@@ -12,7 +12,6 @@ import { focus_target } from '../rust/generated/cyberstream';
 type Dir = 'up' | 'down' | 'left' | 'right';
 
 const KEY_DIR: Record<string, Dir> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
-const lastInRow = new WeakMap<Element, HTMLElement>();
 let backHandler: () => boolean = () => false;
 let keyInterceptor: ((e: KeyboardEvent) => boolean) | null = null;
 let smooth = true;
@@ -44,11 +43,21 @@ function focusables(root: Element): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>('[data-f]')).filter(visible);
 }
 
+/** a film / series page (stack page) keeps the main tabs and the update strip reachable above it */
+const OPEN_ABOVE = '.topnav [data-f], .update-banner [data-f]';
+const isStackScope = (scope: Element) => scope.classList.contains('stack-page');
+function inScope(scope: Element, el: Element): boolean {
+  return scope.contains(el) || (isStackScope(scope) && !!el.closest('.topnav, .update-banner'));
+}
+function scopeItems(scope: Element): HTMLElement[] {
+  const list = Array.from(scope.querySelectorAll<HTMLElement>('[data-f]'));
+  if (isStackScope(scope)) list.push(...document.querySelectorAll<HTMLElement>(OPEN_ABOVE));
+  return list;
+}
+
 export function focusEl(el: HTMLElement | null | undefined, scroll = true) {
   if (!el) return;
   el.focus({ preventScroll: true });
-  const row = el.closest('[data-row]');
-  if (row) lastInRow.set(row, el);
   if (scroll) el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
 }
 
@@ -92,20 +101,20 @@ function best(from: HTMLElement, cands: HTMLElement[], dir: Dir): HTMLElement | 
 export function move(dir: Dir): boolean {
   const scope = currentScope();
   const active = document.activeElement as HTMLElement | null;
-  if (!active || !scope.contains(active) || !active.hasAttribute('data-f')) {
+  if (!active || !inScope(scope, active) || !active.hasAttribute('data-f')) {
     focusFirst(scope);
     return true;
   }
-  // Up from the main tabs: only to the update strip above them. Otherwise stay put (it used to
-  // jump to content scrolled out of view above, which looked like the navigation looping).
+  // Up from any main tab: straight to the update strip's install button (whatever the tab's
+  // position). Without a strip, stay put (it used to jump to content scrolled out of view above).
   if (dir === 'up' && active.closest('.topnav')) {
-    const strip = Array.from(scope.querySelectorAll<HTMLElement>('.update-banner [data-f]')).filter(visible);
-    if (strip.length) focusEl(best(active, strip, 'up') || strip[0], false);
+    const strip = Array.from(document.querySelectorAll<HTMLElement>('.update-banner [data-f]')).filter(visible);
+    if (strip.length) focusEl(strip.find((e) => e.classList.contains('primary')) || strip[0], false);
     return true;
   }
   // and Down from that strip back to the current tab
   if (dir === 'down' && active.closest('.update-banner')) {
-    const tabs = scope.querySelector('.topnav [data-tabs]');
+    const tabs = document.querySelector('.topnav [data-tabs]');
     const tab = tabs && currentTab(tabs);
     if (tab) {
       focusEl(tab, false);
@@ -124,7 +133,7 @@ export function move(dir: Dir): boolean {
     }
     if (row.hasAttribute('data-row-lock')) return true;
   }
-  const all = Array.from(scope.querySelectorAll<HTMLElement>('[data-f]'));
+  const all = scopeItems(scope);
   const others = row && (dir === 'up' || dir === 'down') ? all.filter((e) => !row.contains(e)) : all;
   let target = best(active, others, dir);
   // a tab row lying between here and the target is never skipped (the closest wins)
@@ -141,17 +150,15 @@ export function move(dir: Dir): boolean {
       if (el) (gap = d), (target = el);
     }
   }
-  // 2. entering a row: restore its remembered item
+  // 2. entering a row from above / below: a tab row gives its current tab, a section (rail, button
+  //    row) its first item, not the one nearest in the column (the player's bars keep the nearest)
   if (target) {
     const trow = target.closest('[data-row]');
     const cur = trow && trow !== row && trow.hasAttribute('data-tabs') ? currentTab(trow) : null;
     if (cur) target = cur;
-    else if (trow && trow !== row && (dir === 'up' || dir === 'down')) {
-      const remembered = lastInRow.get(trow);
-      if (remembered && remembered.isConnected && visible(remembered)) {
-        const rr = remembered.getBoundingClientRect();
-        if (rr.right > 0 && rr.left < innerWidth) target = remembered;
-      }
+    else if (trow && trow !== row && (dir === 'up' || dir === 'down') && !trow.closest('.player, .topnav')) {
+      const first = focusables(trow).find((e) => !e.hasAttribute('disabled'));
+      if (first) target = first;
     }
   }
   if (target) {
