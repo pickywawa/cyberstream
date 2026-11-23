@@ -46,7 +46,7 @@ struct Trakt {
     lists: Vec<List>,
 }
 /**
- * A long one-word name over two lines ("Documen- / taires"): cut between two consonants (French
+ * A long one-word name over two lines ("Documen / taires"): cut between two consonants (French
  * syllables), the cut nearest the middle; short names stay on one line.
  */
 fn two_lines(label: &str) -> Option<(String, String)> {
@@ -109,7 +109,7 @@ pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
         // each its colour (blue, red, green, yellow, purple, other blue, orange, then again)
         section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
             div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){button.card.cat-card data-f data-cmd=(format!("tile:{id}")) aria-label=(t(key)){
-                span.ic{(icon(id,""))}span.txt{span.lb{@if let Some((a,b))=two_lines(t(key)){span.l1{(a)"-"}span.l2{(b)}}@else{(t(key))}}}
+                span.ic{(icon(id,""))}span.txt{span.lb{@if let Some((a,b))=two_lines(t(key)){span.l1{(a)}span.l2{(b)}}@else{(t(key))}}}
             }}
         }}}
         @if !h.cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &h.cont{(w.card(true,true).outer("land"))}}))}
