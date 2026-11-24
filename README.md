@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="Dernière version" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/moteur-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
+  <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="Plateformes" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -135,6 +136,10 @@ Le site vitrine est dans [`docs/`](docs/) (HTML, CSS et JS sans build). Pour le 
 ```sh
 python3 -m http.server 8090 -d docs
 ```
+
+## 📄 Licence
+
+Code sous licence [MIT](LICENSE).
 
 ---
 
