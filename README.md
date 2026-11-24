@@ -28,7 +28,7 @@
 <p align="center">
   <img src="docs/assets/demo.gif" alt="Démonstration : profil, accueil, fiche film, TV en direct, guide et recherche" width="100%" />
   <br />
-  <sub>Données et visuels de démonstration fictifs.</sub>
+  <sub>Enregistré avec la source de démonstration et les métadonnées TMDB.</sub>
 </p>
 
 ## ⚡ Fonctions
@@ -39,7 +39,7 @@
 | 🗓️ **Guide TV XMLTV** | Grille virtualisée, ligne « maintenant », rattrapage des programmes passés. |
 | 🎬 **Films & séries** | Fiches enrichies par TMDB : casting, collections, âge, saisons, reprise, épisode suivant. |
 | ⏸️ **Pause du direct** | Tampon local de 30 à 60 min, ±10 s, retour au direct, bascule vers un flux de secours. |
-| 🎙️ **Commande vocale** | « Mets la chaîne 5 », « recherche Lumen », « recule de 30 secondes », en français et en anglais. |
+| 🎙️ **Commande vocale** | « Mets la chaîne 5 », « recherche Dune », « recule de 30 secondes », en français et en anglais. |
 | 📱 **Installation par QR code** | La TV récupère profil, sources et réglages depuis le téléphone. |
 | 🔁 **Replay gratuit** | ARTE, france.tv, Okoo et flux RSS YouTube. |
 | 💬 **Sous-titres & Trakt** | SRT, WebVTT, OpenSubtitles par empreinte, scrobble et watchlist Trakt. |
@@ -58,7 +58,7 @@
   </tr>
   <tr>
     <td><img src="docs/assets/screens/series-episodes.webp" alt="Saisons et épisodes d’une série" /><p align="center"><sub>Série</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="Lecteur" /><p align="center"><sub>Lecteur — extrait : <i>Sintel</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="docs/assets/screens/player.webp" alt="Lecteur" /><p align="center"><sub>Lecteur — flux de test <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
@@ -138,4 +138,4 @@ python3 -m http.server 8090 -d docs
 
 ---
 
-<p align="center"><sub>Les titres, affiches et chaînes des captures sont fictifs. Extrait vidéo : <i>Sintel</i> © Blender Foundation, licence CC BY 3.0.</sub></p>
+<p align="center"><sub>Affiches, photos et métadonnées : <a href="https://www.themoviedb.org/">TMDB</a>. Ce produit utilise l’API TMDB sans être approuvé ni certifié par TMDB. Logos de chaînes : base <a href="https://github.com/iptv-org/database">iptv-org</a> ; marques et visuels appartiennent à leurs détenteurs. Vidéo du lecteur : flux de test <i>Big Buck Bunny</i> © Blender Foundation, CC BY 3.0.</sub></p>

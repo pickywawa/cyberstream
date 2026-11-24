@@ -199,7 +199,7 @@ h3 { margin: 0 0 8px; font-size: 1.12rem; letter-spacing: -0.01em; }
   width: 30%; max-width: 230px; padding: 8px; border-radius: 34px;
   background: linear-gradient(160deg, #23272f, #0b0c10); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(79, 227, 168, 0.12);
 }
-.phone img { border-radius: 27px; width: 100%; }
+.phone img { border-radius: 27px; width: 100%; height: auto; }
 .phone.up { transform: translateY(-34px); }
 
 /* ---------- architecture ---------- */
