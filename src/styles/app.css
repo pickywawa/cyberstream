@@ -129,7 +129,7 @@ html.native-video .app-shell { visibility: hidden; }
 .kbd [data-tabs] [data-f]:focus { box-shadow: none; background: var(--accent); color: var(--accent-text); opacity: 1; }
 [data-tabs] [data-f]:focus-visible::after,
 .kbd [data-tabs] [data-f]:focus::after { display: none; }
-.kbd .navlink.active { background: var(--surface-2); color: var(--text); }
+/* remote: the current tab (focus elsewhere) looks as with the mouse, its name in the main colour (.navlink.active) */
 .tabs[data-tabs] .tab { padding: 6px 14px; border-radius: 6px; }
 .kbd .tabs[data-tabs] .tab.active { background: var(--surface-2); }
 .kbd .tabs[data-tabs] .tab.active::after { display: none; }
@@ -331,7 +331,15 @@ html.tv .rail-head a, html.tv .rail-head button { display: none; }
 .hero .bg { z-index: 0; }
 .hero .content { z-index: 2; }
 .hero-select:focus-visible, .kbd .hero-select:focus { box-shadow: none; animation: none !important; }
-.hero-select:focus-visible::before, .kbd .hero-select:focus::before { content: ''; position: absolute; inset: 0; z-index: 4; box-shadow: inset 0 0 0 3px var(--focus); pointer-events: none; }
+/* selected banner: no frame, its title (logo or text) slowly zooms in and out */
+.hero .content .title-logo, .hero .content h1 { transform-origin: left bottom; }
+.hero-select:focus-visible .content .title-logo, .kbd .hero-select:focus .content .title-logo,
+.hero-select:focus-visible .content h1, .kbd .hero-select:focus .content h1 { animation: hero-title 1.8s ease-in-out infinite; will-change: transform; }
+@keyframes hero-title { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-select:focus-visible .content .title-logo, .kbd .hero-select:focus .content .title-logo,
+  .hero-select:focus-visible .content h1, .kbd .hero-select:focus .content h1 { animation: none; transform: scale(1.04); }
+}
 /* its trailer, between the image and the title */
 .hero-trailer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .hero-trailer .trailer::after { content: ''; position: absolute; inset: 0; background: var(--hero-scrim), var(--scrim); }
@@ -444,7 +452,7 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 .msg-ko { color: #ff6b7d; }
 
 /* ───────────── Settings ───────────── */
-.settings { max-width: 880px; padding: 24px var(--gutter) 60px; }
+.settings { max-width: 880px; margin-inline: auto; padding: 24px var(--gutter) 60px; }
 .mobile .settings { padding-top: calc(16px + var(--sat)); }
 .settings h1 { font-size: 2rem; font-weight: 800; margin-bottom: 20px; }
 .settings h2 { font-size: 1.2rem; margin: 26px 0 12px; }
@@ -1039,3 +1047,32 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .tv-head .tab { font-size: 1.05rem; padding: 4px 12px; }
 .btn-guide { height: 38px; padding: 0 14px; gap: 8px; font-size: .95rem; }
 .btn-guide svg { width: 18px; height: 18px; }
+
+/* ───────────── Light rendering (Performance setting, low-end devices) ───────────── */
+/* no blur behind the rating chips: a plain see-through background */
+.perf .card .thumb .imdb, .perf .card .thumb .score, .perf .mtop.over .mtop-btn, .perf .voice-bubble { backdrop-filter: none; }
+.perf .card .thumb .score { background: rgba(0, 0, 0, 0.72); }
+/* focus: no pulse, no glow, same weight (a bolder label reflows its row) */
+.perf button[data-f]:focus-visible, .perf.kbd button[data-f]:focus { animation: none; }
+.perf .cat-wrap .cat-card { transition: none; }
+.perf .cat-wrap .cat-card:hover, .perf .cat-wrap .cat-card[data-f]:focus-visible, .perf.kbd .cat-wrap .cat-card[data-f]:focus { box-shadow: none; }
+.perf .cat-wrap .cat-card:hover .lb, .perf .cat-wrap .cat-card[data-f]:focus-visible .lb, .perf.kbd .cat-wrap .cat-card[data-f]:focus .lb { font-weight: 400; }
+/* low-end device: Home's shelves out of view are neither laid out nor painted */
+.low-end .home-shelves > .rail:not(.cat-rail) { content-visibility: auto; contain-intrinsic-size: auto 320px; }
+.low-end .replay-shelves > .rail { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+
+/* Home's categories: the Contenus filters' look (grey when current, the main colour under the remote), an icon each */
+.home-cats { margin: clamp(10px, 1.4vw, 20px) 0 clamp(6px, 1vw, 14px); }
+.cat-chip { display: inline-flex; align-items: center; gap: 8px; }
+.cat-chip svg { width: 20px; height: 20px; flex: none; }
+.mobile .cat-chip svg { width: 18px; height: 18px; }
+.home-cat-content { min-height: calc(100vh - var(--nav-h)); }
+/* radio tiles: the same gradient as the tiles without a logo, in the logo's colour (images.ts) */
+.radio-tile { background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--tile-hue, var(--accent)) 55%, transparent), transparent 70%), linear-gradient(160deg, var(--surface-2), var(--surface)); }
+/* radio logos: one frame for all (small icons enlarged, large ones reduced), above the name */
+.radio-tile:has(img) { padding: 8px 10px 24px; }
+.radio-tile img { width: 70%; height: 84%; max-width: none; max-height: none; object-fit: contain; }
+/* radios without a logo: their initials in a square the size of a square logo, the name below as for the others */
+.radio-tile .name-tile { padding: 8px 10px 24px; gap: 0; }
+.radio-tile .name-tile .mono { width: auto; height: 98%; aspect-ratio: 1; font-size: clamp(1.2rem, 2vw, 1.7rem); border-radius: 22%; }
+.radio-tile .name-tile .nm { display: none; }

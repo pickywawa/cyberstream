@@ -1,5 +1,5 @@
 use super::*;
-use crate::artwork::Image;
+use crate::{artwork::Image, cards::low_end};
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -55,9 +55,12 @@ impl Item {
         .markup()
     }
     fn card(&self, lang: &str, now: f64) -> Card {
+        // ARTE pictures come in any size: a card (~220 px wide) needs far less than the 940 px kept for
+        // the page; france.tv's links are signed (their size can't be changed)
+        let size = if low_end() { "400x225" } else { "480x270" };
         let mut c = Card {
             title: self.title.clone(),
-            image: self.image.clone(),
+            image: self.image.as_ref().map(|s| s.replace("/940x530", &format!("/{size}"))),
             cmd: format!("item:{}", self.id),
             long_press: true,
             ..Default::default()
@@ -147,32 +150,54 @@ pub fn replay_filters(filter: &str, lang: &str) -> String {
        (match f{"all"=>lookup(lang,"replay.all"),"kids"=>lookup(lang,"replay.kids"),_=>provider(f)})
     }}}.into_string()
 }
-#[wasm_bindgen]
-pub fn replay_shelves(
-    raw: &str,
-    continuing: &str,
-    filter: &str,
-    lang: &str,
-    now: f64,
-    status: &str,
-) -> Result<String, String> {
-    let cat: Option<Catalog> =
-        serde_json::from_str(raw).map_err(|_| "Catalogue replay invalide")?;
+/** the Contenus tab's shelves, one block each `[key, html]` (keys unique, in page order) */
+fn replay_block_list(raw: &str, continuing: &str, filter: &str, lang: &str, now: f64, status: &str) -> Result<Vec<(String, String)>, String> {
+    let cat: Option<Catalog> = serde_json::from_str(raw).map_err(|_| "Catalogue replay invalide")?;
     let cont: Vec<Watch> = serde_json::from_str(continuing).map_err(|_| "Historique invalide")?;
     let t = |k| lookup(lang, k);
-    Ok(html!{
-        @if !cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &cont{(w.card(true,false).outer("land"))}}))}
-        @if status=="loading"{div.spinner.big style="margin:80px auto"{}}
-        @if status=="error"{div.empty{p{(t("replay.error"))}button.btn data-f data-cmd="retry"{(icon("restart",""))" "(t("replay.retry"))}}}
-        @if let Some(c)=cat{
-            @for p in &c.failed{@if filter=="all"||filter==p||(filter=="kids"&&p=="francetv"){p.container.muted.small{(t("replay.providerDown").replace("{name}",provider(p)))}}}
-            @for r in c.ordered(filter){section.rail data-rail=(&r.id){div.rail-head{h2.section-title{
+    let mut out: Vec<(String, String)> = vec![];
+    let mut keys = std::collections::HashSet::new();
+    let mut push = |key: &str, m: Markup| {
+        let mut k = key.to_string();
+        let mut n = 1;
+        while !keys.insert(k.clone()) {
+            n += 1;
+            k = format!("{key}#{n}");
+        }
+        out.push((k, m.into_string()));
+    };
+    if !cont.is_empty() {
+        push("continue", rail("continue", t("home.continue"), None, html! {@for w in &cont{(w.card(true,false).outer("land"))}}));
+    }
+    if status == "loading" {
+        push("loading", html! {div.spinner.big style="margin:80px auto"{}});
+    }
+    if status == "error" {
+        push("error", html! {div.empty{p{(t("replay.error"))}button.btn data-f data-cmd="retry"{(icon("restart",""))" "(t("replay.retry"))}}});
+    }
+    if let Some(c) = cat {
+        for p in &c.failed {
+            if filter == "all" || filter == p || (filter == "kids" && p == "francetv") {
+                push(&format!("down:{p}"), html! {p.container.muted.small{(t("replay.providerDown").replace("{name}",provider(p)))}});
+            }
+        }
+        for r in c.ordered(filter) {
+            push(&r.id, html! {section.rail data-rail=(&r.id){div.rail-head{h2.section-title{
                span class=(format!("rp-prov {}",if r.kids{"okoo"}else{&r.provider})){(if r.kids{"Okoo"}else{provider(&r.provider)})}(&r.title)}}
                div.rail-track data-row{@for it in &r.items{(it.card(lang,now).outer("land"))}}
-            }}
-            p.container.dim.small style="margin:28px 0 40px"{(t("replay.footer"))}
+            }});
         }
-    }.into_string())
+        push("footer", html! {p.container.dim.small style="margin:28px 0 40px"{(t("replay.footer"))}});
+    }
+    Ok(out)
+}
+#[wasm_bindgen]
+pub fn replay_blocks(raw: &str, continuing: &str, filter: &str, lang: &str, now: f64, status: &str) -> Result<String, String> {
+    serde_json::to_string(&replay_block_list(raw, continuing, filter, lang, now, status)?).map_err(|e| e.to_string())
+}
+#[wasm_bindgen]
+pub fn replay_shelves(raw: &str, continuing: &str, filter: &str, lang: &str, now: f64, status: &str) -> Result<String, String> {
+    Ok(replay_block_list(raw, continuing, filter, lang, now, status)?.into_iter().map(|(_, h)| h).collect())
 }
 #[wasm_bindgen]
 pub fn replay_banner(raw: &str, lang: &str, index: usize, count: usize) -> Result<String, String> {

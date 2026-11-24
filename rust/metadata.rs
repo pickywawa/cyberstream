@@ -81,10 +81,14 @@ fn details(r: &Value, kind: &str, lang: &str) -> Value {
         .into_iter()
         .find_map(|l| logos.iter().find(|x| strv(&x["iso_639_1"]) == l));
     let videos = arr(&r["videos"]["results"]);
-    let trailer = videos
-        .iter()
-        .find(|v| v["site"] == "YouTube" && v["type"] == "Trailer")
-        .or_else(|| videos.iter().find(|v| v["site"] == "YouTube"));
+    // the profile's language first (a French trailer before an English one), then a trailer of any language
+    let yt = |v: &&Value| v["site"] == "YouTube";
+    let trailer = [(Some(locale), "Trailer"), (Some(locale), "Teaser"), (None, "Trailer"), (None, "Teaser")]
+        .into_iter()
+        .find_map(|(l, kind)| {
+            videos.iter().filter(yt).find(|v| v["type"] == kind && l.is_none_or(|l| strv(&v["iso_639_1"]) == l))
+        })
+        .or_else(|| videos.iter().find(yt));
     let cast = arr(&r["credits"]["cast"]);
     let creator = arr(&r["credits"]["crew"])
         .iter()

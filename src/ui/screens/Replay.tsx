@@ -6,22 +6,59 @@ import { replayCatalog, replayInfo, replayShow, type ReplayCatalog, type ReplayI
 import { useAsync } from '../hooks';
 import { profileCountry } from '@/core/prefs';
 import { RustView, readCommand } from '../components/RustView';
-import { replay_shelves, replay_filters, replay_page } from '@/rust/generated/cyberstream';
+import { ShelvesView } from '../components/Shelves';
+import { replay_blocks, replay_filters, replay_page } from '@/rust/generated/cyberstream';
 import { openReplay, playReplay } from '../actions';
 import { Radios } from './Radios';
 import { ReplayMenu } from '../components/TitleMenu';
 
 const MEM = new Map<string, ReplayCatalog>();
 type Filter = 'all' | ReplayProvider | 'kids';
+type Status = 'loading' | 'error' | 'ready';
 
-/** profile start: the saved catalogue goes to memory (the tab shows its rows at once), then the network refreshes it */
+const SHELF_FIELDS = ['rails','kids','youtube','failed','id','title','provider','items','kind','subtitle','channel','image','durationSec','published','expires'];
+/**
+ * The shelves' markup, kept per catalogue copy and filter: coming back to the tab (or to a filter)
+ * reuses it at once. Rebuilt after 10 min ("il y a 5 min" labels, programmes leaving soon).
+ */
+const BLOCKS = new WeakMap<object, Map<string, { at: number; blocks: [string, string][] }>>();
+const NO_CAT = {};
+function shelvesFor(cat: ReplayCatalog | null | undefined, filter: Filter, lang: string, status: Status): [string, string][] {
+  const owner = cat || NO_CAT;
+  const key = `${filter}|${lang}|${status}`;
+  let byKey = BLOCKS.get(owner);
+  if (!byKey) BLOCKS.set(owner, byKey = new Map());
+  const hit = byKey.get(key);
+  if (hit && Date.now() - hit.at < 600000) return hit.blocks;
+  // "Reprendre la lecture" lives in Mes vidéos: no resume shelf here
+  const blocks = JSON.parse(replay_blocks(JSON.stringify(cat || null, SHELF_FIELDS), '[]', filter, lang, Date.now(), status)) as [string, string][];
+  byKey.set(key, { at: Date.now(), blocks });
+  return blocks;
+}
+const idle = (fn: () => void) => {
+  const w = window as Window & { requestIdleCallback?: typeof requestIdleCallback };
+  if (w.requestIdleCallback) w.requestIdleCallback(fn, { timeout: 4000 });
+  else setTimeout(fn, 1500);
+};
+
+/**
+ * Profile start: the saved catalogue goes to memory and its shelves are prepared when the app is idle,
+ * so the tab shows them at once; the network (data worker) refreshes it a little later.
+ */
 export async function preloadReplay(lang: string, country: string) {
   const key = `${lang}:${country}`;
   if (MEM.has(key)) return;
   const saved = await replayCatalog(lang, { cachedOnly: true, country }).catch(() => null);
-  if (saved && !MEM.has(key)) MEM.set(key, saved);
+  if (saved && !MEM.has(key)) {
+    MEM.set(key, saved);
+    idle(() => shelvesFor(saved, 'all', lang, 'ready'));
+  }
   // a little later, so the start of the app isn't slowed down (fresh enough copies are kept as is)
-  setTimeout(() => void replayCatalog(lang, { country }).then((c) => c && MEM.set(key, c), () => {}), 8000);
+  setTimeout(() => void replayCatalog(lang, { country, known: MEM.get(key) }).then((c) => {
+    if (!c || c === MEM.get(key)) return;
+    MEM.set(key, c);
+    idle(() => shelvesFor(c, 'all', lang, 'ready'));
+  }, () => {}), 8000);
 }
 
 export function Replay() {
@@ -36,9 +73,9 @@ export function Replay() {
 
   useEffect(() => {
     let off = false;
-    // the saved copy shows at once, the network refreshes it when it is old
+    // the copy in memory (or the saved one) shows at once; the network refreshes it only when it is old
     if (!MEM.has(memKey)) void replayCatalog(lang, { cachedOnly: true, country }).then((c) => !off && c && setCat((x) => x ?? c));
-    replayCatalog(lang, { force: reload > 0, country }).then(
+    replayCatalog(lang, { force: reload > 0, country, known: MEM.get(memKey) }).then(
       (c) => {
         if (off || !c) return;
         MEM.set(memKey, c);
@@ -51,10 +88,8 @@ export function Replay() {
     };
   }, [lang, country, memKey, reload]);
 
-  const shelves = useMemo(() => replay_shelves(JSON.stringify(cat || null, [
-    'rails','kids','youtube','failed','id','title','provider','items','kind','subtitle','channel','image','durationSec','published','expires'
-  // "Reprendre la lecture" lives in Mes vidéos: no resume shelf here
-  ]), '[]', filter, lang, Date.now(), cat === undefined ? 'loading' : cat === null ? 'error' : 'ready'), [cat,filter,lang]);
+  const status: Status = cat === undefined ? 'loading' : cat === null ? 'error' : 'ready';
+  const blocks = useMemo(() => shelvesFor(cat, filter, lang, status), [cat, filter, lang, status]);
   const lookup = useMemo(() => {
     const map = new Map<string,ReplayItem>();
     if (cat) for (const rail of [...cat.rails, ...(cat.kids || []), ...(cat.youtube || [])]) for (const item of rail.items) map.set(item.id,item);
@@ -65,7 +100,7 @@ export function Replay() {
       <div className="hero-spacer" />
       <Radios />
       <RustView className="chips" row tabs html={replay_filters(filter, lang)} onCommand={f => setFilter(f as Filter)} />
-      <RustView className="replay-shelves" html={shelves} onCommand={cmd => {
+      <ShelvesView className="replay-shelves" blocks={blocks} resetKey={filter} onCommand={cmd => {
         const [action, id] = readCommand(cmd);
         if (action === 'retry') setReload(n => n+1);
         if (action === 'item') { const item = lookup.get(id); if (item) openReplay(item); }

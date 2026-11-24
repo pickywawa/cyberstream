@@ -3,6 +3,7 @@ import type { Movie, Series, TmdbListItem } from '../types';
 import { isGenericEpisodeTitle, norm } from '../util/text';
 import { Tmdb, type TmdbDetails } from './tmdb';
 import { fetchTextStream, lines } from '../net/http';
+import { giveWay } from '../quiet';
 
 /** bump to re-enrich already enriched titles in the background (v2: age, saga, IMDb id, recos, cast photos) */
 export const ENRICH_V = 2;
@@ -214,6 +215,8 @@ export class Enricher {
       this.onUpdate();
     };
     while (!this.stopFlag) {
+      // weak device: never while the remote is in use, and a breather between two titles
+      await giveWay(300);
       const job = this.priority.shift();
       if (job) {
         if (job.kind === 'movie') {
@@ -295,7 +298,9 @@ export async function refreshImdbRatings(profileId: string): Promise<boolean> {
   if (!want.size || Date.now() - last < gap) return false;
   const found: { id: string; rating: number; votes: number }[] = [];
   try {
+    let n = 0;
     for await (const line of lines(await fetchTextStream(IMDB_RATINGS, 300000))) {
+      if (++n % 20000 === 0) await giveWay();
       const tab = line.indexOf('\t');
       if (tab < 0) continue;
       const id = line.slice(0, tab);

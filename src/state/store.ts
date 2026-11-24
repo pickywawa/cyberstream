@@ -1,4 +1,5 @@
 import { isAndroidApp } from '@/core/platform';
+import { isLowEnd } from '@/core/perfTier';
 import { create } from 'zustand';
 import type { PlayRequest, Profile, SyncProgress, ThemeId, Lang } from '@/core/types';
 import type { UpdateState } from '@/core/updater';
@@ -27,6 +28,8 @@ export type SettingsSection = 'sources' | 'services' | 'appearance' | 'player' |
 export interface GridFilter {
   universe?: string;
   genre?: string;
+  /** genre bits (rust/genres.rs: TMDB genres + the provider's category), e.g. 1 << 14 music */
+  mask?: number;
   categoryId?: string;
   sort?: 'added' | 'rating' | 'title' | 'year';
   tmdbList?: string;
@@ -247,7 +250,8 @@ export function applyTheme(theme: ThemeId, accent?: string, performance?: boolea
   r.dataset.theme = theme;
   if (accent) r.style.setProperty('--accent', accent);
   else r.style.removeProperty('--accent');
-  r.classList.toggle('perf', !!performance);
+  // a low-end device always gets the light rendering, whatever the setting
+  r.classList.toggle('perf', !!performance || isLowEnd());
 }
 
 export type { Lang };

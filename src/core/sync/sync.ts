@@ -10,6 +10,7 @@ import { GuideImport } from '../epg/staging';
 import { parseXmltv, type XmltvChannel } from '../epg/xmltv';
 import { serversOf, serverLabel } from '../sources/servers';
 import { IPTV_ORG, applyIptvOrg, refreshIptvOrg } from './iptvorg';
+import { giveWay } from '../quiet';
 
 export type Progress = (p: SyncProgress) => void;
 
@@ -49,6 +50,7 @@ const ENRICH_FIELDS = [
 async function mergeExisting<T extends Movie | Series>(table: any, rows: T[], firstSync: boolean) {
   const now = Date.now();
   for (let offset = 0; offset < rows.length; offset += BATCH) {
+    await giveWay();
     const batch = rows.slice(offset, offset + BATCH);
     const existing: (T | undefined)[] = await table.bulkGet(batch.map(row => row.id));
     for (const [i, r] of batch.entries()) {
@@ -109,6 +111,7 @@ async function importList(src: Source, kind: ListKind, cats: unknown[], load: (c
   let waiting = !!liveReady;
   void liveReady?.then(() => { waiting = false; }, () => { waiting = false; });
   const save = async (batch: typeof pending) => {
+    await giveWay();
     if (kind !== 'live') await mergeExisting(table, batch as (Movie | Series)[], !src.lastSyncAt);
     if (kind === 'live') await db.channels.bulkPut(batch as Channel[]);
     else if (kind === 'vod') await db.movies.bulkPut(batch as Movie[]);
@@ -347,6 +350,7 @@ async function syncM3u(src: Source, progress: Progress, setup?: SetupDownload, a
       }
       total += batch.channels.length + batch.movies.length + batch.episodes.length;
       if (n >= BATCH || done) {
+        await giveWay();
         await mergeExisting(db.movies, pending.movies, !src.lastSyncAt);
         await mergeExisting(db.series, pending.series, !src.lastSyncAt);
         await db.transaction('rw', tables.map(key => db[key]), async () => {

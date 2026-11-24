@@ -27,6 +27,59 @@ export function useViewMarkup(ref: RefObject<HTMLElement | null>, html: string) 
   }, [ref, html]);
 }
 
+const blockHtml = new WeakMap<Element, string>();
+/**
+ * Markup in blocks `[key, html]` (one top-level element each, e.g. Home's shelves), the first `count`
+ * of them in the page: a block whose markup didn't change is left as it is (cards, pictures, the
+ * remote's place, its horizontal scroll); a changed one is replaced and keeps the remote's place.
+ */
+export function useBlocksMarkup(ref: RefObject<HTMLElement | null>, blocks: [string, string][], count: number) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const current = new Map<string, HTMLElement>();
+    for (const c of Array.from(el.children) as HTMLElement[]) if (c.dataset.block) current.set(c.dataset.block, c);
+    const active = document.activeElement as HTMLElement | null;
+    const focusedBlock = active && el.contains(active) ? active.closest<HTMLElement>('[data-block]') : null;
+    const focusedIndex = focusedBlock ? Array.prototype.indexOf.call(el.children, focusedBlock) : -1;
+    let refocus: HTMLElement | null = null;
+    let prev: Element | null = null;
+    for (const [key, html] of blocks.slice(0, count)) {
+      let node = current.get(key);
+      current.delete(key);
+      if (!node || blockHtml.get(node) !== html) {
+        const t = document.createElement('template');
+        t.innerHTML = html;
+        const fresh = (t.content.firstElementChild as HTMLElement | null) || document.createElement('div');
+        fresh.dataset.block = key;
+        blockHtml.set(fresh, html);
+        if (node) {
+          // same shelf, new content: its horizontal position and the remote's card are kept
+          const track = node.querySelector<HTMLElement>('.rail-track');
+          const x = track?.scrollLeft || 0;
+          node.replaceWith(fresh);
+          if (x) { const t2 = fresh.querySelector<HTMLElement>('.rail-track'); if (t2) t2.scrollLeft = x; }
+          if (node === focusedBlock) {
+            const cmd = active!.dataset.cmd;
+            refocus = (cmd && fresh.querySelector<HTMLElement>(`[data-f][data-cmd="${CSS.escape(cmd)}"]`)) || fresh.querySelector<HTMLElement>('[data-f]');
+          }
+        }
+        node = fresh;
+      }
+      const at: Element | null = prev ? prev.nextElementSibling : el.firstElementChild;
+      if (at !== node) el.insertBefore(node, at);
+      prev = node;
+    }
+    // shelves gone: the remote goes to the shelf now at the same place
+    for (const gone of current.values()) gone.remove();
+    if (focusedBlock && !focusedBlock.isConnected && !refocus) {
+      const near = el.children[Math.min(focusedIndex, el.children.length - 1)];
+      refocus = near?.querySelector<HTMLElement>('[data-f]') || null;
+    }
+    refocus?.focus({ preventScroll: true });
+  }, [ref, blocks, count]);
+}
+
 /** A single listener dispatches Rust-rendered controls, including bubbling TV long presses. */
 export function RustView({ tag: Tag = 'div', className, html, onCommand, row, scope, tabs, onHold }: {
   tag?: 'header' | 'div' | 'nav'; className: string; html: string; onCommand: (id: string) => void; row?: boolean;

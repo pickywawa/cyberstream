@@ -1,4 +1,8 @@
 import {homeCatalog, similarByGenre} from '@/core/catalog';
+import { homeView } from '@/core/homeView';
+import { refreshReplayCatalog } from '@/core/replay';
+import { setQuietLowEnd, userActive } from '@/core/quiet';
+import { set_low_end } from '@/rust/generated/cyberstream';
 /// <reference lib="webworker" />
 
 import { setProxyBase } from '@/core/net/http';
@@ -16,7 +20,14 @@ let tmdb: Tmdb | null = null;
 let busy = false;
 
 export const api = {
-  homeCatalog, similarByGenre,
+  homeCatalog, similarByGenre, homeView, userActive,
+  /** Contenus: the replay catalogues downloaded and parsed here, saved, then handed to the screen */
+  replayRefresh: refreshReplayCatalog,
+  /** weak device: smaller pictures in the markup built here, background work giving way to the remote */
+  setLowEnd(v: boolean) {
+    set_low_end(v);
+    setQuietLowEnd(v);
+  },
   init(proxyBase: string | null) {
     setProxyBase(proxyBase);
   },

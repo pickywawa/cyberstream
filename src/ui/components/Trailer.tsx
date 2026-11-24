@@ -13,13 +13,15 @@ import { IcVolume, IcVolumeOff } from '../icons';
  * (no key needed: the provider gives the TMDB id). At most daily; saved on every copy of the title.
  */
 export function useTrailers(kind: 'movie' | 'series', it: Movie | Series): string[] {
+  const lang = useApp((s) => s.profile?.lang || 'fr');
   const own = [it.trailer, ...(it.trailerAlts || [])].filter((u): u is string => !!u);
   const [found, setFound] = useState<{ id: string; list: string[] } | null>(null);
-  const need = !!it.tmdbId && (!it.trailer || !it.trailerAlts) && Date.now() - (it.trailerLookupAt || 0) > 86400000;
+  // looked for again once in the profile's language (older lookups put English trailers first)
+  const need = !!it.tmdbId && ((!it.trailer || !it.trailerAlts) && Date.now() - (it.trailerLookupAt || 0) > 86400000 || it.trailerLang !== lang);
   useEffect(() => {
     if (!need || !it.tmdbId) return;
     let off = false;
-    void lookupTrailers(kind, it).then((list) => !off && setFound({ id: it.id, list }));
+    void lookupTrailers(kind, it, lang).then((list) => !off && setFound({ id: it.id, list }));
     return () => {
       off = true;
     };
@@ -29,7 +31,7 @@ export function useTrailers(kind: 'movie' | 'series', it: Movie | Series): strin
 }
 
 const looking = new Map<string, Promise<string[]>>();
-function lookupTrailers(kind: 'movie' | 'series', it: Movie | Series): Promise<string[]> {
+function lookupTrailers(kind: 'movie' | 'series', it: Movie | Series, lang: string): Promise<string[]> {
   const key = `${kind}:${it.id}`;
   const cur = looking.get(key);
   if (cur) return cur;
@@ -38,10 +40,12 @@ function lookupTrailers(kind: 'movie' | 'series', it: Movie | Series): Promise<s
       dataWorker().tmdbTrailers(kind === 'movie' ? 'movie' : 'tv', it.tmdbId!).catch(() => [] as string[]),
       wikiTrailers(kind, it.tmdbId!).catch(() => [] as string[]),
     ]);
-    const list = [...new Set([it.trailer, ...tm, ...wd].filter((u): u is string => !!u))];
+    // TMDB's, sorted with the profile's language first, before the one saved at enrichment
+    // (which used to be the first trailer found, often English) and Wikidata's (no language)
+    const list = [...new Set([...tm, it.trailer, ...wd].filter((u): u is string => !!u))];
     const table = (kind === 'movie' ? db.movies : db.series) as typeof db.movies;
     const keys = await table.where('groupKey').equals(it.groupKey).primaryKeys();
-    const patch = list.length ? { trailer: list[0], trailerAlts: list.slice(1), trailerLookupAt: Date.now() } : { trailerLookupAt: Date.now() };
+    const patch = list.length ? { trailer: list[0], trailerAlts: list.slice(1), trailerLookupAt: Date.now(), trailerLang: lang } : { trailerLookupAt: Date.now(), trailerLang: lang };
     for (const k of new Set([it.id, ...keys])) await table.update(k, patch);
     return list;
   })().finally(() => looking.delete(key));

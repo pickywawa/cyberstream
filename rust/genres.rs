@@ -19,6 +19,8 @@ static GENRES: LazyLock<RegexSet> = LazyLock::new(|| {
         r"western",
         r"(musi|concert)",
         r"(christmas|no[eë]l|weihnacht|navidad|natale|świąt)",
+        // shows on stage (no TMDB genre: the providers' categories, e.g. "VOD | Spectacles")
+        r"(spectacle|stand.?up|one.?(wo)?man.?show|th[eé][aâ]tre|theat(er|re)|sketch|humoriste|cabaret|comedy special)",
     ])
     .case_insensitive(true)
     .build()

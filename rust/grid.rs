@@ -10,6 +10,9 @@ struct Filter {
     universe: String,
     genre: String,
     category_id: String,
+    /** genre bits (see genres.rs, from TMDB's genres and the provider's category): with a universe,
+     *  a title matching either one is kept */
+    mask: u32,
 }
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -26,6 +29,7 @@ struct Row {
     year: Option<u32>,
     added_at: f64,
     rating: Option<f64>,
+    imdb_rating: Option<f64>,
 }
 struct Entry {
     id: String,
@@ -88,26 +92,6 @@ impl GridCatalog {
             {
                 continue;
             }
-            if !self.filter.universe.is_empty()
-                && row.universe != self.filter.universe
-                && !(self.filter.universe == "kids"
-                    && genres
-                        .iter()
-                        .any(|g| re!(r"(?i)anim|famil|kids").is_match(g)))
-            {
-                continue;
-            }
-            let audio = row.langs.unwrap_or_default();
-            let original = row.orig_lang.unwrap_or_default();
-            let subs = row.subs.unwrap_or_default();
-            let rank = score(&audio, &subs, &original, &self.audio, &self.subs);
-            // Explicit subtitle/audio matches can come from any member. Original language only
-            // influences a group if every member has untagged audio, using its chosen representative.
-            let explicit = if rank == 0 || rank == 2 || rank == 4 {
-                rank
-            } else {
-                8
-            };
             let mask = genres
                 .iter()
                 .fold(*self.categories.get(cat).unwrap_or(&0), |mask, g| {
@@ -123,13 +107,41 @@ impl GridCatalog {
                     };
                     mask | bits
                 });
+            let by_universe = !self.filter.universe.is_empty()
+                && (row.universe == self.filter.universe
+                    || (self.filter.universe == "kids"
+                        && genres
+                            .iter()
+                            .any(|g| re!(r"(?i)anim|famil|kids").is_match(g))));
+            let by_mask = self.filter.mask != 0 && mask & self.filter.mask != 0;
+            let wanted = match (self.filter.universe.is_empty(), self.filter.mask == 0) {
+                (true, true) => true,
+                (false, true) => by_universe,
+                (true, false) => by_mask,
+                (false, false) => by_universe || by_mask,
+            };
+            if !wanted {
+                continue;
+            }
+            let audio = row.langs.unwrap_or_default();
+            let original = row.orig_lang.unwrap_or_default();
+            let subs = row.subs.unwrap_or_default();
+            let rank = score(&audio, &subs, &original, &self.audio, &self.subs);
+            // Explicit subtitle/audio matches can come from any member. Original language only
+            // influences a group if every member has untagged audio, using its chosen representative.
+            let explicit = if rank == 0 || rank == 2 || rank == 4 {
+                rank
+            } else {
+                8
+            };
             let new = Entry {
                 id: row.id,
                 title: row.title,
                 mask,
                 year: row.year.unwrap_or(0),
                 added: row.added_at,
-                rating: row.rating.unwrap_or(0.),
+                // the IMDb rating shown on the cards, TMDB's when there is none
+                rating: row.imdb_rating.filter(|r| *r > 0.).or(row.rating).unwrap_or(0.),
                 rank,
                 language: explicit,
                 has_audio: !audio.is_empty(),
@@ -175,7 +187,7 @@ impl GridCatalog {
         }
     }
     pub fn select(&self, sort: &str, sub: u32) -> String {
-        let mut counts = [0u32; 16];
+        let mut counts = [0u32; 17];
         let mut entries = Vec::new();
         for e in &self.entries {
             let mut bits = e.mask;
@@ -187,8 +199,12 @@ impl GridCatalog {
                 entries.push(e)
             }
         }
+        // "added" (the default) lists the titles in the user's first language first; a sort the user
+        // chose (rating, year, A → Z) is followed across all of their languages, only titles in
+        // foreign languages alone (8, see variants::score) coming after
+        let tier = |e: &Entry| if sort == "added" { e.language } else { (e.language >= 8) as usize };
         entries.sort_by(|a, b| {
-            a.language.cmp(&b.language).then_with(|| match sort {
+            tier(a).cmp(&tier(b)).then_with(|| match sort {
                 "title" => a.alphabet.cmp(&b.alphabet),
                 "rating" => b.rating.total_cmp(&a.rating),
                 "year" => b.year.cmp(&a.year),

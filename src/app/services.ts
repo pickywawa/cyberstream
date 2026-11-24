@@ -15,6 +15,8 @@ import type { Profile, SyncProgress } from '@/core/types';
 import { primeCache } from '@/ui/hooks';
 import { checkForUpdate, installSilentNow, reportBootOk, type UpdateCheck } from '@/core/updater';
 import { enrollTarget, importAsProfile, parseImportLink, type EnrollPayload } from '@/core/enroll';
+import { isLowEnd } from '@/core/perfTier';
+import { set_low_end } from '@/rust/generated/cyberstream';
 
 let periodic: number | null = null;
 let lastEnrichBump = 0;
@@ -57,6 +59,21 @@ export async function boot() {
     setInterval(() => void runUpdateCheck(), 6 * 3600000);
   }
   document.documentElement.classList.toggle('tv', isTvMode());
+  // weak device: smaller pictures (both copies of the Rust code) and background work giving way to the remote
+  const low = isLowEnd();
+  set_low_end(low);
+  if (low) {
+    void dataWorker().setLowEnd(true);
+    let sent = 0;
+    const active = () => {
+      if (Date.now() - sent < 1000) return;
+      sent = Date.now();
+      void dataWorker().userActive(4000);
+    };
+    window.addEventListener('keydown', active, { capture: true, passive: true });
+    window.addEventListener('pointerdown', active, { capture: true, passive: true });
+    window.addEventListener('wheel', active, { capture: true, passive: true });
+  }
   installSpatialNav();
   setBackHandler(() => handleBack(false));
   // keyboard users get visible focus rings even on cards
@@ -196,7 +213,7 @@ export async function selectProfile(p: Profile) {
   void import('@/ui/screens/Radios').then((m) => m.preloadRadios(p.id, profileCountry(p))).catch(() => {});
   // Contenus: the saved rows (and the screen's code) are ready before the tab opens, refreshed after
   void import('@/ui/screens/Replay').then((m) => m.preloadReplay(p.lang, profileCountry(p))).catch(() => {});
-  if (!useApp.getState().settings.performance) void searchWorker().warm(p.id, (await getMeta<number>(`catalog:version:${p.id}`)) || 0);
+  if (!useApp.getState().settings.performance && !isLowEnd()) void searchWorker().warm(p.id, (await getMeta<number>(`catalog:version:${p.id}`)) || 0);
   // catalogs synced before language detection existed: resync once to tag languages/countries
   // v0.5: one full resync to restore catalogues an invalid list could have emptied
   const LANG_SCHEMA = `schema:resync:v5:${p.id}`;
@@ -337,7 +354,7 @@ export async function runSync(profileId: string, withEpg = true, opts: { quiet?:
       if (firstSync) window.setTimeout(() => void startEnrichment(prof), 60000);
       else void startEnrichment(prof);
     }
-    if (!useApp.getState().settings.performance) void searchWorker().warm(profileId, (await getMeta<number>(`catalog:version:${profileId}`)) || Date.now());
+    if (!useApp.getState().settings.performance && !isLowEnd()) void searchWorker().warm(profileId, (await getMeta<number>(`catalog:version:${profileId}`)) || Date.now());
     // keep the background pre-download in step with the sources / servers in use
     void schedulePrefetch(profileId);
   } catch (e) {

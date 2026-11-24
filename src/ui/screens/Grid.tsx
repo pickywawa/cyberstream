@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp, type GridFilter } from '@/state/store';
 import { t } from '@/core/i18n';
 import { langPrefs } from '@/core/prefs';
@@ -19,14 +19,18 @@ function CatalogRow({ kind, ids }: { kind: Kind; ids: string[] }) {
     const items = await (kind === 'movie' ? db.movies : db.series).bulkGet(ids);
     return grid_row(JSON.stringify(items, ['id','title','genres','year','poster','imdbRating']), kind);
   }, [kind, key], { key: `grid-row:${kind}:${key}` });
-  return <RustView className="catalog-row" html={html || ''} onCommand={cmd => {
+  // another sort / genre: the row keeps its cards until the new ones are read (no blank flash)
+  const last = useRef(html);
+  if (html !== undefined) last.current = html;
+  return <RustView className="catalog-row" html={html ?? last.current ?? ''} onCommand={cmd => {
     const [action, id] = readCommand(cmd);
     if (action === 'movie') openMovie(id);
     if (action === 'series') openSeries(id);
   }} />;
 }
 
-export function Grid({ kind, title, filter }: { kind: Kind; title: string; filter: GridFilter }) {
+/** `embedded`: under Home's categories (no back button / title, the chips only) */
+export function Grid({ kind, title, filter, embedded }: { kind: Kind; title: string; filter: GridFilter; embedded?: boolean }) {
   const profile = useApp(s => s.profile)!;
   const hideAdult = useApp(s => s.settings.hideAdult);
   const [sort, setSort] = useState(filter.sort || 'added');
@@ -34,11 +38,16 @@ export function Grid({ kind, title, filter }: { kind: Kind; title: string; filte
   const mobile = useMediaQuery('(max-width: 760px)') && !isTvMode();
   const prefs = langPrefs(profile);
   const key = JSON.stringify([profile.id, kind, filter, sort, hideAdult, prefs, sub]);
-  const result = useAsync(() => searchWorker().grid(profile.id, kind, { ...filter, sort }, hideAdult, prefs, sub),
+  const fresh = useAsync(() => searchWorker().grid(profile.id, kind, { ...filter, sort }, hideAdult, prefs, sub),
     [key], { key: 'grid:' + key });
+  // another sort / genre: the grid, its counts and its chips stay as they are until the new list
+  // is there (they used to empty out for a moment: spinner, chips gone, the page jumping)
+  const shown = useRef(fresh);
+  if (fresh) shown.current = fresh;
+  const result = fresh ?? shown.current;
   const ids = result?.[0];
   const toolbar = useMemo(() => grid_toolbar(title, profile.lang, ids?.length ?? -1,
-    Uint32Array.from(filter.genre ? [] : result?.[1] || []), sub, sort), [result, title, profile.lang, sub, sort, filter.genre, ids]);
+    Uint32Array.from(filter.genre ? [] : result?.[1] || []), sub, sort, !embedded), [result, title, profile.lang, sub, sort, filter.genre, ids, embedded]);
   useEffect(() => {
     if (!ids?.length) return;
     let active = true;

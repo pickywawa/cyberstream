@@ -4,7 +4,7 @@ import type { GridFilter } from '@/state/store';
 import { GridCatalog } from '@/rust/generated/cyberstream';
 
 type Kind = 'movie' | 'series';
-const fields = ['id','title','groupKey','categoryId','universe','genres','langs','subs','origLang','year','addedAt','rating'];
+const fields = ['id','title','groupKey','categoryId','universe','genres','langs','subs','origLang','year','addedAt','rating','imdbRating'];
 let current: { key: string; catalog: GridCatalog; at: number; alphabet: boolean } | undefined;
 let pending: Promise<void> = Promise.resolve();
 

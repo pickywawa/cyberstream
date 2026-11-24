@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from 'react';
 import { useApp, useRoute, type TabId } from '@/state/store';
 import { t, getLang } from '@/core/i18n';
 import { isTvMode } from '@/core/platform';
@@ -13,11 +13,29 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { LiveTv } from './screens/LiveTv';
 import { startVoice, voiceAvailable } from './voice/VoiceControl';
 
-const Search = lazy(() => import('./screens/Search').then((m) => ({ default: m.Search })));
-const Replay = lazy(() => import('./screens/Replay').then((m) => ({ default: m.Replay })));
-const MyVideos = lazy(() => import('./screens/MyVideos').then((m) => ({ default: m.MyVideos })));
-const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
-const StackView = lazy(() => import('./StackView').then((m) => ({ default: m.StackView })));
+/**
+ * A screen loaded on first use. Once its code is there it renders straight away: React.lazy suspends
+ * on the first render even when the module is already loaded, and React then keeps the spinner for
+ * ~300 ms (fallback throttling) — what made Contenus slow to open after each launch.
+ */
+function screen<P extends object>(load: () => Promise<ComponentType<P>>) {
+  let Loaded: ComponentType<P> | null = null;
+  let pending: Promise<{ default: ComponentType<P> }> | null = null;
+  const preload = () => (pending ??= load().then((C) => ((Loaded = C), { default: C })));
+  const Lazy = lazy(preload);
+  const Screen = (props: P) => (Loaded ? <Loaded {...props} /> : <Lazy {...props} />);
+  return Object.assign(Screen, { preload });
+}
+const Search = screen(() => import('./screens/Search').then((m) => m.Search));
+const Replay = screen(() => import('./screens/Replay').then((m) => m.Replay));
+const MyVideos = screen(() => import('./screens/MyVideos').then((m) => m.MyVideos));
+const Settings = screen(() => import('./screens/Settings').then((m) => m.Settings));
+const StackView = screen(() => import('./StackView').then((m) => m.StackView));
+/** after the start, while idle: every tab and the film / series page open without waiting */
+const preloadScreens = () => [Search, MyVideos, StackView, Settings].forEach((s) => void s.preload().catch(() => {}));
+
+/** the first focus after the app's start has been given (TV: the Accueil tab) */
+let launchFocused = false;
 
 export function Shell() {
   const tab = useApp((s) => s.tab);
@@ -30,6 +48,18 @@ export function Shell() {
   const [solid, setSolid] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // Contenus' code is fetched at the profile's start anyway (its saved shelves are prepared then)
+    void Replay.preload().catch(() => {});
+    // requestIdleCallback is missing from older TV web engines
+    const w = window as Window & { requestIdleCallback?: typeof requestIdleCallback; cancelIdleCallback?: typeof cancelIdleCallback };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(preloadScreens, { timeout: 5000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(preloadScreens, 2000);
+    return () => clearTimeout(id);
+  }, []);
   const [shownTab, setShownTab] = useState(tab);
   useEffect(() => {
     if (shownTab === tab) return;
@@ -43,6 +73,34 @@ export function Shell() {
     document.documentElement.classList.toggle('mobile', mobile);
   }, [mobile]);
 
+  // a film page / the player opening over a tab: where the remote was (and how far the tab was
+  // scrolled) is noted at that moment, before the tab goes inert and loses the focus…
+  const back = useRef<{ el: HTMLElement; cmd?: string; block?: string; scroll: number } | null>(null);
+  useEffect(() => useApp.subscribe((s, prev) => {
+    const opening = (!prev.stack.length && s.stack.length > 0) || (!prev.player && !!s.player && !s.stack.length);
+    const page = pageRef.current;
+    const el = document.activeElement as HTMLElement | null;
+    if (!opening || !page) return;
+    back.current = el && page.contains(el) && el.hasAttribute('data-f')
+      ? { el, cmd: el.dataset.cmd, block: el.closest<HTMLElement>('[data-block]')?.dataset.block, scroll: page.scrollTop }
+      : null;
+  }), []);
+  /** …and given back when it closes: the same card (or the one with the same action if its shelf was redrawn), the same scroll */
+  const restore = (page: HTMLElement): boolean => {
+    const b = back.current;
+    back.current = null;
+    if (!b) return false;
+    let el: HTMLElement | null = b.el.isConnected && page.contains(b.el) ? b.el : null;
+    if (!el && b.cmd) {
+      const scope = (b.block && page.querySelector(`[data-block="${CSS.escape(b.block)}"]`)) || page;
+      el = scope.querySelector<HTMLElement>(`[data-f][data-cmd="${CSS.escape(b.cmd)}"]`);
+    }
+    if (!el) return false;
+    page.scrollTop = b.scroll;
+    el.focus({ preventScroll: true });
+    return true;
+  };
+
   // focus management on navigation (remote users)
   useEffect(() => {
     if (player) return;
@@ -54,6 +112,17 @@ export function Shell() {
       const scope = document.querySelector<HTMLElement>('.stack-page:last-of-type') || pageRef.current;
       if (!scope) return;
       if (scope.contains(document.activeElement) || (!route && document.activeElement?.closest('.topnav'))) return;
+      // back from a film page / the player: the remote where it was
+      if (!route && scope === pageRef.current && restore(scope)) return;
+      // TV, app just started: the remote starts on the Accueil tab of the top bar, not on the banner
+      if (!launchFocused && isTvMode() && !route && shownTab === 'home') {
+        const homeTab = document.querySelector<HTMLElement>('.topnav [data-tabs] [data-f][data-cmd="home"]');
+        if (homeTab) {
+          launchFocused = true;
+          homeTab.focus({ preventScroll: true });
+          return;
+        }
+      }
       if (scope.querySelector('[data-f]')) focusFirst(scope);
       else if (tries++ < 30) timer = window.setTimeout(tick, 50);
     };

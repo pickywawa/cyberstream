@@ -1,5 +1,8 @@
 use super::*;
-use crate::{artwork::Image, cards::tmdb};
+use crate::{
+    artwork::Image,
+    cards::{card_size, tmdb},
+};
 use std::collections::HashSet;
 
 #[derive(Default, Deserialize)]
@@ -48,7 +51,7 @@ struct Trakt {
 fn poster(item: &Media, kind: &str) -> Markup {
     Card {
         sub: item.credited(item.genres.as_ref().and_then(|g| g.first())),
-        fallback: item.backdrop.as_ref().map(|s| tmdb(s, "w780")),
+        fallback: item.backdrop.as_ref().map(|s| tmdb(s, card_size(false))),
         score: item.rating,
         ..item.card(kind)
     }
@@ -83,47 +86,107 @@ fn mixed(key: &str, title: &str, items: &[Mixed]) -> Markup {
         html! {@for m in items.iter().take(40){(poster(&m.item,&m.kind))}},
     )
 }
-#[wasm_bindgen]
-pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
+/** Home's shelves, one block each `[key, html]` (keys unique): the page updates and adds them one by one */
+fn blocks(raw: &str, lang: &str) -> Result<Vec<(String, String)>, String> {
     let h: Home = serde_json::from_str(raw).map_err(|_| "Accueil invalide")?;
     let t = |k| lookup(lang, k);
     let mut seen = HashSet::new();
-    Ok(html!{
-        // universes: films / series grids, Sport / Info / Musique open the TV tab on that category;
-        // (--cat: a colour per tile, unused while they share the main colour, see app.css)
-        section.rail.cat-rail data-rail="categories"{div.rail-track data-row{@for (i,(id,key)) in [("cinema","universe.cinema"),("series","universe.series"),("kids","universe.kids"),("docs","home.docs"),("ent","universe.ent"),("sport","universe.sport"),("news","universe.news"),("music","universe.music")].into_iter().enumerate(){
-            div.cat-wrap style=(format!("--cat:var(--cat-{})",i%7+1)){button.card.cat-card data-f data-cmd=(format!("tile:{id}")) aria-label=(t(key)){
-                span.ic{(icon(&format!("u-{id}"),""))}span.txt{span.lb{(t(key))}}
-            }}
-        }}}
-        @if !h.cont.is_empty(){(rail("continue",t("home.continue"),None,html!{@for w in &h.cont{(w.card(true,true).outer("land"))}}))}
-        @if !h.has_vod{div.empty{h3{(t("home.emptyTitle"))}p{(t("home.emptyText"))}button.btn.primary data-f data-cmd="tile:live"{(t("nav.tv"))}}}
-        @if let Some(tr)=&h.trakt{(mixed("for-you",t("trakt.forYou"),&tr.for_you))}
-        (standard(lang,t("home.fresh"),"movie",h.fresh.iter(),Some("all:fresh")))
-        @if h.top.len()>=3{(rail("top",t("home.top10"),None,html!{@for (i,m) in h.top.iter().enumerate(){
+    let mut out: Vec<(String, String)> = vec![];
+    let mut keys = HashSet::new();
+    let mut push = |key: &str, m: Markup| {
+        let html = m.into_string();
+        if html.is_empty() {
+            return;
+        }
+        let mut k = key.to_string();
+        let mut n = 1;
+        while !keys.insert(k.clone()) {
+            n += 1;
+            k = format!("{key}#{n}");
+        }
+        out.push((k, html));
+    };
+    if !h.cont.is_empty() {
+        push("continue", rail("continue", t("home.continue"), None, html! {@for w in &h.cont{(w.card(true,true).outer("land"))}}));
+    }
+    if !h.has_vod {
+        push("empty", html! {div.empty{h3{(t("home.emptyTitle"))}p{(t("home.emptyText"))}button.btn.primary data-f data-cmd="tile:live"{(t("nav.tv"))}}});
+    }
+    let std_key = |title: &str, all: Option<&str>| all.unwrap_or(title).to_string();
+    let standard_block = |push: &mut dyn FnMut(&str, Markup), title: &str, kind: &str, items: &mut dyn Iterator<Item = &Media>, all: Option<&str>| {
+        push(&std_key(title, all), standard(lang, title, kind, items, all));
+    };
+    if let Some(tr) = &h.trakt {
+        push("for-you", mixed("for-you", t("trakt.forYou"), &tr.for_you));
+    }
+    standard_block(&mut push, t("home.fresh"), "movie", &mut h.fresh.iter(), Some("all:fresh"));
+    if h.top.len() >= 3 {
+        push("top", rail("top", t("home.top10"), None, html! {@for (i,m) in h.top.iter().enumerate(){
             (Card{rank:i+1,score:m.rating,..m.card("movie")}.outer("top10"))
-        }}))}
-        (standard(lang,t("home.nowPlaying"),"movie",h.now_playing.iter(),None))
-        (standard(lang,t("home.newSeries"),"series",h.new_series.iter(),Some("all:newSeries")))
-        (standard(lang,t("home.popularSeries"),"series",h.trending_tv.iter().chain(&h.popular_tv).filter(|s|seen.insert(s.group_key.as_str())),None))
-        (standard(lang,t("home.mustSee"),"movie",h.must_see.iter(),Some("all:mustSee")))
-        @if !h.fav_movies.is_empty()||!h.fav_series.is_empty(){(rail("favorites",t("home.myList"),None,html!{
+        }}));
+    }
+    standard_block(&mut push, t("home.nowPlaying"), "movie", &mut h.now_playing.iter(), None);
+    standard_block(&mut push, t("home.newSeries"), "series", &mut h.new_series.iter(), Some("all:newSeries"));
+    standard_block(&mut push, t("home.popularSeries"), "series", &mut h.trending_tv.iter().chain(&h.popular_tv).filter(|s| seen.insert(s.group_key.as_str())), None);
+    standard_block(&mut push, t("home.mustSee"), "movie", &mut h.must_see.iter(), Some("all:mustSee"));
+    if !h.fav_movies.is_empty() || !h.fav_series.is_empty() {
+        push("favorites", rail("favorites", t("home.myList"), None, html! {
             @for m in &h.fav_movies{(Card{sub:m.credited(None),score:m.rating,..m.card("movie")}.outer("poster"))}
             @for s in &h.fav_series{(Card{score:s.rating,..s.card("series")}.outer("poster"))}
-        }))}
-        @if let Some(tr)=&h.trakt{(mixed("watchlist",t("trakt.watchlist"),&tr.watchlist))
-            @for (i,l) in tr.lists.iter().enumerate(){(mixed(&format!("trakt-{i}"),&l.name,&l.items))}
+        }));
+    }
+    if let Some(tr) = &h.trakt {
+        push("watchlist", mixed("watchlist", t("trakt.watchlist"), &tr.watchlist));
+        for (i, l) in tr.lists.iter().enumerate() {
+            let key = format!("trakt-{i}");
+            push(&key, mixed(&key, &l.name, &l.items));
         }
-        (standard(lang,t("home.kids"),"movie",h.kids.iter(),Some("all:kids")))
-        (standard(lang,t("home.popularMovies"),"movie",h.popular_movies.iter(),None))
-        @for (g,items) in &h.genres{(standard(lang,g,"movie",items.iter(),Some(&format!("genre:{g}"))))}
-        (standard(lang,t("home.classics"),"movie",h.classics.iter(),None))
-        (standard(lang,t("home.awardSeries"),"series",h.award_series.iter(),None))
-        (standard(lang,t("home.awardMovies"),"movie",h.award_movies.iter(),None))
-        (standard(lang,t("home.reality"),"series",h.reality.iter(),None))
-        (standard(lang,t("home.buzz"),"series",h.buzz.iter(),None))
-        @for (p,items) in &h.platforms{(standard(lang,&t("home.onPlatform").replace("{p}",p),"movie",items.iter(),None))}
-    }.into_string())
+    }
+    standard_block(&mut push, t("home.kids"), "movie", &mut h.kids.iter(), Some("all:kids"));
+    standard_block(&mut push, t("home.popularMovies"), "movie", &mut h.popular_movies.iter(), None);
+    for (g, items) in &h.genres {
+        standard_block(&mut push, g, "movie", &mut items.iter(), Some(&format!("genre:{g}")));
+    }
+    standard_block(&mut push, t("home.classics"), "movie", &mut h.classics.iter(), None);
+    standard_block(&mut push, t("home.awardSeries"), "series", &mut h.award_series.iter(), None);
+    standard_block(&mut push, t("home.awardMovies"), "movie", &mut h.award_movies.iter(), None);
+    standard_block(&mut push, t("home.reality"), "series", &mut h.reality.iter(), None);
+    standard_block(&mut push, t("home.buzz"), "series", &mut h.buzz.iter(), None);
+    for (p, items) in &h.platforms {
+        standard_block(&mut push, &t("home.onPlatform").replace("{p}", p), "movie", &mut items.iter(), None);
+    }
+    Ok(out)
+}
+/** Home's categories (shown with the Contenus filters' look, an icon each): "Tout" is Home's shelves,
+ *  the others show their grid right under the bar (`cat:<id>`) */
+pub(crate) const HOME_CATEGORIES: [(&str, &str); 8] = [
+    ("all", "replay.all"),
+    ("cinema", "universe.cinema"),
+    ("series", "universe.series"),
+    ("kids", "universe.kids"),
+    ("docs", "home.docs"),
+    ("ent", "universe.ent"),
+    ("music", "universe.music"),
+    ("shows", "home.shows"),
+];
+#[wasm_bindgen]
+pub fn home_categories(selected: &str, lang: &str) -> String {
+    html! {@for (id,key) in HOME_CATEGORIES{
+        button.chip.cat-chip.active[id==selected] data-f data-cmd=(format!("cat:{id}")) {
+            (icon(&format!("u-{id}"),""))span{(lookup(lang,key))}
+        }
+    }}
+    .into_string()
+}
+/** Home's shelves as `[[key, html], …]` (see blocks) */
+#[wasm_bindgen]
+pub fn home_blocks(raw: &str, lang: &str) -> Result<String, String> {
+    serde_json::to_string(&blocks(raw, lang)?).map_err(|e| e.to_string())
+}
+/** Home's shelves in one piece */
+#[wasm_bindgen]
+pub fn home_html(raw: &str, lang: &str) -> Result<String, String> {
+    Ok(blocks(raw, lang)?.into_iter().map(|(_, h)| h).collect())
 }
 #[derive(Deserialize, Default)]
 #[serde(default)]

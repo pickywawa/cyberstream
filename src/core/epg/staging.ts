@@ -2,6 +2,7 @@ import { guide_delta } from '../../rust/generated/cyberstream';
 import { db } from '../db';
 import { uid } from '../util/text';
 import type { Program } from '../types';
+import { giveWay } from '../quiet';
 
 /** Save batches outside the live guide until the entire XML document has been validated. */
 export class GuideImport {
@@ -9,6 +10,7 @@ export class GuideImport {
   private readonly ids = new Set<string>();
 
   async append(rows: Program[]) {
+    await giveWay();
     const groups = new Map<string, Program[]>();
     for (const row of rows) {
       let group = groups.get(row.epgId);
@@ -25,6 +27,7 @@ export class GuideImport {
     // sees a coherent schedule, including if Android suspends the worker partway through.
     for (let i = 0; i < ids.length; i += 16) {
       const page = ids.slice(i, i + 16);
+      await giveWay();
       await db.transaction('rw', db.programs, db.guideStage, async () => {
         const deltas = await Promise.all(page.map(async id => {
           const [staged, previous] = await Promise.all([

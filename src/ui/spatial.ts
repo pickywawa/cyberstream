@@ -1,4 +1,5 @@
 import { focus_target } from '../rust/generated/cyberstream';
+import { isLowEnd } from '@/core/perfTier';
 /**
  * Lightweight spatial navigation for remotes / keyboards (D-pad).
  *  - focusable elements: [data-f]  (buttons, links, inputs, cards)
@@ -24,7 +25,7 @@ export function setKeyInterceptor(fn: ((e: KeyboardEvent) => boolean) | null) {
   keyInterceptor = fn;
 }
 export function setSmoothScroll(v: boolean) {
-  smooth = v;
+  smooth = v && !isLowEnd();
 }
 
 function visible(el: HTMLElement): boolean {
@@ -111,6 +112,19 @@ function best(from: HTMLElement, cands: HTMLElement[], dir: Dir): HTMLElement | 
   return cands[idx] || null;
 }
 
+/** the first item of the next shelf with something selectable (its cards before its "All" link) */
+function neighbourShelf(row: Element, dir: 'up' | 'down'): HTMLElement | null {
+  const shelf = row.closest('.home-shelves > *, .replay-shelves > *');
+  if (!shelf) return null;
+  const step = (el: Element) => (dir === 'up' ? el.previousElementSibling : el.nextElementSibling);
+  for (let s = step(shelf); s; s = step(s)) {
+    for (const sel of ['[data-row] [data-f]', '[data-f]']) {
+      for (const el of s.querySelectorAll<HTMLElement>(sel)) if (visible(el)) return el;
+    }
+  }
+  return null;
+}
+
 export function move(dir: Dir): boolean {
   const scope = currentScope();
   const active = document.activeElement as HTMLElement | null;
@@ -135,6 +149,15 @@ export function move(dir: Dir): boolean {
     }
   }
   const row = active.closest('[data-row]');
+  // low-end device, Home's / Contenus' shelves: Up / Down only looks at the shelf above / below (measuring
+  // the hundreds of cards of the page on every press is what makes a weak TV lag)
+  if (row && (dir === 'up' || dir === 'down') && isLowEnd()) {
+    const t = neighbourShelf(row, dir);
+    if (t) {
+      focusEl(t);
+      return true;
+    }
+  }
   // 1. horizontal moves stay inside the row
   if (row && (dir === 'left' || dir === 'right')) {
     const inRow = Array.from(row.querySelectorAll<HTMLElement>('[data-f]'));

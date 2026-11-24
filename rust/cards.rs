@@ -31,6 +31,24 @@ pub(crate) struct Card {
     pub long_press: bool,
     pub auto_focus: bool,
 }
+static LOW_END: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/** weak TV box: smaller card pictures (fewer pixels to download and decode) */
+#[wasm_bindgen]
+pub fn set_low_end(v: bool) {
+    LOW_END.store(v, std::sync::atomic::Ordering::Relaxed);
+}
+pub(crate) fn low_end() -> bool {
+    LOW_END.load(std::sync::atomic::Ordering::Relaxed)
+}
+/** TMDB size of a card's picture: posters w342 (w185 on a weak device), wide pictures w780 (w300) */
+pub(crate) fn card_size(poster: bool) -> &'static str {
+    match (poster, LOW_END.load(std::sync::atomic::Ordering::Relaxed)) {
+        (true, false) => "w342",
+        (true, true) => "w185",
+        (false, false) => "w780",
+        (false, true) => "w300",
+    }
+}
 pub(crate) fn tmdb(url: &str, size: &str) -> String {
     re!(r"(image\.tmdb\.org/t/p/)[^/]+")
         .replace(url, |m: &regex::Captures| format!("{}{size}", &m[1]))
@@ -57,7 +75,7 @@ impl Card {
         let mut srcs = vec![
             self.image
                 .as_deref()
-                .map(|s| tmdb(s, if poster { "w342" } else { "w780" })),
+                .map(|s| tmdb(s, card_size(poster))),
         ];
         if poster {
             srcs.push(self.fallback.clone())
@@ -108,7 +126,7 @@ impl Card {
                 }}
             },
             "top10" => {
-                html! {span.num{(self.rank)}div.thumb{(image(vec![self.image.as_deref().map(|s|tmdb(s,"w342"))],&self.title,false))
+                html! {span.num{(self.rank)}div.thumb{(image(vec![self.image.as_deref().map(|s|tmdb(s,card_size(true)))],&self.title,false))
                     @if let Some(s)=self.score.filter(|v|*v>0.){(score(s))}}}
             }
             "tile" => {

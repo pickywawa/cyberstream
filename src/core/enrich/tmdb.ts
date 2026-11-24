@@ -166,7 +166,10 @@ export class Tmdb {
     if (!list.length) list = ((await this.get<any>(`/${kind}/${id}/videos`, { language: 'en-US' })).results || []).filter((v: any) => v.site === 'YouTube' && v.key);
     const type = (v: any) => (v.type === 'Trailer' ? 0 : v.type === 'Teaser' ? 1 : 2);
     const lang = (v: any) => (v.iso_639_1 === langShort ? 0 : v.iso_639_1 === 'en' ? 1 : 2);
-    return [...new Set(list.sort((a, b) => type(a) - type(b) || lang(a) - lang(b)).map((v) => `https://www.youtube.com/watch?v=${v.key}`))].slice(0, 5);
+    // trailers and teasers before other videos; among them the profile's language first (a French
+    // teaser before an English trailer), then the kind
+    const clip = (v: any) => (type(v) < 2 ? 0 : 1);
+    return [...new Set(list.sort((a, b) => clip(a) - clip(b) || lang(a) - lang(b) || type(a) - type(b)).map((v) => `https://www.youtube.com/watch?v=${v.key}`))].slice(0, 5);
   }
 
   async collection(id: number): Promise<TmdbCollection> {

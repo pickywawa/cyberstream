@@ -23,6 +23,13 @@ export function registerImageCache() {
     if (img.crossOrigin === 'anonymous') {
       const tone = knownTone(url) ?? analyseLogo(url, img);
       if (tone !== 'ok') img.classList.add('logo-' + tone);
+      // radio tiles: their gradient takes the logo's colour
+      const tile = img.closest<HTMLElement>('.radio-tile');
+      const h = tile ? logoHue(url, img) : null;
+      if (tile && h !== null) tile.style.setProperty('--tile-hue', `hsl(${h} 60% 45%)`);
+      // and every logo the same size: its transparent margins cut off, the drawing fills the frame (app.css)
+      const box = tile ? logoBox(url, img) : null;
+      if (box) img.style.setProperty('object-view-box', box);
     }
     img.style.opacity = '1';
   }, true);
@@ -32,6 +39,104 @@ export function registerImageCache() {
       img.outerHTML = artwork_failed(img.dataset.art, img.dataset.fallback);
   }, true);
   if (!isNative && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+/** a hue for a name (tiles without a coloured logo): stable, spread around the colour wheel */
+export function nameHue(name: string): number {
+  let h = 7;
+  for (const c of name.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % 360;
+}
+
+const HUE_KEY = 'cybertv.logoHue.v1';
+let hues: Record<string, number> | null = null;
+let hueTimer = 0;
+/**
+ * The main colour of a logo (hue of its saturated pixels, averaged on the colour wheel), or null when
+ * it has none (black, white, grey logos) or can't be read (no CORS). Kept per URL.
+ */
+export function logoHue(url: string, img: HTMLImageElement): number | null {
+  if (!hues) {
+    try { hues = JSON.parse(localStorage.getItem(HUE_KEY) || '{}'); } catch { hues = {}; }
+  }
+  const known = hues![url];
+  if (known !== undefined) return known < 0 ? null : known;
+  let hue = -1;
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 32;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(img, 0, 0, 32, 32);
+    const d = ctx.getImageData(0, 0, 32, 32).data;
+    let x = 0, y = 0, weight = 0, opaque = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
+      opaque++;
+      const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const sat = max ? (max - min) / max : 0;
+      if (sat < 0.35 || max < 0.25) continue;
+      const h = max === r ? ((g - b) / (max - min)) % 6 : max === g ? (b - r) / (max - min) + 2 : (r - g) / (max - min) + 4;
+      const a = (h * 60 * Math.PI) / 180;
+      x += Math.cos(a) * sat;
+      y += Math.sin(a) * sat;
+      weight += sat;
+    }
+    // a few coloured pixels in a grey logo don't make it coloured
+    if (opaque && weight > opaque * 0.04) hue = Math.round(((Math.atan2(y, x) * 180) / Math.PI + 360) % 360);
+  } catch {
+    return null; // tainted canvas: not kept, the name's colour stays
+  }
+  hues![url] = hue;
+  clearTimeout(hueTimer);
+  hueTimer = window.setTimeout(() => {
+    try { localStorage.setItem(HUE_KEY, JSON.stringify(hues)); } catch { /* full */ }
+  }, 1500);
+  return hue < 0 ? null : hue;
+}
+
+const BOX_KEY = 'cybertv.logoBox.v1';
+let boxes: Record<string, string> | null = null;
+let boxTimer = 0;
+/**
+ * The part of a logo that is actually drawn, as `inset(top right bottom left)` in % (transparent
+ * margins left out), or null when there is nothing to cut (or it can't be read). Kept per URL.
+ */
+export function logoBox(url: string, img: HTMLImageElement): string | null {
+  if (!boxes) {
+    try { boxes = JSON.parse(localStorage.getItem(BOX_KEY) || '{}'); } catch { boxes = {}; }
+  }
+  const known = boxes![url];
+  if (known !== undefined) return known || null;
+  let box = '';
+  try {
+    const n = 64;
+    const c = document.createElement('canvas');
+    c.width = c.height = n;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(img, 0, 0, n, n);
+    const d = ctx.getImageData(0, 0, n, n).data;
+    let top = n, left = n, bottom = -1, right = -1;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      if (d[(y * n + x) * 4 + 3] < 24) continue;
+      if (y < top) top = y;
+      if (y > bottom) bottom = y;
+      if (x < left) left = x;
+      if (x > right) right = x;
+    }
+    const pct = (v: number) => `${Math.max(0, (v / n) * 100).toFixed(1)}%`;
+    // only worth it for a real margin (at least 6 % on a side)
+    if (bottom >= 0 && (top > 3 || left > 3 || n - 1 - bottom > 3 || n - 1 - right > 3))
+      box = `inset(${pct(top)} ${pct(n - 1 - right)} ${pct(n - 1 - bottom)} ${pct(left)})`;
+  } catch {
+    return null;
+  }
+  boxes![url] = box;
+  clearTimeout(boxTimer);
+  boxTimer = window.setTimeout(() => {
+    try { localStorage.setItem(BOX_KEY, JSON.stringify(boxes)); } catch { /* full */ }
+  }, 1500);
+  return box || null;
 }
 
 export type LogoTone = 'ok' | 'dim' | 'dark';

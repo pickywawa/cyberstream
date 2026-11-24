@@ -1,5 +1,5 @@
 import { dataWorker } from '@/core/workers';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { db, setMeta } from '@/core/db';
@@ -11,17 +11,34 @@ import { ScreenActive, useAsync, useCarousel } from '../hooks';
 import { TrailerBg, useTrailers } from '../components/Trailer';
 import { TitleMenu } from '../components/TitleMenu';
 import { RustView, readCommand } from '../components/RustView';
-import { home_html, hero_html } from '@/rust/generated/cyberstream';
+import { ShelvesView } from '../components/Shelves';
+import { hero_html, home_categories } from '@/rust/generated/cyberstream';
+import { Grid } from './Grid';
+import type { GridFilter } from '@/state/store';
 import { openMovie, openSeries, prioritizeEnrichment, resume } from '../actions';
 import { langPrefs } from '@/core/prefs';
-import { sortByLang, type LangPrefs } from '@/core/util/lang';
 import { traktLists } from '@/core/trakt';
+import { isLowEnd } from '@/core/perfTier';
 import type { TmdbListItem } from '@/core/types';
+import type { HomeItem } from '@/core/homeView';
 
-type HeroItem = { kind: 'movie' | 'series'; item: Movie | Series };
+type HeroItem = HomeItem;
+
+/** what each category of Home's bar shows (genre bits: rust/genres.rs — 11 documentary, 14 music, 16 shows on stage) */
+const HOME_CATEGORIES = {
+  cinema: { kind: 'movie', label: 'universe.cinema', filter: {} },
+  series: { kind: 'series', label: 'universe.series', filter: {} },
+  kids: { kind: 'movie', label: 'universe.kids', filter: { universe: 'kids' } },
+  docs: { kind: 'movie', label: 'home.docs', filter: { universe: 'docs', mask: 1 << 11 } },
+  ent: { kind: 'series', label: 'universe.ent', filter: { universe: 'ent' } },
+  music: { kind: 'movie', label: 'universe.music', filter: { universe: 'music', mask: 1 << 14 } },
+  shows: { kind: 'movie', label: 'home.shows', filter: { mask: 1 << 16 } },
+} as Record<string, { kind: 'movie' | 'series'; label: Parameters<typeof t>[0]; filter: GridFilter } | undefined>;
+type HomeCategory = 'all' | keyof typeof HOME_CATEGORIES;
 type MixItem = HeroItem;
 
-export const homeKey = (profileId: string, prefsKey: string, hideAdult: boolean) => `home:${profileId}:${prefsKey}:${hideAdult}`;
+// v2: Home built by the data worker (a saved copy of the older shape is never shown)
+export const homeKey = (profileId: string, prefsKey: string, hideAdult: boolean) => `home2:${profileId}:${prefsKey}:${hideAdult}`;
 export const homePrefsKey = (p: { lang: string; audioLangs?: string[]; subLangs?: string[] }) => `${p.lang}|${p.audioLangs?.join()}|${p.subLangs?.join()}`;
 
 let lastSnapshot = 0;
@@ -30,16 +47,6 @@ function saveHomeSnapshot(profileId: string, key: string, data: unknown) {
   if (Date.now() - lastSnapshot < 20000) return;
   lastSnapshot = Date.now();
   void setMeta(`snapshot:home:${profileId}`, { key, data, at: Date.now() }).catch(() => {});
-}
-
-const SHELF_FIELDS = ['classics','awardMovies','awardSeries','reality','buzz','platforms','cont','hasVod','trakt','lists','forYou','watchlist','items','name','item','kind','fresh','newSeries','top','nowPlaying','popularMovies','mustSee','trendingTv','popularTv','genres','kids','favMovies','favSeries','id','key','groupKey','title','subtitle','poster','image','backdrop','year','imdbRating','rating','durationSec','positionSec'];
-
-function featured<T extends Movie | Series>(pool: T[], prefs: LangPrefs, hideAdult: boolean): T[] {
-  const eligible = sortByLang(pool.filter(m => !hideAdult || m.universe !== 'adult'), prefs);
-  const artworkRank = (m: T) => m.backdrop ? 0 : m.poster ? 1 : 2;
-  eligible.sort((a, b) => artworkRank(a) - artworkRank(b));
-  const seen = new Set<string>();
-  return eligible.filter(m => !seen.has(m.groupKey) && seen.add(m.groupKey)).slice(0, 6);
 }
 
 export function Home() {
@@ -51,11 +58,29 @@ export function Home() {
 
   const prefsKey = homePrefsKey(profile);
   const [menu, setMenu] = useState<{ kind: 'movie' | 'series'; id: string } | null>(null);
+  // the category bar: "Tout" shows Home's shelves, the others their grid right under the bar
+  const [cat, setCat] = useState<HomeCategory>('all');
+  // the bar reached or a category chosen: the page scrolls so the bar sits right under the top bar,
+  // its list in full view below (not on the app's start: the banner stays in view then)
+  const barRef = useRef<HTMLDivElement>(null);
+  const toBar = useCallback(() => requestAnimationFrame(() => {
+    const bar = barRef.current;
+    const page = bar?.closest<HTMLElement>('.page');
+    if (!bar || !page) return;
+    const top = document.querySelector('.topnav')?.getBoundingClientRect().bottom ?? page.getBoundingClientRect().top;
+    const y = page.scrollTop + bar.getBoundingClientRect().top - top - 4;
+    if (Math.abs(y - page.scrollTop) < 2) return;
+    page.scrollTo({ top: y, behavior: document.documentElement.classList.contains('perf') ? 'auto' : 'smooth' });
+  }), []);
+  const chosen = useRef(false);
+  useEffect(() => { if (chosen.current) toBar(); }, [cat, toBar]);
+  // low-end device: once Home has content, background updates (enrichment, sync) no longer rebuild it
+  // while it is on screen, only when coming back to it; the user's own changes refresh it at once
+  const [nonce, refresh] = useReducer((n: number) => n + 1, 0);
+  const filled = useRef(false);
   const data = useAsync(async () => {
     const prefs = langPrefs(profile);
-    const [catalog,cont,favs] = await Promise.all([
-      dataWorker().homeCatalog(profile.id,profile.lang,hideAdult,prefs),continueWatching(profile.id),favoritesOf(profile.id),
-    ]);
+    const [cont,favs] = await Promise.all([continueWatching(profile.id),favoritesOf(profile.id)]);
     const favMovies = (await db.movies.bulkGet(favs.filter((f) => f.kind === 'movie').map((f) => f.itemId))).filter(Boolean) as Movie[];
     const favSeries = (await db.series.bulkGet(favs.filter((f) => f.kind === 'series').map((f) => f.itemId))).filter(Boolean) as Series[];
     // Trakt: recommendations, watchlist and personal lists, only what the sources carry
@@ -77,11 +102,10 @@ export function Home() {
           lists: await Promise.all(tr.lists.map(async (l) => ({ name: l.name, items: await mixed(l.movies, l.shows) }))),
         }
       : null;
-    return {
-      trakt,
-      ...catalog, cont, favMovies, favSeries,
-    };
-  }, [profile.id, prefsKey, hideAdult], { key: homeKey(profile.id, prefsKey, hideAdult) });
+    // the catalogue is read and the shelves built in the data worker: only their HTML comes back
+    return dataWorker().homeView(profile.id, profile.lang, hideAdult, prefs, { trakt, cont, favMovies, favSeries });
+  }, [profile.id, prefsKey, hideAdult, nonce], { key: homeKey(profile.id, prefsKey, hideAdult), lazy: isLowEnd() && filled.current });
+  filled.current = !!data?.hasVod;
 
   // snapshot for the next cold start: Home renders at once, then refreshes
   useEffect(() => {
@@ -92,22 +116,12 @@ export function Home() {
   // enrich what's on screen first
   useEffect(() => {
     if (!data) return;
-    prioritizeEnrichment('movie', [...data.top, ...data.fresh.slice(0, 16), ...data.nowPlaying.slice(0, 10)]);
-    prioritizeEnrichment('series', [...data.trendingTv.slice(0, 10), ...data.newSeries.slice(0, 16)]);
+    prioritizeEnrichment('movie', data.enrich.movie);
+    prioritizeEnrichment('series', data.enrich.series);
   }, [data]);
 
-  const hero = useMemo<HeroItem[]>(() => {
-    if (!data) return [];
-    const prefs = langPrefs(profile);
-    const movies = featured([...data.top, ...data.nowPlaying, ...data.popularMovies, ...data.fresh, ...data.mustSee], prefs, hideAdult);
-    if (movies.length) return movies.map(item => ({ kind: 'movie', item }));
-    return featured([...data.trendingTv, ...data.newSeries], prefs, hideAdult).map(item => ({ kind: 'series', item }));
-  }, [data, profile, hideAdult]);
-
-  const shelves = useMemo(() => data && home_html(JSON.stringify({
-    ...data, genres: data.genres.map(([genre, rows]) => [genre, rows.slice(0, 30)]),
-  }, SHELF_FIELDS), profile.lang), [data, profile.lang]);
-  if (!data || !shelves) return <div className="empty"><div className="spinner big" style={{ margin: '80px auto' }} /></div>;
+  if (!data) return <div className="empty"><div className="spinner big" style={{ margin: '80px auto' }} /></div>;
+  const hero = data.hero;
 
   const select = (cmd: string, hold = false) => {
     const [action, id] = readCommand(cmd);
@@ -120,29 +134,37 @@ export function Home() {
       // the rail may come from the saved copy of Home: the position is read again
       void getProgress(profile.id, key).then((fresh) => {
         const w = fresh || data.cont.find(w => w.key === key);
-        if (w) action === 'remove' ? void hideFromContinue(w).then(() => useApp.getState().bumpCatalog()) : void resume(w);
+        if (w) action === 'remove' ? void hideFromContinue(w).then(() => { useApp.getState().bumpCatalog(); refresh(); }) : void resume(w);
       });
     }
-    if (action === 'tile') {
-      if (id === 'live') return setTab('tv');
-      // sport / news / music live on TV channels: the TV tab, on that category
-      if (id === 'sport' || id === 'news' || id === 'music') {
-        try { sessionStorage.setItem('tv.cat', id); } catch { /* private mode */ }
-        return setTab('tv');
-      }
-      if (id === 'ent') return push({ name: 'grid', kind: 'series', title: t('universe.ent'), filter: { universe: 'ent' } });
-      if (id === 'series' || id === 'cinema' || id === 'kids' || id === 'docs') push({ name: 'grid',
-        kind: id === 'series' ? 'series' : 'movie', title: t(id === 'docs' ? 'home.docs' : `universe.${id}`), filter: id === 'kids' || id === 'docs' ? { universe: id } : {} });
-    }
+    // no film / series at all: the TV tab
+    if (action === 'tile' && id === 'live') return setTab('tv');
     if (action === 'genre') push({ name: 'grid', kind: 'movie', title: id, filter: { genre: id } });
     if (action === 'all' && (id === 'fresh' || id === 'newSeries' || id === 'mustSee' || id === 'kids')) push({
       name: 'grid', kind: id === 'newSeries' ? 'series' : 'movie', title: t(`home.${id}`),
       filter: id === 'kids' ? { universe: 'kids' } : { sort: id === 'mustSee' ? 'rating' : 'added' },
     });
   };
+  const category = HOME_CATEGORIES[cat];
   return <div>
     {hero.length ? <Hero items={hero} lang={profile.lang} /> : <div className="hero-spacer" />}
-    <RustView className="home-shelves" html={shelves} onCommand={select} onHold={cmd => select(cmd, true)} />
+    {/* a tab reached with the remote opens by itself after a short pause (data-tabs, see spatial.ts) */}
+    <div ref={barRef} onFocus={toBar}>
+      <RustView className="chips home-cats" row tabs html={home_categories(cat, profile.lang)}
+        onCommand={cmd => {
+          const [action, id] = readCommand(cmd);
+          if (action !== 'cat' || !(id === 'all' || id in HOME_CATEGORIES)) return;
+          chosen.current = true;
+          setCat(id as HomeCategory);
+          toBar();
+        }} />
+    </div>
+    {/* at least a screen high: the bar can always reach the top, even over a short list */}
+    <div className="home-cat-content">
+      {category
+        ? <Grid key={cat} embedded kind={category.kind} title={t(category.label)} filter={category.filter} />
+        : <ShelvesView className="home-shelves" blocks={data.blocks} onCommand={select} onHold={cmd => select(cmd, true)} />}
+    </div>
     {menu && <TitleMenu kind={menu.kind} id={menu.id} onClose={() => setMenu(null)} />}
   </div>;
 }
@@ -156,12 +178,17 @@ function Hero({ items, lang }: { items: HeroItem[]; lang: string }) {
   const h = items[i];
   const active = useContext(ScreenActive);
   const trailers = useTrailers(h.kind, h.item);
+  // low-end device: the trailer plays only while the banner has the focus (stops as soon as the remote goes down)
+  const [focused, setFocused] = useState(false);
+  const low = isLowEnd();
   const html = useMemo(() => hero_html(JSON.stringify(h.item, ['title','backdrop','poster','logo','year','rating','genres']), i, items.length, lang), [h.item, i, items.length, lang]);
-  return <section className="hero" {...handlers}>
+  return <section className="hero" {...handlers}
+    onFocus={() => { handlers.onFocus(); setFocused(true); }}
+    onBlur={e => { handlers.onBlur(e); setFocused(e.currentTarget.contains(e.relatedTarget)); }}>
     <RustView className="hero-inner" html={html} onCommand={cmd => {
       if (command(cmd)) return;
       if (cmd === 'info') return h.kind === 'series' ? openSeries(h.item.id) : openMovie(h.item.id);
     }} />
-    <div className="hero-trailer"><TrailerBg urls={trailers} delay={700} active={active} /></div>
+    <div className="hero-trailer"><TrailerBg urls={trailers} delay={700} active={active && (!low || focused)} /></div>
   </section>;
 }

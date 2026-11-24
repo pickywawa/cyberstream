@@ -126,6 +126,8 @@ export interface Movie {
   trailer?: string;
   /** last time a missing trailer was looked for */
   trailerLookupAt?: number;
+  /** language the trailers were looked for in (the profile's): another language looks again */
+  trailerLang?: string;
   /** other trailers to try when YouTube refuses to embed the first one */
   trailerAlts?: string[];
   tmdbId?: number;
@@ -186,6 +188,8 @@ export interface Series {
   trailer?: string;
   /** last time a missing trailer was looked for */
   trailerLookupAt?: number;
+  /** language the trailers were looked for in (the profile's): another language looks again */
+  trailerLang?: string;
   /** other trailers to try when YouTube refuses to embed the first one */
   trailerAlts?: string[];
   tmdbId?: number;

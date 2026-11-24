@@ -43,12 +43,15 @@ export const ScreenActive = createContext(true);
  * Async query re-run on deps change and whenever the catalog version bumps (visible screens only).
  * With `key`, the previous result is shown immediately (stale-while-revalidate).
  */
-export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList, opts: { epg?: boolean; key?: string } = {}): T | undefined {
+export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList, opts: { epg?: boolean; key?: string; lazy?: boolean } = {}): T | undefined {
   const active = useContext(ScreenActive);
   const liveCatalog = useApp((s) => s.catalogVersion);
   const liveEpg = useApp((s) => (opts.epg ? s.epgVersion : 0));
   const versions = useRef({ c: liveCatalog, e: liveEpg });
-  if (active) versions.current = { c: liveCatalog, e: liveEpg };
+  // lazy: data changes made meanwhile are picked up only when the screen comes back (not while it is shown)
+  const wasActive = useRef(active);
+  if (active && (!opts.lazy || !wasActive.current)) versions.current = { c: liveCatalog, e: liveEpg };
+  wasActive.current = active;
   const { c: catalogVersion, e: epgVersion } = versions.current;
   const [v, setV] = useState<T | undefined>(() => (opts.key ? cached<T>(opts.key) : undefined));
   const seq = useRef(0);

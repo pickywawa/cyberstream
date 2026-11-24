@@ -1,4 +1,5 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { nameHue } from '@/core/images';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
 import { profileCountry } from '@/core/prefs';
@@ -27,14 +28,25 @@ export function Radios() {
   // last lists shown, kept in memory: the rail is there at once when coming back to the tab
   const [directory, setDirectory] = useState<Radio[]>(() => DIR_MEM.get(country) || []);
   const [prefs, setPrefsState] = useState<RadioPrefs>(() => PREFS_MEM.get(profile.id) || { fav: [], custom: [], recent: [] });
-  const setPrefs = (p: RadioPrefs) => (PREFS_MEM.set(profile.id, p), setPrefsState(p));
+  // a list read again but unchanged keeps the one shown: the 50 tiles aren't drawn a second time
+  const setPrefs = (p: RadioPrefs) => {
+    const cur = PREFS_MEM.get(profile.id);
+    if (cur && JSON.stringify(cur) === JSON.stringify(p)) return;
+    PREFS_MEM.set(profile.id, p);
+    setPrefsState(p);
+  };
   const [menu, setMenu] = useState<Radio | null>(null);
   const [adding, setAdding] = useState(false);
   const reloadPrefs = () => void radioPrefs(profile.id).then(setPrefs);
   useEffect(reloadPrefs, [profile.id]);
   useEffect(() => {
     let off = false;
-    void directoryRadios(country).then((l) => (DIR_MEM.set(country, l), !off && setDirectory(l)), () => {});
+    void directoryRadios(country).then((l) => {
+      const cur = DIR_MEM.get(country);
+      if (cur && JSON.stringify(cur) === JSON.stringify(l)) return;
+      DIR_MEM.set(country, l);
+      if (!off) setDirectory(l);
+    }, () => {});
     return () => { off = true; };
   }, [country]);
   const list = useMemo(() => orderRadios(directory, prefs.custom, prefs.fav, prefs.recent), [directory, prefs]);
@@ -84,7 +96,9 @@ export function Radios() {
 const RadioTile = memo(function RadioTile({ r, fav, onPlay, onMenu }: { r: Radio; fav: boolean; onPlay: () => void; onMenu: () => void }) {
   const ref = useLongPress<HTMLButtonElement>(onMenu);
   return (
-    <button ref={ref} className="card logo-tile radio-tile" data-f data-lp onClick={onPlay} aria-label={r.name} title={r.name}>
+    // the gradient of the tiles without a logo, for all: the logo's colour once it is read, the name's until then
+    <button ref={ref} className="card logo-tile radio-tile" data-f data-lp onClick={onPlay} aria-label={r.name} title={r.name}
+      style={{ '--tile-hue': `hsl(${nameHue(r.name)} 55% 42%)` } as CSSProperties}>
       <Img srcs={[r.logo]} contain label={r.name} alt="" />
       {fav && <IcStar className="fav" />}
       <span className="nm">{r.name}</span>
