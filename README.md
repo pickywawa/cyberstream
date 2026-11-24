@@ -1,8 +1,86 @@
-# Cyberstream
+<p align="center">
+  <a href="https://pickywawa.github.io/cyberstream/">
+    <img src="docs/assets/banner.png" alt="Cyberstream — lecteur IPTV au moteur Rust" width="100%" />
+  </a>
+</p>
 
-Cyberstream porte le lecteur IPTV CyberTV vers Rust. Le même module WebAssembly sert le navigateur, Android mobile et TV, iOS et Electron. Android utilise Media3 pour le décodage vidéo et le choix des pistes.
+<p align="center">
+  <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="Dernière version" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
+  <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/moteur-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
+  <img alt="Plateformes" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
+</p>
 
-## État du portage
+<p align="center">
+  <b><a href="https://pickywawa.github.io/cyberstream/">Site</a></b> ·
+  <b><a href="https://github.com/pickywawa/cyberstream/releases/latest">Télécharger</a></b> ·
+  <a href="#-fonctions">Fonctions</a> ·
+  <a href="#-captures">Captures</a> ·
+  <a href="#-compiler-et-tester">Compiler</a>
+</p>
+
+---
+
+**Cyberstream** lit tes sources **Xtream Codes** et **M3U** : chaînes en direct, guide TV, films, séries et replay. Il porte le lecteur IPTV CyberTV vers Rust : le même module WebAssembly sert le navigateur, Android mobile et TV, iOS et Electron. Android utilise Media3 pour le décodage vidéo et le choix des pistes.
+
+> [!NOTE]
+> Cyberstream est un lecteur. Il ne fournit aucun contenu : tu utilises tes propres sources.
+
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="Démonstration : profil, accueil, fiche film, TV en direct, guide et recherche" width="100%" />
+  <br />
+  <sub>Données et visuels de démonstration fictifs.</sub>
+</p>
+
+## ⚡ Fonctions
+
+| | |
+| --- | --- |
+| 📡 **Xtream & M3U** | Catalogues lus par blocs, serveurs de secours, synchronisation différentielle. |
+| 🗓️ **Guide TV XMLTV** | Grille virtualisée, ligne « maintenant », rattrapage des programmes passés. |
+| 🎬 **Films & séries** | Fiches enrichies par TMDB : casting, collections, âge, saisons, reprise, épisode suivant. |
+| ⏸️ **Pause du direct** | Tampon local de 30 à 60 min, ±10 s, retour au direct, bascule vers un flux de secours. |
+| 🎙️ **Commande vocale** | « Mets la chaîne 5 », « recherche Lumen », « recule de 30 secondes », en français et en anglais. |
+| 📱 **Installation par QR code** | La TV récupère profil, sources et réglages depuis le téléphone. |
+| 🔁 **Replay gratuit** | ARTE, france.tv, Okoo et flux RSS YouTube. |
+| 💬 **Sous-titres & Trakt** | SRT, WebVTT, OpenSubtitles par empreinte, scrobble et watchlist Trakt. |
+| 👤 **Profils** | Avatar, langue et limite d’âge par profil. Jetons rangés dans le coffre de secrets de l’appareil. |
+
+## 🖼️ Captures
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="Accueil avec rails de films et séries" /><p align="center"><sub>Accueil</sub></p></td>
+    <td width="50%"><img src="docs/assets/screens/live.webp" alt="TV en direct" /><p align="center"><sub>TV en direct</sub></p></td>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/screens/guide.webp" alt="Programme TV" /><p align="center"><sub>Programme TV</sub></p></td>
+    <td><img src="docs/assets/screens/movie.webp" alt="Fiche film" /><p align="center"><sub>Fiche film</sub></p></td>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/screens/series-episodes.webp" alt="Saisons et épisodes d’une série" /><p align="center"><sub>Série</sub></p></td>
+    <td><img src="docs/assets/screens/player.webp" alt="Lecteur" /><p align="center"><sub>Lecteur — extrait : <i>Sintel</i> © Blender Foundation, CC BY</sub></p></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/assets/screens/mobile-home.webp" alt="Accueil sur téléphone" width="30%" />
+  &nbsp;
+  <img src="docs/assets/screens/mobile-rows.webp" alt="Rails sur téléphone" width="30%" />
+  &nbsp;
+  <img src="docs/assets/screens/mobile-movie.webp" alt="Fiche film sur téléphone" width="30%" />
+</p>
+
+## 📦 Installer
+
+Télécharge `Cyberstream-x.y.z.apk` depuis la [dernière publication](https://github.com/pickywawa/cyberstream/releases/latest), puis installe-le sur le téléphone ou sur la TV :
+
+```sh
+adb -d install -r Cyberstream-1.0.1.apk
+```
+
+Le paquet Android est `app.cyberstream.player`. Le même APK s’installe sur mobile et apparaît dans le lanceur Android TV. Le minimum déclaré est Android 7 (API 24). L’interface nécessite un WebView compatible WebAssembly et modules JavaScript. La version du système seule ne garantit pas cette compatibilité.
+
+## 🦀 État du portage
 
 La préversion suit CyberTV 0.16.0. Le portage reste hybride.
 
@@ -18,9 +96,9 @@ La préversion suit CyberTV 0.16.0. Le portage reste hybride.
 
 Les écrans de CyberTV ont été repris pour conserver les parcours pendant la migration. La parité complète sur Android TV, iOS et ordinateur reste à tester. Les spécifications d’origine se trouvent dans [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md).
 
-## Compiler et tester
+## 🛠️ Compiler et tester
 
-Prérequis pour le web et les tests locaux : Rust stable avec la cible WebAssembly, Node.js 22.12 ou ultérieur et npm. Le générateur de liaisons doit correspondre à la version du crate.
+Prérequis pour le web et les tests locaux : Rust stable avec la cible WebAssembly, Node.js 22.12 ou ultérieur et npm. Le générateur de liaisons doit correspondre à la version du crate.
 
 ```sh
 rustup target add wasm32-unknown-unknown
@@ -31,23 +109,33 @@ npm test
 npm run build
 ```
 
-Avec le SDK Android 36, JDK 21, `JAVA_HOME` et `ANDROID_HOME` configurés :
+Avec le SDK Android 36, JDK 21, `JAVA_HOME` et `ANDROID_HOME` configurés :
 
 ```sh
 npm run android:apk
 adb -d install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Le paquet Android est `app.cyberstream.player`. Le même APK s’installe sur mobile et apparaît dans le lanceur Android TV. Le minimum déclaré dans le projet est Android 7 (API 24). L’interface nécessite un WebView compatible WebAssembly et modules JavaScript. La version du système seule ne garantit pas cette compatibilité.
-
 Le profil et les sources se configurent sur l’appareil. Pour tester le web avec les données fictives, lancer `npm run dev -- --host 127.0.0.1` et sélectionner la source de démonstration pendant la configuration. Les clés de services facultatifs se renseignent dans les paramètres du profil. Depuis la version 0.16.3, le lecteur vérifie les publications GitHub de Cyberstream, préversions comprises. Chaque publication Android doit joindre son manifeste `update.json` et l’APK qu’il référence. Pour tester un autre canal, définir `CYBER_UPDATE_URL` avec l’URL d’un manifeste lors du build. Les utilisateurs des versions 0.16.1 et 0.16.2 doivent installer manuellement une première fois un APK plus récent.
 
-## Ressources sur Android TV
+## 📺 Ressources sur Android TV
 
 La grille du catalogue conserve des identifiants triés et lit les affiches par rangée visible. Le premier téléchargement sélectionne les catégories dans les langues audio du profil, avec une option pour garder toutes les langues.
 
 Une empreinte des entrées Xtream permet de conserver les lignes inchangées entre deux synchronisations. Le guide conserve aussi les identifiants des créneaux stables et réécrit les programmes modifiés.
 
-Les lanceurs et les icônes d’interface utilisent des dessins vectoriels. Android conserve les SVG et animations reçus et adapte les photographies à leur usage. Le bord maximal est de 224 pixels pour un logo, 448 pour une carte et 1 024 pour un visuel principal. Deux décodages d’image peuvent fonctionner simultanément. Le cache disque vise 96 Mio avec éviction périodique des fichiers les moins récemment utilisés.
+Les lanceurs et les icônes d’interface utilisent des dessins vectoriels. Android conserve les SVG et animations reçus et adapte les photographies à leur usage. Le bord maximal est de 224 pixels pour un logo, 448 pour une carte et 1 024 pour un visuel principal. Deux décodages d’image peuvent fonctionner simultanément. Le cache disque vise 96 Mio avec éviction périodique des fichiers les moins récemment utilisés.
 
 Le mode performance est activé par défaut sur Android. L’accueil lit un échantillon borné de films. La recherche construit son index à la demande dans ce mode. Sur un appareil identifié comme pauvre en mémoire, le lecteur cible 24 Mio de tampon média. Ces limites encadrent des sous-systèmes précis. La mémoire totale, le temps de démarrage et la fluidité doivent être mesurés sur le téléviseur cible.
+
+## 🌐 Site
+
+Le site vitrine est dans [`docs/`](docs/) (HTML, CSS et JS sans build). Pour le publier : *Settings › Pages › Deploy from a branch*, branche `main`, dossier `/docs`. Aperçu local :
+
+```sh
+python3 -m http.server 8090 -d docs
+```
+
+---
+
+<p align="center"><sub>Les titres, affiches et chaînes des captures sont fictifs. Extrait vidéo : <i>Sintel</i> © Blender Foundation, licence CC BY 3.0.</sub></p>
