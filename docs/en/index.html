@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cyberstream — IPTV player with a Rust engine</title>
+  <meta name="description" content="Cyberstream: IPTV player for Android, Android TV, iOS, desktop and web. Xtream and M3U sources, TV guide, movies, series, catch-up. One Rust engine compiled to WebAssembly." />
+  <meta name="theme-color" content="#07080b" />
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml" />
+  <link rel="alternate" hreflang="fr" href="https://pickywawa.github.io/cyberstream/" />
+  <link rel="alternate" hreflang="en" href="https://pickywawa.github.io/cyberstream/en/" />
+  <meta property="og:title" content="Cyberstream — IPTV player with a Rust engine" />
+  <meta property="og:description" content="Xtream, M3U, TV guide, movies, series and catch-up. Android, Android TV, iOS, desktop and web." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pickywawa.github.io/cyberstream/en/" />
+  <meta property="og:image" content="https://pickywawa.github.io/cyberstream/assets/og-en.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Cyberstream, home">
+      <img src="../assets/icon.svg" alt="" width="34" height="34" />
+      <span>Cyber<b>stream</b></span>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#engine">Engine</a>
+      <a href="#install">Install</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="lang" href="../" hreflang="fr" lang="fr" aria-label="Version française">FR</a>
+      <a class="gh" href="https://github.com/pickywawa/cyberstream" aria-label="Source code on GitHub">
+        <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+      <a class="btn btn-accent sm" href="https://github.com/pickywawa/cyberstream/releases/latest">Download</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="kicker"><span class="dot"></span> v1.0.1 · available on Android and Android TV</p>
+        <h1 class="glitch" data-text="All your TV.">All your TV.</h1>
+        <h1 class="h1-2">One <span class="neon">Rust engine</span>.</h1>
+        <p class="lead">Cyberstream plays your <b>Xtream</b> and <b>M3U</b> sources: live channels, TV guide, movies, series and catch-up. The same WebAssembly module runs on phones, TVs, desktops and browsers.</p>
+        <div class="cta-row">
+          <a class="btn btn-accent" href="https://github.com/pickywawa/cyberstream/releases/latest">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+            Download the APK
+          </a>
+          <a class="btn btn-ghost" href="#screenshots">See the interface</a>
+        </div>
+        <div class="term" aria-label="Example command">
+          <span class="prompt">~/cyberstream</span><span class="sep">❯</span>
+          <span class="typed" data-lines='["npm run android:apk","cargo test --locked","npm run desktop","npm run dev -- --host 127.0.0.1"]'></span><span class="caret"></span>
+        </div>
+      </div>
+
+      <div class="hero-screen">
+        <div class="frame">
+          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <div class="frame-bar">
+            <span></span><span></span><span></span>
+            <em>cyberstream://demo</em>
+            <strong class="rec">● REC</strong>
+          </div>
+          <video src="../assets/demo.mp4" poster="../assets/demo-poster.webp" autoplay muted loop playsinline preload="metadata" aria-label="Demo of the Cyberstream interface"></video>
+        </div>
+        <p class="caption">Recorded with the demo source and TMDB metadata. Interface shown in French.</p>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" aria-label="In numbers">
+      <div><b>1</b><span>shared Rust engine</span></div>
+      <div><b>5</b><span>targets: Android, TV, iOS, desktop, web</span></div>
+      <div><b>2</b><span>sources: Xtream Codes and M3U</span></div>
+      <div><b>0</b><span>content provided: bring your own sources</span></div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <header class="sec-head">
+        <p class="tag">// 01 — features</p>
+        <h2>Built for the remote,<br />at home on your phone.</h2>
+      </header>
+      <div class="features">
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3zM8 3l4 4 4-4"/></svg></div>
+          <h3>Xtream & M3U</h3>
+          <p>Catalogues read in chunks, backup servers, differential sync: only changed rows are rewritten.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 10h18M9 5v14"/></svg></div>
+          <h3>XMLTV guide</h3>
+          <p>Virtualised channel × time grid, day-by-day navigation, gzip and time zones handled. Past programmes play back as catch-up.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 4v5M15 4v5"/></svg></div>
+          <h3>Movies & series</h3>
+          <p>Pages enriched by TMDB: cast, collections, age ratings, seasons and episodes, resume and next episode.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14M3 12a9 9 0 1 0 2.6-6.4"/></svg></div>
+          <h3>Live pause</h3>
+          <p>Local 30 to 60 min buffer: pause, ±10 s and back to live on HLS streams, with automatic switch to a backup stream.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+          <h3>Voice commands</h3>
+          <p>“Put on channel 5”, “search Dune”, “go back 30 seconds”. Understood on the device, in French and English.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></svg></div>
+          <h3>QR code setup</h3>
+          <p>Scan the code on the TV with your phone: profile, sources and settings arrive without typing a URL with the remote.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4M12 8v4l3 2"/></svg></div>
+          <h3>Free catch-up</h3>
+          <p>ARTE, france.tv and Okoo built in, plus YouTube RSS feeds. Official streams come first for public channels.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zM8 20h8M7 11h4M13 11h4"/></svg></div>
+          <h3>Subtitles & Trakt</h3>
+          <p>SRT, WebVTT and OpenSubtitles hash search. Trakt scrobbling, watchlist and recommendations on the home screen.</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div>
+          <h3>Profiles & vault</h3>
+          <p>Several profiles with their own language, avatar and age limit. Service tokens stay in the device's secret store.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SCREENSHOTS -->
+    <section id="screenshots" class="section">
+      <header class="sec-head">
+        <p class="tag">// 02 — interface</p>
+        <h2>A dark interface,<br />sharp and fast.</h2>
+      </header>
+
+      <div class="gallery">
+        <div class="tabs" role="tablist" aria-label="Screens">
+          <button role="tab" aria-selected="true" data-src="../assets/screens/home.webp" data-cap="Home: carousel, categories and rows of new arrivals.">Home</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/home-rows.webp" data-cap="Movie and series rows, with ratings.">Rows</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/live.webp" data-cap="Live TV: now, tonight and categories.">Live TV</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/guide.webp" data-cap="TV guide: virtualised grid and “now” line.">TV guide</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/movie.webp" data-cap="Movie page: synopsis, age rating, cast.">Movie</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/series-episodes.webp" data-cap="Series: seasons and episodes from left to right.">Series</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/player.webp" data-cap="Player: ±10 s, tracks, info, picture-in-picture. Test stream: Big Buck Bunny © Blender Foundation, CC BY.">Player</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/search.webp" data-cap="Search as you type: channels, movies, series.">Search</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/profiles.webp" data-cap="“Who's watching?”: one profile per person.">Profiles</button>
+        </div>
+        <figure class="stage frame">
+          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <img id="stage-img" src="../assets/screens/home.webp" alt="Screenshot of the Cyberstream home screen" width="1440" height="900" />
+          <figcaption id="stage-cap">Home: carousel, categories and rows of new arrivals.</figcaption>
+        </figure>
+      </div>
+
+      <div class="phones">
+        <div class="phones-copy">
+          <p class="tag">// mobile</p>
+          <h3>In your pocket too.</h3>
+          <p>On phones, the tab bar moves to the bottom, rows scroll with your finger and the player supports picture-in-picture. The same APK installs on phones and shows up in the Android TV launcher.</p>
+        </div>
+        <div class="phone-row">
+          <div class="phone"><img src="../assets/screens/mobile-home.webp" alt="Home on a phone" width="390" height="844" /></div>
+          <div class="phone up"><img src="../assets/screens/mobile-rows.webp" alt="Rows on a phone" width="390" height="844" /></div>
+          <div class="phone"><img src="../assets/screens/mobile-movie.webp" alt="Movie page on a phone" width="390" height="844" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENGINE -->
+    <section id="engine" class="section">
+      <header class="sec-head">
+        <p class="tag">// 03 — engine</p>
+        <h2>A Rust core,<br />WebAssembly everywhere.</h2>
+      </header>
+      <div class="arch">
+        <div class="arch-core">
+          <div class="core-box">
+            <span class="mono">rust/ → wasm32</span>
+            <strong>Cyberstream engine</strong>
+            <ul>
+              <li>Xtream, M3U, XMLTV parsing</li>
+              <li>Search index, ranking</li>
+              <li>Grids, views, D-pad navigation</li>
+              <li>Subtitles, catch-up, Trakt</li>
+              <li>LZ4, gzip compression</li>
+            </ul>
+          </div>
+        </div>
+        <div class="arch-wires" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="arch-hosts">
+          <div class="host"><b>Android & TV</b><span>Capacitor · Media3 · image cache · timeshift</span></div>
+          <div class="host"><b>iOS</b><span>Swift host · Capacitor</span></div>
+          <div class="host"><b>Desktop</b><span>Electron · macOS, Windows, Linux</span></div>
+          <div class="host"><b>Web</b><span>React · IndexedDB · Web Worker</span></div>
+        </div>
+      </div>
+      <div class="perf">
+        <div><b>24 MiB</b><span>media buffer on low-memory devices</span></div>
+        <div><b>96 MiB</b><span>image disk cache, LRU eviction</span></div>
+        <div><b>0.4 s</b><span>to open the TV guide on a phone</span></div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install" class="section">
+      <header class="sec-head">
+        <p class="tag">// 04 — install</p>
+        <h2>Ready in two minutes.</h2>
+      </header>
+      <div class="install">
+        <div class="tabs small" role="tablist" aria-label="Install method">
+          <button role="tab" aria-selected="true" data-panel="p-android">Android & TV</button>
+          <button role="tab" aria-selected="false" data-panel="p-source">From source</button>
+          <button role="tab" aria-selected="false" data-panel="p-desktop">Desktop</button>
+        </div>
+        <div class="panel" id="p-android">
+          <ol class="steps">
+            <li>Download <code>Cyberstream-x.y.z.apk</code> from the <a href="https://github.com/pickywawa/cyberstream/releases/latest">latest release</a>.</li>
+            <li>Install it on your phone, or on the TV with <code>adb</code>:</li>
+          </ol>
+          <div class="code"><button class="copy" aria-label="Copy">copy</button><pre><code>adb -d install -r Cyberstream-1.0.1.apk</code></pre></div>
+          <p class="note">Android 7 (API 24) minimum, with a WebView that supports WebAssembly. After that, the app checks GitHub for new versions by itself.</p>
+        </div>
+        <div class="panel" id="p-source" hidden>
+          <p class="note">Stable Rust with the WebAssembly target, Node.js 22.12 or later and npm.</p>
+          <div class="code"><button class="copy" aria-label="Copy">copy</button><pre><code>rustup target add wasm32-unknown-unknown
+cargo install --locked wasm-bindgen-cli --version 0.2.108
+npm ci
+cargo test --locked &amp;&amp; npm test
+npm run dev -- --host 127.0.0.1</code></pre></div>
+          <p class="note">In development, pick the demo source during setup to try it without a subscription.</p>
+        </div>
+        <div class="panel" id="p-desktop" hidden>
+          <p class="note">The desktop host uses Electron. Run it locally or build the macOS, Windows and Linux packages:</p>
+          <div class="code"><button class="copy" aria-label="Copy">copy</button><pre><code>npm run desktop
+npm run desktop:dist</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <h2>Plug in your source. <span class="neon">Press play.</span></h2>
+      <div class="cta-row center">
+        <a class="btn btn-accent" href="https://github.com/pickywawa/cyberstream/releases/latest">Download Cyberstream</a>
+        <a class="btn btn-ghost" href="https://github.com/pickywawa/cyberstream">Source code</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="brand small"><img src="../assets/icon.svg" alt="" width="22" height="22" /><span>Cyber<b>stream</b></span></div>
+    <p>Cyberstream is a player. It does not provide, host or list any content: you use your own sources. Code released under the MIT license.</p>
+    <p class="dim">Posters, photos and metadata: <a href="https://www.themoviedb.org/">TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB. Channel logos: <a href="https://github.com/iptv-org/database">iptv-org</a> database; trademarks and artwork belong to their owners. Player video: <i>Big Buck Bunny</i> test stream © Blender Foundation, CC BY 3.0.</p>
+  </footer>
+
+  <div class="lightbox" hidden><img alt="" /></div>
+  <script src="../main.js" defer></script>
+</body>
+</html>

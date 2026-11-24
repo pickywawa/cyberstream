@@ -17,6 +17,8 @@
   <a href="#-fonctions">Fonctions</a> ·
   <a href="#-captures">Captures</a> ·
   <a href="#-compiler-et-tester">Compiler</a>
+  <br />
+  <b>Français</b> · <a href="README.en.md">English</a>
 </p>
 
 ---
@@ -131,7 +133,7 @@ Le mode performance est activé par défaut sur Android. L’accueil lit un éch
 
 ## 🌐 Site
 
-Le site vitrine est dans [`docs/`](docs/) (HTML, CSS et JS sans build). Pour le publier : *Settings › Pages › Deploy from a branch*, branche `main`, dossier `/docs`. Aperçu local :
+Le site vitrine est dans [`docs/`](docs/) (HTML, CSS et JS sans build), en français à la racine et en anglais dans `docs/en/`. Pour le publier : *Settings › Pages › Deploy from a branch*, branche `main`, dossier `/docs`. Aperçu local :
 
 ```sh
 python3 -m http.server 8090 -d docs

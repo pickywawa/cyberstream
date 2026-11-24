@@ -1,4 +1,6 @@
 // Cyberstream site: gallery tabs, install tabs, copy buttons, typed terminal, lightbox, reveal.
+const EN = document.documentElement.lang === 'en';
+const T = EN ? { copy: 'copy', copied: 'copied ✓', shot: 'Screenshot: ' } : { copy: 'copier', copied: 'copié ✓', shot: 'Capture : ' };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // tab lists (gallery + install)
@@ -14,7 +16,7 @@ for (const list of document.querySelectorAll('[role=tablist]')) {
       next.src = tab.dataset.src;
       next.onload = () => {
         img.src = tab.dataset.src;
-        img.alt = 'Capture : ' + tab.textContent.trim();
+        img.alt = T.shot + tab.textContent.trim();
         cap.textContent = tab.dataset.cap || '';
         img.classList.remove('fade');
       };
@@ -46,9 +48,9 @@ for (const b of document.querySelectorAll('.copy')) {
     const text = b.parentElement.querySelector('code').textContent;
     try {
       await navigator.clipboard.writeText(text);
-      b.textContent = 'copié ✓';
+      b.textContent = T.copied;
       b.classList.add('ok');
-      setTimeout(() => { b.textContent = 'copier'; b.classList.remove('ok'); }, 1600);
+      setTimeout(() => { b.textContent = T.copy; b.classList.remove('ok'); }, 1600);
     } catch { /* clipboard unavailable */ }
   });
 }
