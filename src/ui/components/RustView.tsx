@@ -20,7 +20,8 @@ export function useViewMarkup(ref: RefObject<HTMLElement | null>, html: string) 
     });
     if (command) {
       const scope = rail ? el.querySelector(`[data-rail="${CSS.escape(rail)}"]`) : el;
-      const next = scope?.querySelector<HTMLElement>(`[data-cmd="${CSS.escape(command)}"]`) || scope?.querySelector<HTMLElement>('[data-f]');
+      // [data-f] first: the top bar's logo shares the Home tab's command but isn't selectable
+      const next = scope?.querySelector<HTMLElement>(`[data-f][data-cmd="${CSS.escape(command)}"]`) || scope?.querySelector<HTMLElement>('[data-f]');
       next?.focus({ preventScroll: true });
     }
   }, [ref, html]);

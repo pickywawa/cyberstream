@@ -151,14 +151,21 @@ export function move(dir: Dir): boolean {
   // the floating Back button (always shown, top left) is reached from the page's header only:
   // lower down, Up goes to the row above (it used to grab the focus as soon as the page was scrolled)
   const nearBack = !!active.closest('.hero, .detail-hero, .page-header');
-  let target = (nearBack ? null : best(active, others.filter((e) => !e.classList.contains('back-btn')), dir)) || best(active, others, dir);
-  // a tab row lying between here and the target is never skipped (the closest wins)
+  const pick = (list: HTMLElement[]) =>
+    (nearBack ? null : best(active, list.filter((e) => !e.classList.contains('back-btn')), dir)) || best(active, list, dir);
+  // from the page, its own content comes before the fixed top bar: Up from a row goes to the one
+  // above (the banner, a page's first buttons) even when that one is scrolled out of view, past the bar
+  const fromPage = !active.closest('.topnav, .update-banner');
+  let target = (fromPage ? pick(others.filter((e) => !e.closest('.topnav, .update-banner'))) : null) || pick(others);
+  // a tab row lying between here and the target is never skipped (the closest wins).
+  // The fixed top bar is left out: a target scrolled out of view above (the banner, a page's
+  // first buttons) would otherwise put it "between" and Up would land on Home.
   if (target && (dir === 'up' || dir === 'down')) {
     const a = active.getBoundingClientRect();
     const t = target.getBoundingClientRect();
     let gap = Infinity;
     for (const r of scope.querySelectorAll<HTMLElement>('[data-row][data-tabs]')) {
-      if (r === row || r.contains(target) || !visible(r)) continue;
+      if (r === row || r.contains(target) || !visible(r) || r.closest('.topnav')) continue;
       const rr = r.getBoundingClientRect();
       const between = dir === 'up' ? rr.bottom <= a.top + 4 && rr.top >= t.bottom - 4 : rr.top >= a.bottom - 4 && rr.bottom <= t.top + 4;
       const d = dir === 'up' ? a.top - rr.bottom : rr.top - a.bottom;
