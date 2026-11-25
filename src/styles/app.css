@@ -1098,5 +1098,9 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 
 /* Settings: every profile at the top, the add button under them on the right */
 .settings-group { margin: 14px 0 8px; font-size: 1rem; color: var(--text-2); }
-.settings-add { display: flex; justify-content: flex-end; margin: 8px 0 18px; }
+.settings-profiles { background: var(--surface); border-radius: var(--radius); padding: 4px; gap: 0; }
+.settings-profiles .list-item { background: transparent; }
+.settings-profiles .list-item + .list-item { border-top: 1px solid var(--border); border-radius: 0; }
+.settings-add { display: flex; justify-content: flex-end; padding: 6px 10px 10px; border-top: 1px solid var(--border); }
+.settings .list + .list { margin-top: 18px; }
 .settings-add .btn svg { width: 16px; height: 16px; }
