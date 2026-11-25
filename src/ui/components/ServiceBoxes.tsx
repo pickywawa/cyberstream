@@ -34,65 +34,51 @@ export function Collapse({ title, sub, ok, children }: { title: ReactNode; sub?:
 /** the profile being edited is the one in use: the app state follows (enrichment, catalogue) */
 const isCurrent = (p: Profile) => useApp.getState().profile?.id === p.id;
 
-/**
- * TMDB on a single line (state of the token), a discreet button below opens the field. In the
- * profile creation, `onToken` keeps the token until the profile exists.
- */
-export function TmdbLine({ profile, token: draft, onToken }: { profile?: Profile; token?: string; onToken?: (t: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [token, setToken] = useState(draft || '');
-  const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'ko'>(draft ? 'ok' : 'idle');
-  const has = profile ? profile.hasTmdb : !!draft && state === 'ok';
+/** TMDB: one line (state of the token and what it brings) that opens the field, like the other services */
+export function TmdbLine({ profile }: { profile: Profile }) {
+  const [token, setToken] = useState('');
+  const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'ko'>('idle');
+  const has = profile.hasTmdb;
   const save = async () => {
     setState('busy');
     const ok = await dataWorker().validateTmdb(token.trim());
     setState(ok ? 'ok' : 'ko');
     if (!ok) return;
-    if (onToken) onToken(token.trim());
-    if (profile) {
-      await setTmdbToken(profile.id, token.trim());
-      if (isCurrent(profile)) {
-        useApp.getState().patchProfile({ hasTmdb: true });
-        await startEnrichment({ ...profile, hasTmdb: true });
-      }
-      setToken('');
+    await setTmdbToken(profile.id, token.trim());
+    if (isCurrent(profile)) {
+      useApp.getState().patchProfile({ hasTmdb: true });
+      await startEnrichment({ ...profile, hasTmdb: true });
     }
-    setOpen(false);
+    setToken('');
   };
   const remove = async () => {
-    onToken?.('');
-    setToken('');
     setState('idle');
-    if (!profile) return;
     await setTmdbToken(profile.id, null);
     if (isCurrent(profile)) {
       useApp.getState().patchProfile({ hasTmdb: false });
       await startEnrichment({ ...profile, hasTmdb: false });
     }
   };
+  const title = (
+    <>
+      TMDB <span className={`small ${has ? 'msg-ok' : 'dim'}`} style={{ fontWeight: 400, marginInlineStart: 8 }}>{has ? t('settings.tmdbSet') : t('settings.tmdbMissing')}</span>
+    </>
+  );
   return (
-    <div className="service-line">
-      <div className="service-row">
-        <strong>TMDB</strong>
-        <span className={`small ${has ? 'msg-ok' : 'dim'}`}>{has ? t('settings.tmdbSet') : t('settings.tmdbMissing')}</span>
+    <Collapse title={title} sub={t('profiles.tmdbHelp')}>
+      <p className="muted" style={{ lineHeight: 1.5 }}>{t('onboard.tmdbText')}</p>
+      <div className="field">
+        <label>{t('onboard.tmdbToken')}</label>
+        <input className="input" data-f type="password" value={token} onChange={(e) => (setToken(e.target.value), setState('idle'))} placeholder={has ? '••••••••••••' : ''} autoComplete="off" spellCheck={false} />
+        <ServiceGuide site="themoviedb.org" url="https://www.themoviedb.org/settings/api" steps={['help.tmdb1', 'help.tmdb2', 'help.tmdb3']} />
       </div>
-      <button className="link-btn small" data-f onClick={() => setOpen(!open)}>{has ? t('common.edit') : t('onboard.tmdbTitle')}</button>
-      {open && (
-        <div className="form" style={{ marginTop: 10 }}>
-          <p className="muted small" style={{ lineHeight: 1.5 }}>{t('onboard.tmdbText')}</p>
-          <div className="field">
-            <label>{t('onboard.tmdbToken')}</label>
-            <input className="input" data-f type="password" value={token} onChange={(e) => (setToken(e.target.value), setState('idle'))} placeholder={has ? '••••••••••••' : ''} autoComplete="off" spellCheck={false} />
-            <ServiceGuide site="themoviedb.org" url="https://www.themoviedb.org/settings/api" steps={['help.tmdb1', 'help.tmdb2', 'help.tmdb3']} />
-          </div>
-          <div className="btn-row">
-            <button className="btn primary" data-f disabled={!token.trim() || state === 'busy'} onClick={() => void save()}>{state === 'busy' ? t('common.testing') : t('common.save')}</button>
-            {has && <button className="btn danger" data-f onClick={() => void remove()}>{t('settings.tmdbRemove')}</button>}
-            {state === 'ko' && <span className="msg-ko">{t('onboard.tmdbKo')}</span>}
-          </div>
-        </div>
-      )}
-    </div>
+      <div className="btn-row">
+        <button className="btn primary" data-f disabled={!token.trim() || state === 'busy'} onClick={() => void save()}>{state === 'busy' ? t('common.testing') : t('common.save')}</button>
+        {has && <button className="btn danger" data-f onClick={() => void remove()}>{t('settings.tmdbRemove')}</button>}
+        {state === 'ok' && <span className="msg-ok">{t('onboard.tmdbOk')}</span>}
+        {state === 'ko' && <span className="msg-ko">{t('onboard.tmdbKo')}</span>}
+      </div>
+    </Collapse>
   );
 }
 

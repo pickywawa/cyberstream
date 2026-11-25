@@ -162,6 +162,12 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
         <span className="small dim">{t('profiles.countriesHelp')}</span>
         <Toggle label={t('profiles.freeTv')} sub={t('profiles.freeTvHint')} on={!!p.freeTv} onChange={(v) => void patch({ freeTv: v })} />
         <Toggle label={t('profiles.countryFilter')} sub={t('profiles.countryFilterHint')} on={!!p.countryFilter} onChange={(v) => void patch({ countryFilter: v })} />
+        {profileCountries(p).includes('FR') && <Toggle
+          label={t('replay.officialLive')}
+          sub={t('replay.officialLiveHint')}
+          on={p.officialLive !== false}
+          onChange={(v) => void patch({ officialLive: v })}
+        />}
         <TmdbLine profile={p} />
 
         <h2>{t('profiles.audio')}</h2>
@@ -188,12 +194,8 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
           </div>
         </div>
         <OpenSubtitlesBox profile={p} />
-        {profileCountries(p).includes('FR') && <Toggle
-          label={t('replay.officialLive')}
-          sub={t('replay.officialLiveHint')}
-          on={p.officialLive !== false}
-          onChange={(v) => void patch({ officialLive: v })}
-        />}
+        <h2>{t('profiles.recommendations')}</h2>
+        <span className="small dim">{t('profiles.recommendationsHelp')}</span>
         <TraktBox profile={p} />
         <div className="btn-row" style={{ marginTop: 20 }}>
           {confirmDel ? (
