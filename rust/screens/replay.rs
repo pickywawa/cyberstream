@@ -22,6 +22,7 @@ fn provider(id: &str) -> &str {
     match id {
         "arte" => "ARTE",
         "francetv" => "france.tv",
+        "ard" => "ARD",
         "youtube" => "YouTube",
         _ => id,
     }
@@ -145,8 +146,8 @@ impl Catalog {
     }
 }
 #[wasm_bindgen]
-pub fn replay_filters(filter: &str, lang: &str) -> String {
-    html!{@for f in ["all","arte","francetv","youtube","kids"]{button.chip.active[f==filter] data-f data-cmd=(f){
+pub fn replay_filters(filter: &str, lang: &str, providers: &str) -> String {
+    html!{@for f in std::iter::once("all").chain(providers.split(',').filter(|p|!p.is_empty())){button.chip.active[f==filter] data-f data-cmd=(f){
        (match f{"all"=>lookup(lang,"replay.all"),"kids"=>lookup(lang,"replay.kids"),_=>provider(f)})
     }}}.into_string()
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ServiceGuide } from '../components/ServiceGuide';
-import { t, setLang } from '@/core/i18n';
+import { t, setLang, LANGS, isLang, deviceLang } from '@/core/i18n';
 import type { Lang, Profile } from '@/core/types';
 import { COLORS, EMOJIS, createProfile, saveSource, setTmdbToken } from '@/core/profiles';
 import { dataWorker } from '@/core/workers';
@@ -13,7 +13,10 @@ import { IcCheck, IcTrash } from '../icons';
 import { db } from '@/core/db';
 import { EnrollPanel } from '../components/EnrollPanel';
 import { isTvMode } from '@/core/platform';
-import { updateProfile } from '@/core/profiles';
+import { syncFreeTvSources, updateProfile } from '@/core/profiles';
+import { profileCountries } from '@/core/prefs';
+import { CountryPicker } from '../components/CountryPicker';
+import { Toggle } from '../components/Overlay';
 import { canEnroll, type EnrollPayload } from '@/core/enroll';
 
 const DEV_TMDB = (import.meta.env.DEV && (import.meta.env.VITE_DEV_TMDB_TOKEN as string)) || '';
@@ -28,10 +31,15 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
   const [emoji, setEmoji] = useState(EMOJIS[0]);
   const [color, setColor] = useState(COLORS[0]);
   const [lang, setLangState] = useState<Lang>(() => {
-    const l: Lang = importedProfile?.lang || (navigator.language.startsWith('fr') ? 'fr' : 'en');
+    const l: Lang = importedProfile?.lang || deviceLang();
     setLang(l);
     return l;
   });
+  // followed countries: the device's region (or the language's country) until changed
+  const [countries, setCountries] = useState<string[] | null>(null);
+  const shownCountries = countries || profileCountries({ lang });
+  const [freeTv, setFreeTv] = useState(true);
+  const [countryFilter, setCountryFilter] = useState(true);
   const [drafts, setDrafts] = useState<SourceDraft[]>([]);
   const [draft, setDraft] = useState<SourceDraft>(emptyDraft());
   const [token, setToken] = useState(DEV_TMDB);
@@ -100,6 +108,8 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
 
   const finishWith = async (o: { name: string; emoji: string; color: string; lang: Lang; prefs?: EnrollPayload['prefs']; drafts: SourceDraft[]; token: string }) => {
     const p = await createProfile({ name: o.name.trim(), emoji: o.emoji, color: o.color, lang: o.lang });
+    const chosen = o.prefs?.countries?.length ? o.prefs.countries : countries || profileCountries({ lang: o.lang });
+    await updateProfile(p.id, { countries: chosen, country: chosen[0], freeTv: o.prefs?.freeTv ?? freeTv, countryFilter: o.prefs?.countryFilter ?? countryFilter });
     if (o.prefs) {
       const patch = Object.fromEntries(Object.entries(o.prefs).filter(([k, v]) => v !== undefined && k !== 'lang')) as Partial<Profile>;
       if (Object.keys(patch).length) await updateProfile(p.id, patch);
@@ -108,6 +118,7 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
       await saveSource(p.id, draftInput(d));
     }
     if (o.token.trim()) await setTmdbToken(p.id, o.token.trim());
+    await syncFreeTvSources(p.id);
     const fresh = (await db.profiles.get(p.id))!;
     setProfile(fresh);
     setStep(3);
@@ -155,11 +166,14 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
             </div>
             <div className="field">
               <label>{t('settings.language')}</label>
-              <div className="seg" data-row>
-                {(['fr', 'en'] as const).map((l) => (
-                  <button key={l} data-f className={lang === l ? 'on' : ''} onClick={() => changeLang(l)}>{l === 'fr' ? 'Français' : 'English'}</button>
-                ))}
-              </div>
+              <select className="select input" data-f value={lang} onChange={(e) => isLang(e.target.value) && changeLang(e.target.value)}>
+                {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>{t('profiles.countries')}</label>
+              <CountryPicker value={shownCountries} onChange={setCountries} />
+              <span className="small dim">{t('profiles.countriesHelp')}</span>
             </div>
             <div className="btn-row" style={{ marginTop: 10 }}>
               {onDone && <button className="btn ghost" data-f onClick={onDone}>{t('common.cancel')}</button>}
@@ -189,6 +203,8 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
                 ))}
               </div>
             )}
+            <Toggle label={t('profiles.freeTv')} sub={t('profiles.freeTvHint')} on={freeTv} onChange={setFreeTv} />
+            <Toggle label={t('profiles.countryFilter')} sub={t('profiles.countryFilterHint')} on={countryFilter} onChange={setCountryFilter} />
             <SourceForm draft={draft} onChange={setDraft} />
             <div className="btn-row">
               <button className="btn" data-f disabled={!draftValid(draft)} onClick={addAnother}>+ {t('onboard.addAnother')}</button>
@@ -196,7 +212,7 @@ export function Onboarding({ onDone }: { onDone?: () => void }) {
             </div>
             <div className="btn-row" style={{ marginTop: 10 }}>
               <button className="btn ghost" data-f onClick={() => setStep(0)}>{t('common.back')}</button>
-              <button className="btn primary" data-f disabled={!allDrafts.length} onClick={() => setStep(2)}>{t('common.next')}</button>
+              <button className="btn primary" data-f disabled={!allDrafts.length && !freeTv} onClick={() => setStep(2)}>{t('common.next')}</button>
             </div>
           </div>
         )}

@@ -4,8 +4,9 @@ import { XtreamList, PlaylistCatalog, xtream_episodes } from '../../rust/generat
 import { XtreamClient, asArray, num, normalizeServer } from '../sources/xtream';
 import { decodeTextBody, fetchTextStream, setPrefetchSince, prefetched, fetchWithTimeout } from '../net/http';
 import { cleanName, norm, uid } from '../util/text';
-import { langPrefs } from '../prefs';
-import { keepCategory } from '../util/lang';
+import { langPrefs, profileCountries } from '../prefs';
+import { countryGuides } from '../countries';
+import { keepCategory, keepCountry } from '../util/lang';
 import { GuideImport } from '../epg/staging';
 import { parseXmltv, type XmltvChannel } from '../epg/xmltv';
 import { serversOf, serverLabel } from '../sources/servers';
@@ -82,6 +83,13 @@ type ListKind = 'live' | 'vod' | 'series';
 async function catalogLangs(profileId: string) {
   const profile = await db.profiles.get(profileId);
   return profile && !profile.catalogAllLangs ? langPrefs(profile).audio : [];
+}
+
+/** countries whose live categories are kept (empty: all), when the profile asks for the filter */
+async function catalogCountries(src: Source) {
+  if (src.free) return [];
+  const profile = await db.profiles.get(src.profileId);
+  return profile?.countryFilter ? profileCountries(profile) : [];
 }
 
 /** Only remove explicitly excluded categories after a complete, valid download. */
@@ -205,6 +213,7 @@ async function syncXtream(src: Source, password: string, progress: Progress, set
   if (!auth) throw new Error('Authentification Xtream refusée');
   src.account = account;
   const languages = await catalogLangs(src.profileId);
+  const countries = await catalogCountries(src);
   const counts = { live: 0, vod: 0, series: 0 };
   const categories = new Set<string>();
   const missing: string[] = [];
@@ -214,7 +223,11 @@ async function syncXtream(src: Source, password: string, progress: Progress, set
     const rawCats = await x.categories(kind).catch(() => null);
     const cats = asArray<{category_name?: string; category_id:string|number}>(rawCats).filter(c => c && c.category_id != null);
     if (!cats.length) completeCats = false;
-    const selected = languages.length ? cats.filter(c => keepCategory(String(c.category_name || ''),languages)) : cats;
+    const keep = (c: { category_name?: string }) => {
+      const name = String(c.category_name || '');
+      return (!languages.length || keepCategory(name, languages)) && (kind !== 'live' || keepCountry(name, countries));
+    };
+    const selected = languages.length || (kind === 'live' && countries.length) ? cats.filter(keep) : cats;
     const restricted = selected.length > 0 && selected.length < cats.length;
     const ids = restricted ? selected.map(c => String(c.category_id)) : [];
     const catPrefix = kind === 'live' ? 'lc' : kind === 'vod' ? 'vc' : 'sc';
@@ -324,6 +337,7 @@ async function syncM3u(src: Source, progress: Progress, setup?: SetupDownload, a
   const parser = new PlaylistCatalog(src.id, src.profileId, Date.now());
   const languages = all ? [] : await catalogLangs(src.profileId);
   parser.languages(languages);
+  parser.countries(all ? [] : await catalogCountries(src));
   let excluded: string[] = [];
   const keep = { categories: new Set<string>(), channels: new Set<string>(), movies: new Set<string>(), series: new Set<string>(), episodes: new Set<string>() };
   type Rows = { categories: Category[]; channels: Channel[]; movies: Movie[]; series: Series[]; episodes: Episode[] };
@@ -394,8 +408,7 @@ export async function epgUrlsForProfile(profileId: string, secrets: Record<strin
   // the free national guide first: a week of programmes for the main channels, where providers'
   // guides often stop after a few hours (a guide only fills the channels earlier ones didn't cover)
   const prof = await db.profiles.get(profileId);
-  const country = prof?.country || (prof?.lang === 'fr' ? 'FR' : undefined);
-  if (country && DEFAULT_EPG[country]) urls.push(DEFAULT_EPG[country]);
+  if (prof) urls.push(...countryGuides(profileCountries(prof)));
   for (const s of sources) {
     urls.push(...(s.epgUrls || []));
     if (s.type === 'xtream') urls.push(new XtreamClient({ server: s.url, username: s.username!, password: secrets[s.id] || '' }).xmltvUrl());
@@ -403,11 +416,6 @@ export async function epgUrlsForProfile(profileId: string, secrets: Record<strin
   }
   return [...new Set(urls.filter(Boolean))];
 }
-
-/** public XMLTV guides (ids like "TF1.fr", matching iptv-org's "tf1.fr@SD") */
-const DEFAULT_EPG: Record<string, string> = {
-  FR: 'https://xmltvfr.fr/xmltv/xmltv_tnt.xml.gz',
-};
 
 /** "tf1.fr@sd" → "tf1.fr" (iptv-org feed suffix) */
 const epgBase = (id: string) => id.split('@')[0];

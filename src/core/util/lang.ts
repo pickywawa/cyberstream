@@ -1,4 +1,5 @@
 import * as rust from '../../rust/generated/cyberstream';
+import { COUNTRY_LIST } from '../countries';
 /** ISO 639-1 languages offered in the profile + their display flag */
 export const LANGUAGES: { code: string; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -16,27 +17,14 @@ export const LANGUAGES: { code: string; name: string; flag: string }[] = [
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
   { code: 'zh', name: '中文', flag: '🇨🇳' },
   { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
+  { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+  { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'ms', name: 'Bahasa Melayu', flag: '🇲🇾' },
 ];
 
-export const COUNTRIES: { code: string; name: string; flag: string; lang: string }[] = [
-  { code: 'FR', name: 'France', flag: '🇫🇷', lang: 'fr' },
-  { code: 'BE', name: 'Belgique', flag: '🇧🇪', lang: 'fr' },
-  { code: 'CH', name: 'Suisse', flag: '🇨🇭', lang: 'fr' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦', lang: 'fr' },
-  { code: 'LU', name: 'Luxembourg', flag: '🇱🇺', lang: 'fr' },
-  { code: 'MA', name: 'Maroc', flag: '🇲🇦', lang: 'ar' },
-  { code: 'DZ', name: 'Algérie', flag: '🇩🇿', lang: 'ar' },
-  { code: 'TN', name: 'Tunisie', flag: '🇹🇳', lang: 'ar' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', lang: 'en' },
-  { code: 'US', name: 'United States', flag: '🇺🇸', lang: 'en' },
-  { code: 'DE', name: 'Deutschland', flag: '🇩🇪', lang: 'de' },
-  { code: 'ES', name: 'España', flag: '🇪🇸', lang: 'es' },
-  { code: 'IT', name: 'Italia', flag: '🇮🇹', lang: 'it' },
-  { code: 'PT', name: 'Portugal', flag: '🇵🇹', lang: 'pt' },
-  { code: 'NL', name: 'Nederland', flag: '🇳🇱', lang: 'nl' },
-  { code: 'TR', name: 'Türkiye', flag: '🇹🇷', lang: 'tr' },
-  { code: 'PL', name: 'Polska', flag: '🇵🇱', lang: 'pl' },
-];
+/** countries a profile can follow (content per country: ../countries.ts) */
+export const COUNTRIES: { code: string; flag: string; lang: string }[] = COUNTRY_LIST.map(({ code, flag, lang }) => ({ code, flag, lang }));
 
 export function flagOf(lang: string): string {
   return LANGUAGES.find((l) => l.code === lang)?.flag || '🏳️';
@@ -105,6 +93,14 @@ export const COUNTRY_DEFAULT_LANG: Record<string, string> = Object.fromEntries(C
 
 
 export const categoryLangs = (name:string):string[] => rust.category_languages(name);
+/** country a category names ("FR| SPORTS", "[BE] INFO"), if any */
+export const categoryCountry = (name: string): string | undefined => rust.category_country(name) || undefined;
+/** live category kept by the country filter (empty list: every country) */
+export function keepCountry(name: string, countries: string[]) {
+  if (!countries.length) return true;
+  const c = categoryCountry(name);
+  return !c || countries.includes(c);
+}
 export function keepCategory(name:string, langs:string[]) {
   const tags=categoryLangs(name);
   return !tags.length || tags.some(l => l==='multi' || langs.includes(l));

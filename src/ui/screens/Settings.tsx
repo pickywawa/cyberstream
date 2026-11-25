@@ -3,7 +3,7 @@ import { RustView } from '../components/RustView';
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getMeta, setMeta } from '@/core/db';
-import { t, fmtDate, fmtTime, setLang, getLang } from '@/core/i18n';
+import { t, fmtDate, fmtTime, setLang, getLang, LANGS, isLang } from '@/core/i18n';
 import type { Category, Profile, ThemeId } from '@/core/types';
 import { moveSource, removeSource, setTmdbToken, updateProfile } from '@/core/profiles';
 import { secureGet, secureRemove, secureSet, tmdbKey, osKey, osPassKey, osUserKey } from '@/core/secure';
@@ -346,10 +346,10 @@ function AppearanceSection() {
         ))}
       </div>
       <h2>{t('settings.language')}</h2>
-      <div className="seg" data-row>
-        {(['fr', 'en'] as const).map((l) => (
-          <button key={l} data-f className={profile.lang === l ? 'on' : ''} onClick={() => void patch({ lang: l })}>{l === 'fr' ? 'Français' : 'English'}</button>
-        ))}
+      <div className="field">
+        <select className="select input" data-f value={profile.lang} onChange={(e) => isLang(e.target.value) && void patch({ lang: e.target.value })}>
+          {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+        </select>
       </div>
       <div style={{ height: 8 }} />
       <Toggle

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/state/store';
-import { t } from '@/core/i18n';
+import { t, langInfo } from '@/core/i18n';
 import { CyberNative } from '@/core/native';
 import { isAndroidApp } from '@/core/platform';
 import { IcMic } from '../icons';
@@ -31,7 +31,7 @@ async function listen(): Promise<string[]> {
     const typed = window.prompt(t('voice.prompt'));
     return typed ? [typed] : [];
   }
-  const lang = useApp.getState().profile?.lang === 'en' ? 'en-US' : 'fr-FR';
+  const lang = langInfo(useApp.getState().profile?.lang || 'en').speech;
   const r = await CyberNative.speech({ lang, prompt: t('voice.prompt') });
   return [...new Set([r.text, ...(r.alternatives || [])].map((x) => (x || '').trim()).filter(Boolean))];
 }

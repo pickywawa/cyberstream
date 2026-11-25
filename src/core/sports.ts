@@ -1,6 +1,7 @@
 import type { Program } from './types';
 import { norm } from './util/text';
 import { timeoutSignal } from './net/http';
+import { countryLeagues } from './countries';
 
 /**
  * Live scores from ESPN's public scoreboard JSON (no key, no account; unofficial and undocumented,
@@ -8,25 +9,6 @@ import { timeoutSignal } from './net/http';
  * channel airing the match.
  */
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/';
-
-/** competitions followed per country (soccer first, then a few majors) */
-const LEAGUES: Record<string, string[]> = {
-  FR: [
-    'soccer/fra.1', 'soccer/fra.2', 'soccer/fra.coupe_de_france', 'soccer/uefa.champions', 'soccer/uefa.europa', 'soccer/uefa.europa.conf',
-    'soccer/eng.1', 'soccer/esp.1', 'soccer/ita.1', 'soccer/ger.1', 'soccer/fifa.world', 'soccer/uefa.nations', 'basketball/nba',
-    // rugby: Top 14, Six Nations, European cups, test matches, World Cup
-    'rugby/270559', 'rugby/180659', 'rugby/271937', 'rugby/272073', 'rugby/289234', 'rugby/164205',
-  ],
-  BE: ['soccer/bel.1', 'soccer/fra.1', 'soccer/uefa.champions', 'soccer/uefa.europa', 'soccer/eng.1'],
-  CH: ['soccer/sui.1', 'soccer/fra.1', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-  GB: ['soccer/eng.1', 'soccer/eng.2', 'soccer/sco.1', 'soccer/uefa.champions', 'soccer/uefa.europa', 'soccer/eng.fa'],
-  US: ['football/nfl', 'basketball/nba', 'hockey/nhl', 'baseball/mlb', 'soccer/usa.1'],
-  DE: ['soccer/ger.1', 'soccer/ger.2', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-  ES: ['soccer/esp.1', 'soccer/esp.2', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-  IT: ['soccer/ita.1', 'soccer/ita.2', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-  PT: ['soccer/por.1', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-  NL: ['soccer/ned.1', 'soccer/uefa.champions', 'soccer/uefa.europa'],
-};
 
 export interface LiveEvent {
   id: string;
@@ -83,9 +65,11 @@ function teamKeys(t: any): string[] {
 
 let cache: { at: number; country: string; events: LiveEvent[] } | null = null;
 
-export async function liveEvents(country: string): Promise<LiveEvent[]> {
+/** live and upcoming matches of the competitions followed by these countries ("FR,CH") */
+export async function liveEvents(countries: string): Promise<LiveEvent[]> {
+  const country = countries;
   if (cache && cache.country === country && Date.now() - cache.at < 45000) return cache.events;
-  const leagues = LEAGUES[country] || LEAGUES.FR;
+  const leagues = countryLeagues(countries.split(',').filter(Boolean));
   const results = await Promise.allSettled(leagues.map((l) => fetch(`${BASE}${l}/scoreboard`, { signal: timeoutSignal(8000) }).then((r) => r.json())));
   const events: LiveEvent[] = [];
   for (const r of results) {

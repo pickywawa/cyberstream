@@ -1,9 +1,9 @@
 /**
  * Free replay catalogues of public broadcasters (ARTE, france.tv), read from their public APIs.
  * Ids carry the provider: `arte:117142-000-A` (video), `arte:RC-027966` (collection / series),
- * `ftv:<si_id>` (video), `ftvp:<program_path>` (show).
+ * `ftv:<si_id>` (video), `ftvp:<program_path>` (show), `ard:<item>` (video), `ardp:<grouping>` (show).
  */
-export type ReplayProvider = 'arte' | 'francetv' | 'youtube';
+export type ReplayProvider = 'arte' | 'francetv' | 'ard' | 'youtube';
 
 export interface ReplayItem {
   id: string;

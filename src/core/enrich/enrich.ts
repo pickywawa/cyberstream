@@ -46,8 +46,8 @@ export async function refreshLists(tmdb: Tmdb, lang: string, force = false): Pro
     tmdb.list('tv', 'top_rated', 3),
   ]);
   // the rows at the bottom of Home: a failure leaves them out, never the lists above
-  const region = lang === 'en' ? 'US' : 'FR';
-  const origin = lang === 'en' ? 'US' : 'FR';
+  const region = tmdb.region;
+  const origin = tmdb.region;
   const safe = (p: Promise<TmdbListItem[]>) => p.catch(() => [] as TmdbListItem[]);
   const both = async (params: Record<string, string>) =>
     [...(await safe(tmdb.discover('tv', { ...params, with_origin_country: origin }, 2))), ...(await safe(tmdb.discover('tv', params, 1)))];

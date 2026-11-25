@@ -1,6 +1,7 @@
 import { getMeta, setMeta } from '../db';
 import { timeoutSignal } from '../net/http';
 import type { TmdbListItem } from '../types';
+import { langInfo } from '../i18n/langs';
 
 /**
  * Award winners from Wikidata (no TMDB key needed), with their TMDB ids so the catalogue can be
@@ -17,20 +18,22 @@ export interface Awards {
 const KEY = (lang: string) => `awards:v1:${lang}`;
 const WEEK = 7 * 86400000;
 
-const MOVIES = (lang: string) => `SELECT ?tmdb (SAMPLE(?l) AS ?label) (MIN(?d) AS ?date) WHERE {
+const MOVIES = (lang: string) => `SELECT ?tmdb (SAMPLE(COALESCE(?l, ?le)) AS ?label) (MIN(?d) AS ?date) WHERE {
   VALUES ?award { wd:Q102427 wd:Q179808 wd:Q900494 }
   ?f p:P166/ps:P166 ?award ; wdt:P4947 ?tmdb .
   OPTIONAL { ?f wdt:P577 ?d }
   OPTIONAL { ?f rdfs:label ?l FILTER(lang(?l) = "${lang}") }
+  OPTIONAL { ?f rdfs:label ?le FILTER(lang(?le) = "en") }
 } GROUP BY ?tmdb`;
 
-const SERIES = (lang: string) => `SELECT ?tmdb (SAMPLE(?l) AS ?label) (MIN(?d) AS ?date) WHERE {
+const SERIES = (lang: string) => `SELECT ?tmdb (SAMPLE(COALESCE(?l, ?le)) AS ?label) (MIN(?d) AS ?date) WHERE {
   ?s wdt:P4983 ?tmdb ; p:P166/ps:P166 ?award .
   ?award rdfs:label ?al . FILTER(lang(?al) = "en")
   FILTER((STRSTARTS(?al, "Primetime Emmy Award for Outstanding") && CONTAINS(?al, "Series")) ||
          STRSTARTS(?al, "Golden Globe Award for Best Television Series") || STRSTARTS(?al, "Golden Globe Award for Best Miniseries"))
   OPTIONAL { ?s wdt:P580 ?d }
   OPTIONAL { ?s rdfs:label ?l FILTER(lang(?l) = "${lang}") }
+  OPTIONAL { ?s rdfs:label ?le FILTER(lang(?le) = "en") }
 } GROUP BY ?tmdb`;
 
 async function query(q: string): Promise<TmdbListItem[]> {
@@ -49,7 +52,7 @@ let loading: Promise<Awards | null> | null = null;
 
 /** saved lists at once (refreshed in the background once a week); the first time, waits a little */
 export async function awards(lang: string): Promise<Awards | null> {
-  const l = lang === 'en' ? 'en' : 'fr';
+  const l = langInfo(lang).wiki;
   const saved = await getMeta<Awards>(KEY(l)).catch(() => undefined);
   if (saved && Date.now() - saved.at < WEEK) return saved;
   loading ??= Promise.all([query(MOVIES(l)), query(SERIES(l))])

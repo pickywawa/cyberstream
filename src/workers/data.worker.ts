@@ -9,6 +9,7 @@ import { setProxyBase } from '@/core/net/http';
 import { syncProfile, syncEpg, syncSource, testSource, loadXtreamEpisodes, loadXtreamVodInfo, prefetchPlan, fillMissingEpgIds } from '@/core/sync/sync';
 import { takePrefetchHits } from '@/core/net/http';
 import { Tmdb } from '@/core/enrich/tmdb';
+import { tmdbLang } from '@/core/i18n/langs';
 import { Enricher, enrichSeason, refreshLists } from '@/core/enrich/enrich';
 import { db, getMeta, setMeta } from '@/core/db';
 import type { TmdbCollection, TmdbPerson } from '@/core/enrich/tmdb';
@@ -94,7 +95,8 @@ export const api = {
     enricher = null;
     tmdb = null;
     if (!token) return;
-    tmdb = new Tmdb(token, lang === 'en' ? 'en-US' : 'fr-FR');
+    const prof = await db.profiles.get(profileId).catch(() => undefined);
+    tmdb = new Tmdb(token, tmdbLang(lang, prof?.country));
     try {
       await refreshLists(tmdb, lang);
       onUpdate();

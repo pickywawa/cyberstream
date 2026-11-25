@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 use std::collections::HashSet;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
+mod ard;
 mod arte;
 mod france;
 mod youtube;
@@ -58,6 +59,8 @@ pub fn replay_item(provider: &str, raw: &str, now: f64) -> String {
     let v = serde_json::from_str(raw).unwrap_or_default();
     let item = if provider == "arte" {
         arte::item(&v)
+    } else if provider == "ard" {
+        ard::item(&v)
     } else {
         france::item(&v, now)
     };
@@ -75,6 +78,7 @@ pub async fn replay_request(
     let v = match provider.as_str() {
         "arte" => arte::request(&action, &id, &lang, &fetch).await?,
         "francetv" => france::request(&action, &id, now, &fetch).await?,
+        "ard" => ard::request(&action, &id, &fetch).await?,
         _ => return Err(JsError::new("Service inconnu").into()),
     };
     Ok(v.to_string())

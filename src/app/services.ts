@@ -7,7 +7,7 @@ import { CyberNative } from '@/core/native';
 import { dataWorker, proxyCb, reinitWorkers, searchWorker } from '@/core/workers';
 import { loadSecrets } from '@/core/repo';
 import { secureGet, tmdbKey } from '@/core/secure';
-import { profileCountry } from '@/core/prefs';
+import { profileCountries } from '@/core/prefs';
 import { setLang, t } from '@/core/i18n';
 import { applyTheme, useApp } from '@/state/store';
 import { installSpatialNav, setBackHandler, setSmoothScroll } from '@/ui/spatial';
@@ -210,9 +210,9 @@ export async function selectProfile(p: Profile) {
   void startEnrichment(p);
   // saved channel lists first: the TV tab shows at once even while the catalogue is being read
   void import('@/ui/screens/LiveTv').then((m) => m.preloadLiveSnaps(p.id)).catch(() => {});
-  void import('@/ui/screens/Radios').then((m) => m.preloadRadios(p.id, profileCountry(p))).catch(() => {});
+  void import('@/ui/screens/Radios').then((m) => m.preloadRadios(p.id, profileCountries(p).join())).catch(() => {});
   // Contenus: the saved rows (and the screen's code) are ready before the tab opens, refreshed after
-  void import('@/ui/screens/Replay').then((m) => m.preloadReplay(p.lang, profileCountry(p))).catch(() => {});
+  void import('@/ui/screens/Replay').then((m) => m.preloadReplay(p.lang, profileCountries(p).join())).catch(() => {});
   if (!useApp.getState().settings.performance && !isLowEnd()) void searchWorker().warm(p.id, (await getMeta<number>(`catalog:version:${p.id}`)) || 0);
   // catalogs synced before language detection existed: resync once to tag languages/countries
   // v0.5: one full resync to restore catalogues an invalid list could have emptied

@@ -177,6 +177,7 @@ struct Rows {
 #[wasm_bindgen]
 pub struct PlaylistCatalog {
     prefs: Vec<String>,
+    countries: Vec<String>,
     permitted: HashMap<String, bool>,
     excluded: HashSet<String>,
     parser: Playlist,
@@ -195,6 +196,7 @@ impl PlaylistCatalog {
         Self {
             parser: Playlist::new(),
             prefs: vec![],
+            countries: vec![],
             permitted: HashMap::new(),
             excluded: HashSet::new(),
             source: source.into(),
@@ -208,6 +210,10 @@ impl PlaylistCatalog {
     }
     pub fn languages(&mut self, langs: Vec<String>) {
         self.prefs = langs;
+    }
+    /// live categories of other countries are left out (empty: every country)
+    pub fn countries(&mut self, countries: Vec<String>) {
+        self.countries = countries;
     }
     pub fn rejected_categories(&self) -> Vec<String> {
         self.excluded.iter().cloned().collect()
@@ -241,11 +247,12 @@ impl PlaylistCatalog {
         let source = &self.source;
         let profile = &self.profile;
         let cat = format!("{source}:{}c:{}", &cat_kind[..1], stable_key(group));
-        if !self.prefs.is_empty()
-            && !*self
-                .permitted
-                .entry(group.to_owned())
-                .or_insert_with(|| crate::language::keep_category(group, &self.prefs))
+        let live = cat_kind == "live";
+        if (!self.prefs.is_empty() || (live && !self.countries.is_empty()))
+            && !*self.permitted.entry(format!("{}:{group}", &cat_kind[..1])).or_insert_with(|| {
+                crate::language::keep_category(group, &self.prefs)
+                    && (!live || crate::language::keep_country(group, &self.countries))
+            })
         {
             self.excluded.insert(cat);
             return;

@@ -14,7 +14,7 @@ import { IcCalendar, IcHeart, IcHeartFill, IcPlay, IcRestart, IcHd } from '../ic
 import { openChannel, playChannel } from '../actions';
 import { setGuideList } from '../guideList';
 import { isTvMode } from '@/core/platform';
-import { langPrefs, profileCountry } from '@/core/prefs';
+import { langPrefs, profileCountry, profileCountries } from '@/core/prefs';
 import { matchesLangs, rankChannels } from '@/core/channelRank';
 import { flagOf, langName } from '@/core/util/lang';
 import { liveEvents, matchEvent, scoreLabel, type LiveEvent } from '@/core/sports';
@@ -76,7 +76,7 @@ export function LiveTv() {
   const favs = useAsync(() => favoritesOf(profile.id, 'live'), [profile.id, menuFor], { key: `favs:live:${profile.id}` });
   const epg = useAsync(() => nowNext(), [minute], { epg: true, key: 'nownext' });
   // live scores (ESPN public scoreboard), refreshed every minute with the programme data
-  const scores = useAsync(() => liveEvents(profileCountry(profile)).catch(() => [] as LiveEvent[]), [minute, profile.country], { key: `scores:${profile.country}` });
+  const scores = useAsync(() => liveEvents(profileCountries(profile).join()).catch(() => [] as LiveEvent[]), [minute, profileCountries(profile).join()], { key: `scores:${profileCountries(profile).join()}` });
   const evening = useAsync(() => (mode === 'tonight' ? tonight(settings.tonightStartMin) : Promise.resolve(new Map<string, Program>())), [mode, settings.tonightStartMin], { epg: true });
 
   const favKeys = useMemo(() => new Set((favs || []).map((f) => f.key.replace(/^live:/, ''))), [favs]);

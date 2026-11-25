@@ -18,11 +18,12 @@ pub(super) fn item(v: &Value) -> Option<Value> {
         "genre":first(&v["genre"]["label"],&v["kind"]["label"]),"age":v["ageRating"].as_f64()}),
     ))
 }
+/// pages read, with the section name (translation key) put before their rails' titles
 const PAGES: [(&str, &str, usize); 4] = [
     ("HOME", "", 14),
-    ("CIN", "Cinéma", 5),
-    ("SER", "Séries", 5),
-    ("DOR", "Documentaires", 4),
+    ("CIN", "universe.cinema", 5),
+    ("SER", "universe.series", 5),
+    ("DOR", "home.docs", 4),
 ];
 async fn catalog(lang: &str, fetch: &Function) -> Result<Value, JsValue> {
     let pages = futures_util::future::join_all(PAGES.iter().map(|(code, ..)| async move {
@@ -40,8 +41,9 @@ async fn catalog(lang: &str, fetch: &Function) -> Result<Value, JsValue> {
     let mut rails = Vec::new();
     let mut hero = Vec::new();
     let mut seen = HashSet::new();
-    for ((code, label, max), page) in PAGES.into_iter().zip(pages) {
+    for ((code, key, max), page) in PAGES.into_iter().zip(pages) {
         let Ok(page) = page else { continue };
+        let label = if key.is_empty() { "" } else { crate::views::lookup(lang, key) };
         let start = rails.len();
         for z in arr(&page["zones"]) {
             let tpl = strv(&z["displayOptions"]["template"]);
@@ -112,7 +114,7 @@ pub(super) async fn request(
 ) -> Result<Value, JsValue> {
     let lang = match lang {
         "fr" | "de" | "en" | "es" | "it" | "pl" => lang,
-        _ => "fr",
+        _ => "en",
     };
     if action == "catalog" {
         return catalog(lang, fetch).await;

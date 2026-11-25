@@ -4,6 +4,8 @@ import { withTimeshift } from '../playback';
 import { arteCatalog, arteInfo, arteShow, arteStream } from './arte';
 import { ftvCatalog, ftvInfo, ftvKids, ftvShow, ftvStream } from './francetv';
 import { youtubeRails } from './youtube';
+import { ardCatalog, ardInfo, ardShow, ardStream } from './ard';
+import { replayServices } from '../countries';
 import { t } from '../i18n';
 import type { ReplayCatalog, ReplayItem, ReplayProvider, ReplayRail, ReplayShow, ResolvedStream } from './types';
 
@@ -12,33 +14,39 @@ export type { ReplayCatalog, ReplayItem, ReplayProvider, ReplayRail, ReplayShow 
 /** a saved catalogue younger than this is shown as is (no network) */
 export const REPLAY_TTL = 3 * 3600000;
 const TTL = REPLAY_TTL;
-const metaKey = (lang: string, country = '') => `replay:catalog:v3:${lang}:${country}`;
+const metaKey = (lang: string, country = '') => `replay:catalog:v4:${lang}:${country}`;
 
-/** alternate both catalogues so neither buries the other */
-function interleave(a: ReplayRail[], b: ReplayRail[]): ReplayRail[] {
+/** alternate the catalogues so none buries the others */
+function interleave(lists: ReplayRail[][]): ReplayRail[] {
   const out: ReplayRail[] = [];
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    if (a[i]) out.push(a[i]);
-    if (b[i]) out.push(b[i]);
-  }
+  for (let i = 0; i < Math.max(0, ...lists.map((l) => l.length)); i++) for (const l of lists) if (l[i]) out.push(l[i]);
   return out;
 }
 
 export type YtTitles = Record<'docs' | 'sport' | 'news' | 'radio' | 'humor' | 'media', string>;
 const ytTitles = (): YtTitles => ({ docs: t('yt.docs'), sport: t('yt.sport'), news: t('yt.news'), radio: t('yt.radio'), humor: t('yt.humor'), media: t('yt.media') });
 
-async function fetchCatalog(lang: string, country: string, ytTitles: YtTitles): Promise<ReplayCatalog> {
-  const [arte, ftv, kids, yt] = await Promise.allSettled([arteCatalog(lang), ftvCatalog(), ftvKids(), youtubeRails(lang, country, ytTitles)]);
-  const k = kids.status === 'fulfilled' ? kids.value : { rails: [], hero: [] };
+type Part = { rails: ReplayRail[]; hero: ReplayItem[] };
+const NONE: Part = { rails: [], hero: [] };
+
+/**
+ * The catch-up services of the followed countries ("FR,CH": france.tv, ARTE…), their YouTube
+ * channels, and Okoo for the youth filter when france.tv is one of them.
+ */
+async function fetchCatalog(lang: string, countries: string, ytTitles: YtTitles): Promise<ReplayCatalog> {
+  const codes = countries.split(',').filter(Boolean);
+  const services = replayServices(codes, lang);
+  const load: Record<(typeof services)[number], () => Promise<Part>> = { francetv: ftvCatalog, ard: ardCatalog, arte: () => arteCatalog(lang) };
+  const [parts, kids, yt] = await Promise.all([
+    Promise.allSettled(services.map((s) => load[s]())),
+    services.includes('francetv') ? ftvKids().catch(() => NONE) : Promise.resolve(NONE),
+    youtubeRails(lang, codes, ytTitles).catch(() => [] as ReplayRail[]),
+  ]);
   const failed: ReplayProvider[] = [];
-  const a = arte.status === 'fulfilled' ? arte.value : (failed.push('arte'), { rails: [], hero: [] });
-  const f = ftv.status === 'fulfilled' ? ftv.value : (failed.push('francetv'), { rails: [], hero: [] });
+  const ok = parts.map((p, i) => (p.status === 'fulfilled' ? p.value : (failed.push(services[i]), NONE)));
   const hero: ReplayItem[] = [];
-  for (let i = 0; hero.length < 6 && i < 6; i++) {
-    if (a.hero[i]) hero.push(a.hero[i]);
-    if (f.hero[i]) hero.push(f.hero[i]);
-  }
-  return { at: Date.now(), hero: hero.slice(0, 6), rails: interleave(a.rails, f.rails), kids: k.rails, kidsHero: k.hero, youtube: yt.status === 'fulfilled' ? yt.value : [], failed };
+  for (let i = 0; hero.length < 6 && i < 6; i++) for (const p of ok) if (p.hero[i] && hero.length < 6) hero.push(p.hero[i]);
+  return { at: Date.now(), hero, rails: interleave(ok.map((p) => p.rails)), kids: kids.rails, kidsHero: kids.hero, youtube: yt, failed };
 }
 
 /**
@@ -77,15 +85,15 @@ export async function replayShow(id: string, lang: string): Promise<ReplayShow> 
   const hit = SHOWS.get(id);
   if (hit) return hit;
   const [p, ref] = splitId(id);
-  const show = p === 'arte' ? await arteShow(ref, lang) : await ftvShow(ref);
+  const show = p === 'arte' ? await arteShow(ref, lang) : p === 'ardp' ? await ardShow(ref) : await ftvShow(ref);
   SHOWS.set(id, show);
   return show;
 }
 
 export async function replayInfo(id: string, lang: string): Promise<ReplayItem> {
   const [p, ref] = splitId(id);
-  if (p === 'ftvp' || /^RC-/.test(ref)) return (await replayShow(id, lang)).item;
-  return p === 'arte' ? arteInfo(ref, lang) : ftvInfo(ref);
+  if (p === 'ftvp' || p === 'ardp' || /^RC-/.test(ref)) return (await replayShow(id, lang)).item;
+  return p === 'arte' ? arteInfo(ref, lang) : p === 'ard' ? ardInfo(ref) : ftvInfo(ref);
 }
 
 function splitId(id: string): [string, string] {
@@ -96,6 +104,7 @@ function splitId(id: string): [string, string] {
 export async function resolveReplay(id: string, lang: string): Promise<ResolvedStream> {
   const [p, ref] = splitId(id);
   if (p === 'arte') return arteStream(ref, lang);
+  if (p === 'ard') return ardStream(ref);
   if (p === 'ftv') return ftvStream(ref);
   throw new Error('not playable');
 }

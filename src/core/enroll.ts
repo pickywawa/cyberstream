@@ -35,7 +35,7 @@ export interface EnrollPayload {
   os?: { key: string; user?: string; pass?: string };
   /** the user's Trakt API app (the account is then linked on the TV with a code) */
   trakt?: { id: string; secret: string };
-  prefs?: Pick<Profile, 'lang' | 'country' | 'audioLangs' | 'subLangs' | 'subMode' | 'subsOnline' | 'catalogAllLangs'>;
+  prefs?: Pick<Profile, 'lang' | 'country' | 'countries' | 'countryFilter' | 'freeTv' | 'audioLangs' | 'subLangs' | 'subMode' | 'subsOnline' | 'catalogAllLangs'>;
   /** the phone's profile itself (name, emoji, colour), so the TV gets the same one */
   profile?: Pick<Profile, 'name' | 'emoji' | 'color'>;
 }
@@ -159,7 +159,7 @@ export async function buildPhonePayload(profile: Profile, sourceIds: string[], w
     os: osk ? { key: osk, user: (await secureGet(osUserKey(profile.id))) || undefined, pass: (await secureGet(osPassKey(profile.id))) || undefined } : undefined,
     trakt: tr || undefined,
     prefs: withPrefs
-      ? { lang: profile.lang, country: profile.country, audioLangs: profile.audioLangs, subLangs: profile.subLangs, subMode: profile.subMode, subsOnline: profile.subsOnline, catalogAllLangs: profile.catalogAllLangs }
+      ? { lang: profile.lang, country: profile.country, countries: profile.countries, countryFilter: profile.countryFilter, freeTv: profile.freeTv, audioLangs: profile.audioLangs, subLangs: profile.subLangs, subMode: profile.subMode, subsOnline: profile.subsOnline, catalogAllLangs: profile.catalogAllLangs }
       : undefined,
     profile: withPrefs ? { name: profile.name, emoji: profile.emoji, color: profile.color } : undefined,
   };

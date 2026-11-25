@@ -4,6 +4,9 @@ import { uid } from './util/text';
 import { normalizeServer } from './sources/xtream';
 import { secureRemove, secureSet, sourcePassKey, tmdbKey } from './secure';
 import { deleteProfileData, deleteSourceData, invalidateSecrets } from './repo';
+import { countryName, freeTvUrl } from './countries';
+import { profileCountries } from './prefs';
+import { langInfo } from './i18n/langs';
 
 export const EMOJIS = ['🍿', '🎬', '📺', '🦊', '🐼', '🦁', '🐸', '🐙', '🚀', '⚽', '🎮', '🎧', '🌟', '👾', '🧸', '🦄'];
 export const COLORS = ['#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#9333ea', '#0891b2', '#db2777', '#4b5563'];
@@ -83,6 +86,37 @@ export async function removeSource(id: string) {
   await secureRemove(sourcePassKey(id));
   await deleteSourceData(id);
   invalidateSecrets();
+}
+
+/**
+ * Free channels (iptv-org public streams): one M3U source per followed country, after the user's
+ * own sources, kept in step with the profile (countries added or removed, option turned off).
+ * Returns whether sources were added or removed (a sync is then needed).
+ */
+export async function syncFreeTvSources(profileId: string): Promise<boolean> {
+  const p = await db.profiles.get(profileId);
+  if (!p) return false;
+  const wanted = p.freeTv ? profileCountries(p) : [];
+  const sources = await db.sources.where('profileId').equals(profileId).toArray();
+  let changed = false;
+  for (const s of sources) {
+    if (s.free && !wanted.includes(s.free)) {
+      await removeSource(s.id);
+      changed = true;
+    }
+  }
+  let priority = Math.max(-1, ...sources.map((s) => s.priority)) + 1;
+  for (const code of wanted) {
+    if (sources.some((s) => s.free === code)) continue;
+    const url = freeTvUrl(code);
+    const src: Source = {
+      id: uid(), profileId, type: 'm3u', label: `TV · ${countryName(code, langInfo(p.lang).locale)}`, priority: priority++, enabled: true,
+      url, servers: [url], epgUrls: [], status: 'unknown', free: code,
+    };
+    await db.sources.put(src);
+    changed = true;
+  }
+  return changed;
 }
 
 export async function moveSource(profileId: string, id: string, dir: -1 | 1) {

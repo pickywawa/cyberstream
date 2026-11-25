@@ -92,7 +92,7 @@ export async function wikiPerson(name: string, lang: string): Promise<WikiPerson
   if (typeof text === 'string' && text.length > (p.bio || '').length) p.bio = text.trim();
   const q = page.wikibase_item;
   if (q && /^Q\d+$/.test(q)) {
-    const L = lang === 'en' ? 'en' : 'fr';
+    const L = wiki;
     const [facts, works] = await Promise.all([
       sparql(`SELECT ?birth ?death ?placeLabel WHERE { OPTIONAL { wd:${q} wdt:P569 ?birth } OPTIONAL { wd:${q} wdt:P570 ?death }
         OPTIONAL { wd:${q} wdt:P19 ?place . ?place rdfs:label ?placeLabel FILTER(lang(?placeLabel) = "${L}") } } LIMIT 1`).catch(() => []),

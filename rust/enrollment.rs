@@ -46,6 +46,9 @@ fn source(row: &Value) -> Option<Value> {
     }
     Some(s)
 }
+fn country_code(s: &str) -> bool {
+    s.len() == 2 && s.bytes().all(|b| b.is_ascii_uppercase())
+}
 fn langs(v: &Value) -> Option<Vec<&str>> {
     Some(
         v.as_array()?
@@ -78,7 +81,9 @@ pub fn enrollment_payload(raw: &str) -> Option<String> {
         return None;
     }
     let p = &j["prefs"];
-    let prefs=(!p.is_null()).then(||compact(json!({"lang":p["lang"].as_str().filter(|s|matches!(*s,"en"|"fr")),"country":p["country"].as_str().filter(|s|s.len()==2 && s.bytes().all(|b|b.is_ascii_uppercase())),"audioLangs":langs(&p["audioLangs"]),"subLangs":langs(&p["subLangs"]),"subMode":p["subMode"].as_str().filter(|s|matches!(*s,"off"|"auto"|"always")),"subsOnline":p["subsOnline"].as_bool(),"catalogAllLangs":p["catalogAllLangs"].as_bool()})));
+    let prefs=(!p.is_null()).then(||compact(json!({"lang":p["lang"].as_str().filter(|s|matches!(*s,"fr"|"en"|"de"|"es"|"it"|"pt"|"ar"|"hi"|"zh"|"bn"|"id"|"ur"|"ru"|"ja")),"country":p["country"].as_str().filter(|s|country_code(s)),
+        "countries":p["countries"].as_array().map(|a|a.iter().filter_map(Value::as_str).filter(|s|country_code(s)).take(12).collect::<Vec<_>>()).filter(|a|!a.is_empty()),
+        "countryFilter":p["countryFilter"].as_bool(),"freeTv":p["freeTv"].as_bool(),"audioLangs":langs(&p["audioLangs"]),"subLangs":langs(&p["subLangs"]),"subMode":p["subMode"].as_str().filter(|s|matches!(*s,"off"|"auto"|"always")),"subsOnline":p["subsOnline"].as_bool(),"catalogAllLangs":p["catalogAllLangs"].as_bool()})));
     let pr = &j["profile"];
     let profile=text(&pr["name"],24).map(|name|json!({"name":name,"emoji":text(&pr["emoji"],8).unwrap_or("🍿"),
        "color":pr["color"].as_str().filter(|s|re!(r"(?i)^#[0-9a-f]{6}$").is_match(s)).unwrap_or("#e50914")}));

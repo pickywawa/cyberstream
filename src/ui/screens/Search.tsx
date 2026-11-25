@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp, type SearchPick } from '@/state/store';
-import { t, fmtTime } from '@/core/i18n';
+import { t, fmtTime, langInfo } from '@/core/i18n';
 import { db, getMeta } from '@/core/db';
 import { searchWorker } from '@/core/workers';
 import type { SearchHit } from '@/core/search';
@@ -123,7 +123,7 @@ export function Search() {
     if (isAndroidApp) {
       try {
         setListening(true);
-        const r = await CyberNative.speech({ lang: profile.lang === 'fr' ? 'fr-FR' : 'en-US', prompt: t('search.listening') });
+        const r = await CyberNative.speech({ lang: langInfo(profile.lang).speech, prompt: t('search.listening') });
         if (r.text) setQ(r.text);
       } catch {
         toast(t('search.voiceUnavailable'));
@@ -135,7 +135,7 @@ export function Search() {
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!Ctor) return toast(t('search.voiceUnavailable'));
     const rec: SpeechRec = new Ctor();
-    rec.lang = profile.lang === 'fr' ? 'fr-FR' : 'en-US';
+    rec.lang = langInfo(profile.lang).speech;
     rec.interimResults = true;
     rec.onresult = (e: any) => setQ(Array.from(e.results).map((r: any) => r[0].transcript).join(''));
     rec.onend = () => setListening(false);

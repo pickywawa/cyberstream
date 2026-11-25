@@ -97,7 +97,7 @@ export function SourceForm({ draft, onChange }: { draft: SourceDraft; onChange: 
               inputMode="url"
               value={b}
               onChange={(e) => setBackup(i, e.target.value)}
-              placeholder={draft.type === 'xtream' ? 'http://secours.exemple.com:8080' : 'https://…/playlist-secours.m3u'}
+              placeholder={draft.type === 'xtream' ? 'http://backup.example.com:8080' : 'https://…/backup.m3u'}
               autoCapitalize="off"
               spellCheck={false}
             />
@@ -124,7 +124,7 @@ export function SourceForm({ draft, onChange }: { draft: SourceDraft; onChange: 
       </div>
       <div className="field">
         <label>{t('onboard.label')}</label>
-        <input className="input" data-f value={draft.label} onChange={(e) => set({ label: e.target.value })} placeholder="Ma source" />
+        <input className="input" data-f value={draft.label} onChange={(e) => set({ label: e.target.value })} placeholder={t('onboard.label')} />
       </div>
       {draft.type === 'm3u' ? (
         <div className="field">
@@ -136,7 +136,7 @@ export function SourceForm({ draft, onChange }: { draft: SourceDraft; onChange: 
         <>
           <div className="field">
             <label>{t('onboard.server')} {isActive(draft.url) && <ActiveBadge />}</label>
-            <input className="input" data-f inputMode="url" value={draft.url} onChange={(e) => set({ url: e.target.value })} placeholder="http://exemple.com:8080" autoCapitalize="off" spellCheck={false} />
+            <input className="input" data-f inputMode="url" value={draft.url} onChange={(e) => set({ url: e.target.value })} placeholder="http://example.com:8080" autoCapitalize="off" spellCheck={false} />
           </div>
           {backupsUi}
           <div className="field">
@@ -151,7 +151,7 @@ export function SourceForm({ draft, onChange }: { draft: SourceDraft; onChange: 
       )}
       <div className="field">
         <label>{t('onboard.epg')}</label>
-        <textarea className="input" data-f value={draft.epg} onChange={(e) => set({ epg: e.target.value })} rows={2} placeholder="https://xmltvfr.fr/xmltv/xmltv.xml.gz" spellCheck={false} />
+        <textarea className="input" data-f value={draft.epg} onChange={(e) => set({ epg: e.target.value })} rows={2} placeholder="https://…/guide.xml.gz" spellCheck={false} />
       </div>
       <div className="btn-row">
         <button className="btn" data-f disabled={!draftValid(draft) || test?.busy} onClick={() => void runTest()}>

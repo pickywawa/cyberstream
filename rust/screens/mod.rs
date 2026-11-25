@@ -166,7 +166,7 @@ pub fn youtube_html(id: &str, title: &str, lang: &str, tv: bool) -> String {
     let id: String = js_sys::encode_uri_component(id).into();
     let src = format!(
         "https://www.youtube-nocookie.com/embed/{id}?autoplay=1&playsinline=1&rel=0&modestbranding=1&hl={}",
-        if lang == "en" { "en" } else { "fr" }
+        lang.split('-').next().filter(|l| l.len() == 2 && l.bytes().all(|b| b.is_ascii_lowercase())).unwrap_or("en")
     );
     html!{iframe.yt-frame src=(src) title=(if title.is_empty(){"YouTube"}else{title}) allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"{}
         div.yt-bar data-row{button.icon-btn.yt-close data-f data-cmd="back" aria-label=(lookup(lang,"common.close")){(icon("close",""))}

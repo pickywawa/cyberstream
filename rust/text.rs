@@ -1,15 +1,35 @@
 use unicode_normalization::UnicodeNormalization;
 use wasm_bindgen::prelude::*;
 
+/// punctuation of other scripts that separates words (、。「」，؟ ، । …)
+fn is_separator(c: char) -> bool {
+    matches!(c, '\u{2000}'..='\u{206F}' | '\u{3000}'..='\u{303F}' | '\u{FF00}'..='\u{FF0F}' | '\u{FF1A}'..='\u{FF20}' | '\u{060C}' | '\u{061B}' | '\u{061F}' | '\u{06D4}' | '\u{0964}' | '\u{0965}')
+}
+/// combining marks of other scripts (vowel signs, virama, harakat, dakuten…)
+fn is_mark(c: char) -> bool {
+    matches!(c, '\u{0483}'..='\u{0489}' | '\u{0591}'..='\u{05C7}' | '\u{0610}'..='\u{061A}' | '\u{064B}'..='\u{065F}' | '\u{0670}' | '\u{06D6}'..='\u{06ED}'
+        | '\u{0900}'..='\u{0DFF}' | '\u{0E31}'..='\u{0E4E}' | '\u{3099}'..='\u{309A}' | '\u{FE20}'..='\u{FE2F}')
+}
 #[wasm_bindgen]
 pub fn norm(raw: &str) -> String {
     let mut result = String::with_capacity(raw.len());
     let mut space = false;
-    for c in raw.nfd().flat_map(char::to_lowercase) {
+    // Latin letters lose their accents (NFD); other scripts stay as written (their marks are part of
+    // the letter: Arabic hamza, Devanagari virama, Japanese dakuten)
+    let chars = raw.chars().flat_map(|c| -> Box<dyn Iterator<Item = char>> {
+        if c < '\u{370}' { Box::new(std::iter::once(c).nfd()) } else { Box::new(std::iter::once(c)) }
+    });
+    for c in chars.flat_map(char::to_lowercase) {
         if ('\u{300}'..='\u{36f}').contains(&c) {
             continue;
         }
-        if c.is_ascii_alphanumeric() || c == '&' {
+        // other scripts (Greek, Cyrillic, Arabic, Devanagari, CJK…) keep their letters; their
+        // combining marks are left out (Latin letters outside ASCII still drop, as keys always did)
+        let other = c >= '\u{370}' && !is_separator(c) && (c.is_alphanumeric() || is_mark(c));
+        if c >= '\u{370}' && !other && !c.is_whitespace() && !is_separator(c) {
+            continue;
+        }
+        if c.is_ascii_alphanumeric() || c == '&' || other {
             if (space || c == '&') && !result.is_empty() {
                 result.push(' ');
             }

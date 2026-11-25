@@ -53,10 +53,19 @@ describe('YouTube feeds', () => {
     expect(items[0]).toMatchObject({ id: 'yt:EQ3zCQe9Pm0', provider: 'youtube', title: 'Affaire & mystère', channel: 'BFMTV', views: 132, desc: 'Résumé' });
     expect(items[0].image).toBe('https://i.ytimg.com/vi/EQ3zCQe9Pm0/mqdefault.jpg');
   });
-  it('picks channels by language and country', () => {
-    expect(ytChannels('fr', 'FR').news[0].name).toBe('BFMTV');
-    expect(ytChannels('en', 'GB').news[0].name).toBe('BBC News');
-    expect(ytChannels('en', 'US').news[0].name).toBe('CNN');
-    expect(ytChannels('en', 'AU').news[0].name).toBe('CNN');
+  it('picks channels by country, several countries merged', () => {
+    expect(ytChannels('fr', ['FR']).news[0].name).toBe('BFMTV');
+    expect(ytChannels('en', ['GB']).news[0].name).toBe('BBC News');
+    expect(ytChannels('en', ['US']).news[0].name).toBe('CNN');
+    // a country of its own, then the international English channels
+    const au = ytChannels('en', ['AU']).news.map((c) => c.name);
+    expect(au[0]).toMatch(/ABC|9 News|SBS|7NEWS/);
+    expect(au).toContain('DW News');
+    // France and Switzerland: the French channels first, then the Swiss ones
+    const frch = ytChannels('fr', ['FR', 'CH']).news.map((c) => c.name);
+    expect(frch[0]).toBe('BFMTV');
+    expect(frch.some((n) => /RTS|SRF/.test(n))).toBe(true);
+    // a country without a list borrows the one of its language
+    expect(ytChannels('de', ['LI']).news.length).toBeGreaterThan(0);
   });
 });

@@ -5,11 +5,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
 import { t, setLang, getLang } from '@/core/i18n';
 import type { Profile } from '@/core/types';
-import { COLORS, EMOJIS, deleteProfile, updateProfile } from '@/core/profiles';
+import { COLORS, EMOJIS, deleteProfile, syncFreeTvSources, updateProfile } from '@/core/profiles';
 import { useApp, applyTheme } from '@/state/store';
 import { runSync, selectProfile } from '@/app/services';
-import { COUNTRIES, LANGUAGES } from '@/core/util/lang';
-import { langPrefs, profileCountry, subMode } from '@/core/prefs';
+import { LANGUAGES } from '@/core/util/lang';
+import { langPrefs, profileCountries, subMode } from '@/core/prefs';
+import { CountryPicker } from '../components/CountryPicker';
 import { hasOsKey } from '@/core/subs/opensubtitles';
 import { Logo } from '@/app/App';
 import { Onboarding } from './Onboarding';
@@ -119,13 +120,17 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
   useEffect(() => void hasOsKey(id).then(setOsReady), [id]);
   if (!p) return null;
   const patch = async (x: Partial<Profile>) => {
+    if (x.countries) x = { ...x, country: x.countries[0] };
     await updateProfile(p.id, x);
+    // free channels follow the countries; a source added or removed needs a download
+    const freeChanged = (x.countries || x.freeTv !== undefined) && (await syncFreeTvSources(p.id));
     if (p.id === current.id) {
       useApp.getState().patchProfile(x);
       if (x.audioLangs || x.subLangs || x.country) useApp.getState().bumpCatalog();
       if (x.lang) setLang(x.lang);
-      // the catalogue only holds the audio languages: download again what changed
-      if ((x.audioLangs && !p.catalogAllLangs) || x.catalogAllLangs !== undefined) void runSync(p.id, false, { quiet: true });
+      // the catalogue only holds the audio languages (and the chosen countries): download again what changed
+      const filterChanged = x.countryFilter !== undefined || (x.countries && (x.countryFilter ?? p.countryFilter));
+      if ((x.audioLangs && !p.catalogAllLangs) || x.catalogAllLangs !== undefined || filterChanged || freeChanged) void runSync(p.id, !!(freeChanged || x.countries), { quiet: true });
       if (x.theme || x.accent !== undefined) applyTheme(x.theme || current.theme, x.accent ?? current.accent, useApp.getState().settings.performance);
     }
   };
@@ -145,13 +150,11 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
         </div>
         <Toggle label={t('profiles.pin')} sub={p.pin ? '••••' : undefined} on={!!p.pin} onChange={(v) => (v ? setPinMode(true) : void patch({ pin: undefined }))} />
 
-        <h2>{t('profiles.country')}</h2>
-        <div className="field">
-          <select className="select input" data-f value={profileCountry(p)} onChange={(e) => void patch({ country: e.target.value })}>
-            {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.flag}  {c.name}</option>)}
-          </select>
-          <span className="small dim">{t('profiles.countryHelp')}</span>
-        </div>
+        <h2>{t('profiles.countries')}</h2>
+        <CountryPicker value={profileCountries(p)} onChange={(v) => void patch({ countries: v })} />
+        <span className="small dim">{t('profiles.countriesHelp')}</span>
+        <Toggle label={t('profiles.freeTv')} sub={t('profiles.freeTvHint')} on={!!p.freeTv} onChange={(v) => void patch({ freeTv: v })} />
+        <Toggle label={t('profiles.countryFilter')} sub={t('profiles.countryFilterHint')} on={!!p.countryFilter} onChange={(v) => void patch({ countryFilter: v })} />
 
         <h2>{t('profiles.audio')}</h2>
         <LangPair
@@ -182,12 +185,12 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
           on={p.subsOnline !== false}
           onChange={(v) => void patch({ subsOnline: v })}
         />
-        <Toggle
+        {profileCountries(p).includes('FR') && <Toggle
           label={t('replay.officialLive')}
           sub={t('replay.officialLiveHint')}
           on={p.officialLive !== false}
           onChange={(v) => void patch({ officialLive: v })}
-        />
+        />}
         <div className="btn-row" style={{ marginTop: 20 }}>
           {confirmDel ? (
             <>

@@ -15,6 +15,7 @@
   <b><a href="https://pickywawa.github.io/cyberstream/">Site</a></b> ·
   <b><a href="https://github.com/pickywawa/cyberstream/releases/latest">Télécharger</a></b> ·
   <a href="#-fonctions">Fonctions</a> ·
+  <a href="#-langues-et-pays">Pays</a> ·
   <a href="#-captures">Captures</a> ·
   <a href="#-compiler-et-tester">Compiler</a>
   <br />
@@ -42,11 +43,76 @@
 | 🗓️ **Guide TV XMLTV** | Grille virtualisée, ligne « maintenant », rattrapage des programmes passés. |
 | 🎬 **Films & séries** | Fiches enrichies par TMDB : casting, collections, âge, saisons, reprise, épisode suivant. |
 | ⏸️ **Pause du direct** | Tampon local de 30 à 60 min, ±10 s, retour au direct, bascule vers un flux de secours. |
-| 🎙️ **Commande vocale** | « Mets la chaîne 5 », « recherche Dune », « recule de 30 secondes », en français et en anglais. |
+| 🎙️ **Commande vocale** | « Mets la chaîne 5 », « recherche Dune », « recule de 30 secondes », dans les 14 langues de l’interface. |
 | 📱 **Installation par QR code** | La TV récupère profil, sources et réglages depuis le téléphone. |
-| 🔁 **Replay gratuit** | ARTE, france.tv, Okoo et flux RSS YouTube. |
+| 🔁 **Replay gratuit** | ARTE, france.tv, Okoo, ARD Mediathek et plus de 600 chaînes YouTube de médias, selon tes pays. |
 | 💬 **Sous-titres & Trakt** | SRT, WebVTT, OpenSubtitles par empreinte, scrobble et watchlist Trakt. |
+| 🌍 **14 langues, 42 pays** | Chaînes gratuites, guide TV, radios et scores de chaque pays suivi, plusieurs pays par profil. |
 | 👤 **Profils** | Avatar, langue et limite d’âge par profil. Jetons rangés dans le coffre de secrets de l’appareil. |
+
+## 🌍 Langues et pays
+
+**Interface** en 14 langues : français, anglais, allemand, espagnol, italien, portugais, arabe, hindi, chinois, bengali, indonésien, ourdou, russe et japonais. L’arabe et l’ourdou s’affichent de droite à gauche. Les commandes vocales, les dates, la langue des fiches TMDB et la reconnaissance vocale suivent la langue du profil.
+
+**Plusieurs pays par profil.** Dans le profil, choisis un ou plusieurs pays (par exemple France et Suisse). Le premier est le pays principal. Pour chaque pays suivi, l’app ajoute :
+
+- **Chaînes gratuites** : les flux publics et gratuits listés par [iptv-org](https://github.com/iptv-org/iptv), ajoutés comme une source. Option « Chaînes gratuites de mes pays », proposée dès la création du profil : l’app peut servir sans abonnement IPTV.
+- **Guide TV gratuit** : [xmltvfr.fr](https://xmltvfr.fr) pour la France, [epgshare01](https://epgshare01.online) pour les autres pays.
+- **Replay** : france.tv et Okoo (France), ARD Mediathek (Allemagne, Autriche), ARTE (en six langues, en Europe).
+- **YouTube** : chaînes de médias du pays par thème (info, sport, docs, humour, médias, radio). Toutes ont été vérifiées : chacune publie via son flux RSS public.
+- **Radios** : les stations les plus écoutées du pays, via [Radio Browser](https://www.radio-browser.info). Tous les pays sont couverts.
+- **Scores en direct** : championnats du pays.
+
+**Filtre par pays.** L’option « Seulement les chaînes de mes pays » laisse de côté, au téléchargement de ta source, les catégories de chaînes des autres pays (« UK| », « DE: », « [BE] »…). Elle est proposée dès la configuration de la source, avant le premier téléchargement.
+
+| Pays | Chaînes gratuites | Guide TV | Replay | YouTube | Scores |
+| --- | --- | --- | --- | --- | --- |
+| 🇫🇷 France | ≈231 (TF1, France 2, M6, Arte) | oui | france.tv, Okoo, ARTE | 21 (BFMTV, franceinfo…) | Ligue 1, Ligue des champions, Premier League |
+| 🇧🇪 Belgique | ≈60 (La Une, Tipik, RTL-TVI, BX1) | oui | ARTE | 10 (RTBF, RTBF Info…) | Pro League, Ligue 1, Ligue des champions |
+| 🇨🇭 Suisse | ≈137 (RTS, RSI, Couleur 3, 3sat) | oui | ARTE | 9 (RTS Info, Schweizer Radio und Fernsehen…) | Super League, Ligue 1, Bundesliga |
+| 🇱🇺 Luxembourg | ≈20 (RTL, Eldo) | oui | ARTE | 2 (RTL Luxembourg, Wort…) | Ligue 1, Bundesliga, Ligue des champions |
+| 🇨🇦 Canada | ≈265 (CBC, CTV, Télé-Québec) | oui | — | 14 (CBC News, CTV News…) | NHL, NBA, NFL |
+| 🇲🇦 Maroc | ≈13 (2M, Al Aoula, Medi1) | — | — | 10 (2MTV, Hespress…) | CAN, Ligue 1, LaLiga |
+| 🇩🇿 Algérie | ≈9 (Canal Algérie, Ennahar) | — | — | 7 (Ennahar Tv Plus, EchoroukTV…) | CAN, Ligue 1, Ligue des champions |
+| 🇹🇳 Tunisie | ≈4 (Watania, Nessma) | — | — | 7 (Mosaique FM, Nessma TV…) | CAN, Ligue 1, Ligue des champions |
+| 🇬🇧 Royaume-Uni | ≈302 (BBC One, BBC News, Channel 4) | oui | ARTE | 30 (BBC News, Sky News…) | Premier League, Ligue des champions |
+| 🇮🇪 Irlande | ≈58 (RTÉ News, Virgin Media) | oui | ARTE | 9 (RTÉ News, The Irish Times…) | Premier Division, Premier League, Ligue des champions |
+| 🇺🇸 États-Unis | ≈1538 (PBS, ABC News, CBS News) | oui | — | 41 (CNN, NBC News…) | NFL, NBA, NHL |
+| 🇦🇺 Australie | ≈78 (ABC, 7, 9) | oui | — | 11 (9 News Australia, SBS News…) | AFL, A-League, Premier League |
+| 🇳🇿 Nouvelle-Zélande | ≈36 (TVNZ, Whakaata Māori) | oui | — | 6 (RNZ, 1News…) | A-League, Premier League |
+| 🇩🇪 Allemagne | ≈303 (Das Erste, ZDF, 3sat, tagesschau24) | oui | ARD Mediathek, ARTE | 28 (tagesschau, ZDFheute Nachrichten…) | Bundesliga, Ligue des champions |
+| 🇦🇹 Autriche | ≈114 (ORF, ServusTV, PULS 24) | oui | ARD Mediathek, ARTE | 9 (PULS 24, Kronen Zeitung…) | Bundesliga (AT), Bundesliga, Ligue des champions |
+| 🇪🇸 Espagne | ≈305 (3Cat, À Punt, 24 Horas, Atreseries) | oui | ARTE | 27 (Antena 3 Noticias, EL PAÍS…) | LaLiga, Ligue des champions, NBA |
+| 🇲🇽 Mexique | ≈179 (Canal 22, Canal Once, Azteca) | oui | — | 12 (NMás, MILENIO…) | Liga MX, Concacaf, LaLiga |
+| 🇦🇷 Argentine | ≈224 (Telefe, TN, A24) | oui | — | 11 (C5N, LA NACION…) | Liga Profesional, Libertadores, LaLiga |
+| 🇨🇴 Colombie | ≈171 (Canal Capital, Señal Colombia) | oui | — | 7 (Noticias Caracol, Noticias RCN…) | Primera A, Libertadores, LaLiga |
+| 🇨🇱 Chili | ≈220 (TVN, 24 Horas, T13) | oui | — | 9 (Teletrece, CHV Noticias…) | Primera División, Libertadores, LaLiga |
+| 🇮🇹 Italie | ≈359 (Rai 1, Rai 2, Rai 3, Rai News 24) | oui | ARTE | 21 (RaiNews, Sky tg24…) | Serie A, Ligue des champions |
+| 🇵🇹 Portugal | ≈72 (RTP 1, RTP 2, RTP Notícias, SIC) | oui | — | 10 (RTP Notícias, TVI…) | Liga Portugal, Ligue des champions |
+| 🇧🇷 Brésil | ≈401 (TV Cultura, Record News, SBT) | oui | — | 23 (g1, CNN Brasil…) | Brasileirão, Libertadores, NBA |
+| 🇳🇱 Pays-Bas | ≈175 (NPO, AT5) | oui | — | 11 (NOS, RTL Nieuws…) | Eredivisie, Ligue des champions |
+| 🇹🇷 Turquie | ≈180 (TRT 1, TRT Haber, NTV) | oui | — | 8 (TRT Haber, CNN TÜRK…) | Süper Lig, Ligue des champions |
+| 🇵🇱 Pologne | ≈188 (TVP Info, TVP World) | oui | ARTE | 12 (tvn24, Polsat…) | Ligue des champions |
+| 🇷🇺 Russie | ≈518 (2x2, 360°, RT) | — | — | 19 (Телеканал Дождь, BBC News - Русская служба…) | RPL |
+| 🇸🇦 Arabie saoudite | ≈56 (Al Saudiya, Al Ekhbariya, Asharq News) | oui | — | 17 (AlArabiya العربية, سكاي نيوز عربية…) | Saudi Pro League, AFC Champions League, Premier League |
+| 🇦🇪 Émirats arabes unis | ≈23 (Dubai TV, Abu Dhabi TV) | oui | — | 10 (سكاي نيوز عربية, AlArabiya العربية…) | AFC Champions League, Premier League, LaLiga |
+| 🇶🇦 Qatar | ≈10 (Al Jazeera, Al Rayyan) | — | — | 4 (Al Jazeera English, العربي - أخبار…) | AFC Champions League, Premier League, LaLiga |
+| 🇪🇬 Égypte | ≈21 (Nile Drama, MBC Masr, Al Ghad) | — | — | 11 (CBC Egypt, Sada Elbalad - صدى البلد…) | CAN, Premier League, LaLiga |
+| 🇮🇳 Inde | ≈826 (DD National, DD News, Aaj Tak, NDTV) | oui | — | 30 (Aaj Tak, NDTV…) | ISL, Premier League |
+| 🇵🇰 Pakistan | ≈105 (PTV, ARY News, Dunya News) | — | — | 19 (Geo News, ARY News…) | Premier League |
+| 🇧🇩 Bangladesh | ≈37 (ATN Bangla, NTV, T Sports, Ekhon) | — | — | 17 (SOMOY TV, Jamuna TV Plus…) | Premier League |
+| 🇮🇩 Indonésie | ≈177 (TVRI, Kompas TV, Metro TV) | oui | — | 28 (CNN Indonesia, tvOneNews…) | Super League, Premier League |
+| 🇲🇾 Malaisie | ≈6 (TV1, TV2) | oui | — | 6 (Astro AWANI, Berita Harian Online…) | Super League, Premier League |
+| 🇸🇬 Singapour | ≈9 (CNA) | oui | — | 5 (CNA Insider, CNA…) | Premier League |
+| 🇨🇳 Chine | ≈156 (CCTV-1, CCTV-4, CCTV-13) | — | — | 11 (CGTN, CCTV Video News Agency…) | CSL, NBA |
+| 🇹🇼 Taïwan | ≈34 (PTS, TTV) | — | — | 10 (TVBS NEWS, SETN News Network…) | NBA, MLB |
+| 🇭🇰 Hong Kong | ≈18 (RTHK, TVB) | oui | — | 7 (TVB NEWS Official 無綫新聞, RTHK 香港電台…) | Premier League, NBA |
+| 🇯🇵 Japon | ≈17 (NHK General, Nippon TV, TV Asahi, Fuji TV) | oui | — | 22 (ANNnewsCH, TBS NEWS DIG Powered by JNN…) | J1 League, MLB |
+| 🇰🇷 Corée du Sud | ≈72 (KBS, MBC, Arirang) | — | — | 16 (YTN, SBS News…) | MLB, Premier League |
+
+Le nombre de chaînes gratuites vient des listes iptv-org au moment de l’écriture. Une partie de ces flux est réservée à leur pays ou change souvent. Certaines vidéos ARD ne sont visibles qu’en Allemagne, Autriche et Suisse.
+
+**Services non intégrés.** BBC iPlayer, ITVX et Channel 4 demandent un compte et une connexion depuis le Royaume-Uni, ainsi qu’une redevance pour iPlayer. PBS passe par l’app et le compte de chaque station. RTVE Play protège ses vidéos par DRM. RaiPlay réserve une grande partie de son catalogue à l’Italie, souvent avec connexion. Leurs chaînes en direct apparaissent dans les chaînes gratuites quand elles sont diffusées en clair, et leurs chaînes YouTube sont dans le replay.
 
 ## 🖼️ Captures
 
@@ -145,4 +211,4 @@ Code sous licence [MIT](LICENSE).
 
 ---
 
-<p align="center"><sub>Affiches, photos et métadonnées : <a href="https://www.themoviedb.org/">TMDB</a>. Ce produit utilise l’API TMDB sans être approuvé ni certifié par TMDB. Logos de chaînes : base <a href="https://github.com/iptv-org/database">iptv-org</a> ; marques et visuels appartiennent à leurs détenteurs. Vidéo du lecteur : flux de test <i>Big Buck Bunny</i> © Blender Foundation, CC BY 3.0.</sub></p>
+<p align="center"><sub>Affiches, photos et métadonnées : <a href="https://www.themoviedb.org/">TMDB</a>. Ce produit utilise l’API TMDB sans être approuvé ni certifié par TMDB. Logos de chaînes et listes de chaînes gratuites : <a href="https://github.com/iptv-org">iptv-org</a> ; marques et visuels appartiennent à leurs détenteurs. Guides TV : xmltvfr.fr et epgshare01. Radios : Radio Browser. Vidéo du lecteur : flux de test <i>Big Buck Bunny</i> © Blender Foundation, CC BY 3.0.</sub></p>

@@ -1,22 +1,5 @@
 use super::*;
-const GENRES: [(&str, &str); 16] = [
-    ("Action", "Action"),
-    ("Comédie", "Comedy"),
-    ("Drame", "Drama"),
-    ("Thriller & policier", "Thriller & crime"),
-    ("Horreur", "Horror"),
-    ("Science-fiction", "Sci-fi"),
-    ("Fantastique", "Fantasy"),
-    ("Aventure", "Adventure"),
-    ("Animation", "Animation"),
-    ("Famille & jeunesse", "Family & kids"),
-    ("Romance", "Romance"),
-    ("Documentaire", "Documentary"),
-    ("Guerre & histoire", "War & history"),
-    ("Western", "Western"),
-    ("Musique", "Music"),
-    ("Noël", "Christmas"),
-];
+const GENRES: [&str; 16] = ["genre.0", "genre.1", "genre.2", "genre.3", "genre.4", "genre.5", "genre.6", "genre.7", "genre.8", "genre.9", "genre.10", "genre.11", "genre.12", "genre.13", "genre.14", "genre.15"];
 #[wasm_bindgen]
 pub fn grid_toolbar(
     title: &str,
@@ -27,7 +10,6 @@ pub fn grid_toolbar(
     sort: &str,
     header: bool,
 ) -> String {
-    let label = |(fr, en)| if lang == "en" { en } else { fr };
     html!{
         // a page of its own: back button and title; under Home's categories: the chips only
         @if header{div.page-header style="display:flex;align-items:center;gap:12px;padding:calc(var(--nav-h) + 12px) var(--gutter) 8px"{
@@ -35,10 +17,10 @@ pub fn grid_toolbar(
             h1.section-title style="flex:1"{(title)}@if total>=0{span.dim.small{(total)}}}}
         @if genres.iter().filter(|n|**n>=8).count()>1{
             div.chips.sub-chips data-tabs data-row data-scroll="genres"{button.chip.active[sub==0] data-f data-cmd="sub:0"{(lookup(lang,"replay.all"))}
-            @for (i,(count,name)) in genres.iter().zip(GENRES).enumerate(){@if *count>=8{button.chip.active[sub==1<<i] data-f data-cmd=(format!("sub:{}",1u32<<i)){(label(name))}}}}
+            @for (i,(count,name)) in genres.iter().zip(GENRES).enumerate(){@if *count>=8{button.chip.active[sub==1<<i] data-f data-cmd=(format!("sub:{}",1u32<<i)){(lookup(lang,name))}}}}
         }
-        div.chips data-tabs data-row data-scroll="sorts"{@for (key,names) in [("added",("Ajouts récents","Recently added")),("rating",("Mieux notés","Top rated")),("year",("Année","Year")),("title",("A → Z","A → Z"))]{
-            button.chip.active[key==sort] data-f data-cmd=(format!("sort:{key}")){(label(names))}
+        div.chips data-tabs data-row data-scroll="sorts"{@for key in ["added","rating","year","title"]{
+            button.chip.active[key==sort] data-f data-cmd=(format!("sort:{key}")){(lookup(lang,&format!("sort.{key}")))}
         }}
     }.into_string()
 }

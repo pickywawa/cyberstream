@@ -46,6 +46,20 @@ export async function directoryRadios(country: string): Promise<Radio[]> {
   }
 }
 
+/**
+ * stations of several countries ("FR,CH"): the main country's list, then the others' most
+ * listened, without the same station twice
+ */
+export async function countriesRadios(countries: string): Promise<Radio[]> {
+  const codes = countries.split(',').filter(Boolean);
+  const lists = await Promise.all(codes.map((c, i) => directoryRadios(c).then((l) => (i ? l.slice(0, 25) : l), (e) => (i ? [] : Promise.reject(e)))));
+  const seen = new Set<string>();
+  return lists.flat().filter((r) => {
+    const k = r.name.toLowerCase();
+    return !seen.has(k) && !!seen.add(k);
+  });
+}
+
 const recentKey = (pid: string) => `radio:recent:${pid}`;
 
 export interface RadioPrefs { fav: string[]; custom: Radio[]; recent: string[] }

@@ -826,6 +826,7 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .rp-prov { display: inline-block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-right: 10px; vertical-align: 0.18em; background: var(--surface-2); color: var(--text); }
 .rp-prov.arte { background: #fa481c; color: #fff; }
 .rp-prov.francetv { background: #2c40f5; color: #fff; }
+.rp-prov.ard { background: #003480; color: #fff; }
 .rp-prov.youtube { background: #ff0033; color: #fff; }
 .rp-prov.okoo { background: #ffcf26; color: #1a1a1a; }
 .hero .rp-prov, .detail-hero .rp-prov { margin-bottom: 10px; }
@@ -1076,3 +1077,9 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .radio-tile .name-tile { padding: 8px 10px 24px; gap: 0; }
 .radio-tile .name-tile .mono { width: auto; height: 98%; aspect-ratio: 1; font-size: clamp(1.2rem, 2vw, 1.7rem); border-radius: 22%; }
 .radio-tile .name-tile .nm { display: none; }
+
+/* followed countries (profile): flag + name chips, several can be on */
+.country-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.country-grid button { padding: 8px 12px; border-radius: 8px; background: var(--surface); color: var(--text-2); font-weight: 600; }
+.country-grid button.on { background: var(--surface-hover); color: var(--text); box-shadow: 0 0 0 2px var(--accent); }
+.country-chosen { margin: 2px 0 10px; }

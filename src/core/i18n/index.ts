@@ -1,6 +1,8 @@
 import type { Lang } from '../types';
 import type fr from '../../../rust/locales/fr.json';
 import { translation } from '../../rust/generated/cyberstream';
+import { langInfo } from './langs';
+export { LANGS, langInfo, isLang, deviceLang, tmdbLang } from './langs';
 export type I18nKey = keyof typeof fr;
 const cache = new Map<I18nKey,string>();
 let current: Lang = 'fr';
@@ -8,12 +10,15 @@ let current: Lang = 'fr';
 export function setLang(l: Lang) {
   if (current !== l) cache.clear();
   current = l;
-  document.documentElement.lang = l;
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = l;
+    document.documentElement.dir = langInfo(l).rtl ? 'rtl' : 'ltr';
+  }
 }
 export function getLang(): Lang {
   return current;
 }
-export const locale = () => (current === 'fr' ? 'fr-FR' : 'en-GB');
+export const locale = () => langInfo(current).locale;
 
 export function t(key: I18nKey, vars?: Record<string, string | number>): string {
   let s = cache.get(key);

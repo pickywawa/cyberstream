@@ -18,6 +18,10 @@ fn aliases(s: &str) -> Option<&'static str> {
         "kor" | "korean" => Some("ko"),
         "chi" | "zho" | "chinese" => Some("zh"),
         "hin" | "hindi" => Some("hi"),
+        "ben" | "bengali" | "bangla" => Some("bn"),
+        "urd" | "urdu" => Some("ur"),
+        "ind" | "indonesian" | "indonesia" => Some("id"),
+        "may" | "msa" | "malay" | "melayu" => Some("ms"),
         _ => None,
     }
 }
@@ -35,6 +39,10 @@ fn country_lang(s: &str) -> Option<&'static str> {
         "pl" => Some("pl"),
         "ru" => Some("ru"),
         "in" => Some("hi"),
+        "pk" => Some("ur"),
+        "bd" => Some("bn"),
+        "id" | "idn" => Some("id"),
+        "my" => Some("ms"),
         "jp" => Some("ja"),
         "kr" => Some("ko"),
         "cn" => Some("zh"),
@@ -159,7 +167,7 @@ pub fn to_lang(tag: &str) -> Option<String> {
     let t = n.split_whitespace().next()?;
     match t {
         "fr" | "en" | "es" | "de" | "it" | "pt" | "nl" | "ar" | "tr" | "pl" | "ru" | "ja"
-        | "ko" | "zh" | "hi" => Some(t.into()),
+        | "ko" | "zh" | "hi" | "bn" | "ur" | "id" | "ms" => Some(t.into()),
         _ => aliases(t).map(str::to_owned),
     }
 }
@@ -368,4 +376,137 @@ pub(crate) fn keep_category(name: &str, prefs: &[String]) -> bool {
     }
     let langs = category_languages(name);
     langs.is_empty() || langs.iter().any(|s| s == "multi" || prefs.contains(s))
+}
+
+/// country of a category tag ("FR", "UK", "USA", "QC"); "AR" and "EN" name languages, not countries
+fn country_tag(tag: &str) -> Option<&'static str> {
+    let t = tag.to_uppercase();
+    Some(match t.as_str() {
+        "UK" | "GB" | "GBR" => "GB",
+        "USA" | "US" => "US",
+        "FR" | "FRA" => "FR",
+        "BE" | "BEL" => "BE",
+        "CH" | "SUI" => "CH",
+        "CA" | "CAN" | "QC" => "CA",
+        "LU" => "LU",
+        "MA" => "MA",
+        "DZ" => "DZ",
+        "TN" => "TN",
+        "IE" => "IE",
+        "AU" => "AU",
+        "NZ" => "NZ",
+        "DE" | "GER" | "DEU" => "DE",
+        "AT" => "AT",
+        "ES" | "ESP" => "ES",
+        "MX" => "MX",
+        "CO" => "CO",
+        "CL" => "CL",
+        "IT" | "ITA" => "IT",
+        "PT" | "POR" => "PT",
+        "BR" | "BRA" => "BR",
+        "NL" | "NED" => "NL",
+        "TR" => "TR",
+        "PL" => "PL",
+        "SA" | "KSA" => "SA",
+        "AE" | "UAE" => "AE",
+        "EG" => "EG",
+        "QA" => "QA",
+        "IN" | "IND" => "IN",
+        "PK" => "PK",
+        "BD" => "BD",
+        "ID" => "ID",
+        "CN" => "CN",
+        "TW" => "TW",
+        "HK" => "HK",
+        "RU" => "RU",
+        "JP" => "JP",
+        "KR" => "KR",
+        "AL" => "AL",
+        "BG" => "BG",
+        "HU" => "HU",
+        "RO" => "RO",
+        "DK" => "DK",
+        "NO" => "NO",
+        "FI" => "FI",
+        "SE" => "SE",
+        "GR" => "GR",
+        "CZ" => "CZ",
+        "SK" => "SK",
+        "UA" => "UA",
+        "IL" => "IL",
+        "IR" => "IR",
+        "RS" => "RS",
+        "HR" => "HR",
+        "BA" => "BA",
+        "MK" => "MK",
+        "SI" => "SI",
+        "TH" => "TH",
+        "VN" => "VN",
+        "PH" => "PH",
+        _ => return None,
+    })
+}
+fn country_word(s: &str) -> Option<&'static str> {
+    let m = re!(r"\b(france|belgique|belgium|belgie|suisse|switzerland|schweiz|svizzera|quebec|canada|luxembourg|maroc|morocco|algerie|algeria|tunisie|tunisia|united kingdom|britain|ireland|australia|new zealand|germany|deutschland|austria|osterreich|spain|espana|mexico|argentina|colombia|chile|italia|italy|portugal|brasil|brazil|netherlands|nederland|holland|turkey|turkiye|poland|polska|saudi|emirates|egypt|qatar|india|pakistan|bangladesh|indonesia|china|taiwan|hong kong|russia|japan|korea|usa)\b").find(s)?;
+    Some(match m.as_str() {
+        "france" => "FR",
+        "belgique" | "belgium" | "belgie" => "BE",
+        "suisse" | "switzerland" | "schweiz" | "svizzera" => "CH",
+        "quebec" | "canada" => "CA",
+        "luxembourg" => "LU",
+        "maroc" | "morocco" => "MA",
+        "algerie" | "algeria" => "DZ",
+        "tunisie" | "tunisia" => "TN",
+        "united kingdom" | "britain" => "GB",
+        "ireland" => "IE",
+        "australia" => "AU",
+        "new zealand" => "NZ",
+        "germany" | "deutschland" => "DE",
+        "austria" | "osterreich" => "AT",
+        "spain" | "espana" => "ES",
+        "mexico" => "MX",
+        "argentina" => "AR",
+        "colombia" => "CO",
+        "chile" => "CL",
+        "italia" | "italy" => "IT",
+        "portugal" => "PT",
+        "brasil" | "brazil" => "BR",
+        "netherlands" | "nederland" | "holland" => "NL",
+        "turkey" | "turkiye" => "TR",
+        "poland" | "polska" => "PL",
+        "saudi" => "SA",
+        "emirates" => "AE",
+        "egypt" => "EG",
+        "qatar" => "QA",
+        "india" => "IN",
+        "pakistan" => "PK",
+        "bangladesh" => "BD",
+        "indonesia" => "ID",
+        "china" => "CN",
+        "taiwan" => "TW",
+        "hong kong" => "HK",
+        "russia" => "RU",
+        "japan" => "JP",
+        "korea" => "KR",
+        _ => "US",
+    })
+}
+/// Country a channel category names ("FR| SPORTS", "[BE] INFO", "UK: NEWS", "SUISSE"), if any
+#[wasm_bindgen]
+pub fn category_country(name: &str) -> Option<String> {
+    if let Some(m) = re!(r"^\s*([A-Za-z]{2,3})\s*[:|\-–]\s").captures(name)
+        && let Some(c) = country_tag(&m[1])
+    {
+        return Some(c.into());
+    }
+    for m in re!(r"[\[(|]\s*([a-zA-Z]{2,3})\s*[\])|]").captures_iter(name) {
+        if let Some(c) = country_tag(&m[1]) {
+            return Some(c.into());
+        }
+    }
+    country_word(&norm(name)).map(Into::into)
+}
+/// live category kept by the country filter: one naming no country, or one of the profile's
+pub(crate) fn keep_country(name: &str, countries: &[String]) -> bool {
+    countries.is_empty() || category_country(name).is_none_or(|c| countries.contains(&c))
 }

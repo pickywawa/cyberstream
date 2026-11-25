@@ -4,7 +4,7 @@ import { fmtDate } from '@/core/i18n';
 import { getProgress } from '@/core/repo';
 import { replayCatalog, replayInfo, replayShow, type ReplayCatalog, type ReplayItem, type ReplayProvider, type ReplayShow } from '@/core/replay';
 import { useAsync } from '../hooks';
-import { profileCountry } from '@/core/prefs';
+import { profileCountries } from '@/core/prefs';
 import { RustView, readCommand } from '../components/RustView';
 import { ShelvesView } from '../components/Shelves';
 import { replay_blocks, replay_filters, replay_page } from '@/rust/generated/cyberstream';
@@ -35,6 +35,13 @@ function shelvesFor(cat: ReplayCatalog | null | undefined, filter: Filter, lang:
   byKey.set(key, { at: Date.now(), blocks });
   return blocks;
 }
+/** filter chips of the services the catalogue holds (france.tv, ARD, ARTE, YouTube, youth) */
+function filtersOf(cat: ReplayCatalog | null | undefined): string {
+  if (!cat) return '';
+  const set = new Set(cat.rails.map((r) => r.provider));
+  if (cat.youtube?.length) set.add('youtube');
+  return [...(['francetv', 'ard', 'arte', 'youtube'] as const).filter((p) => set.has(p)), ...(cat.kids?.length ? ['kids'] : [])].join();
+}
 const idle = (fn: () => void) => {
   const w = window as Window & { requestIdleCallback?: typeof requestIdleCallback };
   if (w.requestIdleCallback) w.requestIdleCallback(fn, { timeout: 4000 });
@@ -64,7 +71,7 @@ export async function preloadReplay(lang: string, country: string) {
 export function Replay() {
   const profile = useApp((s) => s.profile)!;
   const lang = profile.lang;
-  const country = profileCountry(profile);
+  const country = profileCountries(profile).join();
   const memKey = `${lang}:${country}`;
   const [cat, setCat] = useState<ReplayCatalog | null | undefined>(() => MEM.get(memKey));
   const [filter, setFilter] = useState<Filter>('all');
@@ -99,7 +106,7 @@ export function Replay() {
     <div className="tab-replay">
       <div className="hero-spacer" />
       <Radios />
-      <RustView className="chips" row tabs html={replay_filters(filter, lang)} onCommand={f => setFilter(f as Filter)} />
+      <RustView className="chips" row tabs html={replay_filters(filter, lang, filtersOf(cat))} onCommand={f => setFilter(f as Filter)} />
       <ShelvesView className="replay-shelves" blocks={blocks} resetKey={filter} onCommand={cmd => {
         const [action, id] = readCommand(cmd);
         if (action === 'retry') setReload(n => n+1);
@@ -118,7 +125,7 @@ export function Replay() {
 export function ReplayPage({ id, item }: { id: string; item?: ReplayItem }) {
   const profile = useApp((s) => s.profile)!;
   const lang = profile.lang;
-  const isShow = item ? item.kind === 'show' : /^ftvp:|^arte:RC-/.test(id);
+  const isShow = item ? item.kind === 'show' : /^ftvp:|^ardp:|^arte:RC-/.test(id);
   const [season, setSeason] = useState(0);
   const [failed, setFailed] = useState(false);
   const [show, setShow] = useState<ReplayShow | null>(null);

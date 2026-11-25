@@ -4,7 +4,8 @@ export type Universe =
 export type Quality = 'SD' | 'HD' | 'FHD' | '4K' | 'HEVC' | null;
 export type CatchupMode = 'xc' | 'default' | 'append' | 'shift' | 'flussonic' | null;
 export type ThemeId = 'night' | 'oled' | 'light' | 'midnight';
-export type Lang = 'fr' | 'en';
+/** interface languages (rust/locales/<code>.json) */
+export type Lang = 'fr' | 'en' | 'de' | 'es' | 'it' | 'pt' | 'ar' | 'hi' | 'zh' | 'bn' | 'id' | 'ur' | 'ru' | 'ja';
 
 export interface Profile {
   id: string;
@@ -20,8 +21,14 @@ export interface Profile {
   /** maxAge: titles rated above it need the PIN (undefined = no age limit) */
   parental: { enabled: boolean; pin?: string; maxAge?: number };
   hasTmdb: boolean;
-  /** ISO 3166 country (channel ranking, TMDB region) */
+  /** ISO 3166 country (channel ranking, TMDB region): the first of `countries` */
   country?: string;
+  /** every country followed (free channels, guide, catch-up, radios, scores), main one first */
+  countries?: string[];
+  /** download only the channel categories of these countries (and those without a country) */
+  countryFilter?: boolean;
+  /** add the free channels of these countries (iptv-org public streams) as a source */
+  freeTv?: boolean;
   /** preferred audio languages (ISO 639-1): [primary, secondary?] */
   audioLangs?: string[];
   /** download every category, not only those in the audio languages (default: only them) */
@@ -66,6 +73,8 @@ export interface Source {
   lastError?: string;
   account?: XtreamAccount;
   counts?: { live: number; vod: number; series: number };
+  /** free channels of this country (iptv-org public streams), managed by the profile */
+  free?: string;
 }
 
 export interface Category {

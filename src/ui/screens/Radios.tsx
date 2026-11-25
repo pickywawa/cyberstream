@@ -2,8 +2,8 @@ import { memo, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { nameHue } from '@/core/images';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
-import { profileCountry } from '@/core/prefs';
-import { addCustomRadio, directoryRadios, orderRadios, radioPlayRequest, radioPrefs, rememberRadio, removeCustomRadio, toggleRadioFav, type Radio, type RadioPrefs } from '@/core/radio';
+import { profileCountries } from '@/core/prefs';
+import { addCustomRadio, countriesRadios, orderRadios, radioPlayRequest, radioPrefs, rememberRadio, removeCustomRadio, toggleRadioFav, type Radio, type RadioPrefs } from '@/core/radio';
 import { useLongPress } from '../hooks';
 import { Img } from '../components/Img';
 import { Rail } from '../components/Rail';
@@ -15,7 +15,7 @@ const PREFS_MEM = new Map<string, RadioPrefs>();
 
 /** at profile start: the saved directory and preferences in memory before the tab opens */
 export async function preloadRadios(profileId: string, country: string) {
-  const [list, prefs] = await Promise.all([directoryRadios(country).catch(() => [] as Radio[]), radioPrefs(profileId)]);
+  const [list, prefs] = await Promise.all([countriesRadios(country).catch(() => [] as Radio[]), radioPrefs(profileId)]);
   if (list.length) DIR_MEM.set(country, list);
   PREFS_MEM.set(profileId, prefs);
 }
@@ -24,7 +24,7 @@ export async function preloadRadios(profileId: string, country: string) {
 export function Radios() {
   const profile = useApp((s) => s.profile)!;
   const toast = useApp((s) => s.toast);
-  const country = profileCountry(profile);
+  const country = profileCountries(profile).join();
   // last lists shown, kept in memory: the rail is there at once when coming back to the tab
   const [directory, setDirectory] = useState<Radio[]>(() => DIR_MEM.get(country) || []);
   const [prefs, setPrefsState] = useState<RadioPrefs>(() => PREFS_MEM.get(profile.id) || { fav: [], custom: [], recent: [] });
@@ -41,7 +41,7 @@ export function Radios() {
   useEffect(reloadPrefs, [profile.id]);
   useEffect(() => {
     let off = false;
-    void directoryRadios(country).then((l) => {
+    void countriesRadios(country).then((l) => {
       const cur = DIR_MEM.get(country);
       if (cur && JSON.stringify(cur) === JSON.stringify(l)) return;
       DIR_MEM.set(country, l);

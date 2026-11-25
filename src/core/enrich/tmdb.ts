@@ -62,6 +62,10 @@ export class Tmdb {
   private queue: Promise<unknown> = Promise.resolve();
   private last = 0;
   constructor(private token: string, private lang = 'fr-FR', private minGapMs = 60) {}
+  /** ISO country of the language tag ("pt-BR" → BR): release dates, ratings, streaming offers */
+  get region(): string {
+    return this.lang.split('-')[1] || 'US';
+  }
 
   async get<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
     const q = new URLSearchParams();
@@ -109,7 +113,7 @@ export class Tmdb {
     const out: TmdbListItem[] = [];
     for (let page = 1; page <= pages; page++) {
       const path = list.startsWith('trending') ? `/trending/${kind}/${list.split(':')[1] || 'week'}` : `/${kind}/${list}`;
-      const r = await this.get<any>(path, { page, region: 'FR' });
+      const r = await this.get<any>(path, { page, region: this.region });
       out.push(...this.parse<TmdbListItem[]>('list', r, kind));
     }
     return out;
