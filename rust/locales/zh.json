@@ -184,6 +184,7 @@
   "common.empty": "暂无内容",
   "profiles.who": "谁在观看？",
   "profiles.add": "添加用户",
+  "profiles.current": "当前用户",
   "profiles.manage": "管理用户",
   "profiles.dontAsk": "启动时不再询问",
   "profiles.name": "用户名称",

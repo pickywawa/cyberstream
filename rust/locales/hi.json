@@ -184,6 +184,7 @@
   "common.empty": "अभी दिखाने के लिए कुछ नहीं",
   "profiles.who": "कौन देख रहा है?",
   "profiles.add": "प्रोफ़ाइल जोड़ें",
+  "profiles.current": "मौजूदा प्रोफ़ाइल",
   "profiles.manage": "प्रोफ़ाइल प्रबंधित करें",
   "profiles.dontAsk": "शुरू में दोबारा न पूछें",
   "profiles.name": "प्रोफ़ाइल का नाम",

@@ -135,6 +135,8 @@ export interface Toast {
 interface AppState {
   booted: boolean;
   screen: 'boot' | 'profiles' | 'onboarding' | 'app';
+  /** Settings › Add a profile: the profile screen opens on the creation form, cancel comes back */
+  addingProfile?: boolean;
   profile: Profile | null;
   settings: GlobalSettings;
   tab: TabId;

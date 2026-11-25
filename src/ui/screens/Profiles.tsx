@@ -24,14 +24,17 @@ export function ProfilePicker() {
   const profiles = useLiveQuery(() => db.profiles.toArray(), []);
   const settings = useApp((s) => s.settings);
   const update = useApp((s) => s.updateSettings);
-  const [adding, setAdding] = useState(false);
+  // from Settings › Add a profile: straight to the form; cancel goes back to the app
+  const [fromSettings] = useState(() => !!useApp.getState().addingProfile);
+  const [adding, setAdding] = useState(fromSettings);
   const [locked, setLocked] = useState<Profile | null>(null);
+  useEffect(() => void (fromSettings && useApp.setState({ addingProfile: false })), [fromSettings]);
 
   useEffect(() => {
     if (profiles) requestAnimationFrame(() => focusFirst(document.querySelector('.profiles') || document.body));
   }, [profiles, adding]);
 
-  if (adding) return <Onboarding onDone={() => setAdding(false)} />;
+  if (adding) return <Onboarding onDone={() => (fromSettings ? useApp.setState({ screen: 'app' }) : setAdding(false))} />;
   if (!profiles) return null;
 
   const pick = (p: Profile) => {

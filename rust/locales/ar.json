@@ -184,6 +184,7 @@
   "common.empty": "لا شيء لعرضه بعد",
   "profiles.who": "من يشاهد؟",
   "profiles.add": "إضافة ملف شخصي",
+  "profiles.current": "الملف الشخصي الحالي",
   "profiles.manage": "إدارة الملفات الشخصية",
   "profiles.dontAsk": "عدم السؤال مجددًا عند التشغيل",
   "profiles.name": "اسم الملف الشخصي",

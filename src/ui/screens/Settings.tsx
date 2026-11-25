@@ -26,8 +26,16 @@ import { IcChevronRight, IcDown, IcRefresh, IcTrash, IcUp } from '../icons';
 export function Settings() {
   const profile = useApp(s => s.profile)!;
   const push = useApp(s => s.push);
-  return <RustView className="settings" html={settings_menu(getLang(), profile.name, profile.emoji, profile.color, isAndroidApp && !isTvMode())}
-    onCommand={id => (id === 'profiles' || id === 'profile-edit') ? push({ name:id }) : push({name:'settings-section',section:id as SettingsSection})} />;
+  const profiles = useLiveQuery(() => db.profiles.toArray(), []);
+  if (!profiles) return null;
+  // the profile in use first, then the others
+  const list = [...profiles].sort((a, b) => Number(b.id === profile.id) - Number(a.id === profile.id));
+  const html = settings_menu(getLang(), JSON.stringify(list.map(p => ({ id: p.id, name: p.name, emoji: p.emoji, color: p.color, locked: !!p.pin }))), profile.id, isAndroidApp && !isTvMode());
+  return <RustView className="settings" html={html} onCommand={id => {
+    if (id.startsWith('edit:')) push({ name: 'profile-edit', profileId: id.slice(5) });
+    else if (id === 'add-profile') useApp.setState({ screen: 'profiles', addingProfile: true });
+    else push({ name: 'settings-section', section: id as SettingsSection });
+  }} />;
 }
 
 export function SettingsSectionView({ section }: { section: SettingsSection }) {

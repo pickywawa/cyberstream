@@ -1095,3 +1095,8 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .collapse-head .chev { transition: transform 0.15s; }
 .collapse.open .collapse-head .chev { transform: rotate(90deg); }
 .collapse-body { padding: 12px 4px 4px; }
+
+/* Settings: every profile at the top, the add button under them on the right */
+.settings-group { margin: 14px 0 8px; font-size: 1rem; color: var(--text-2); }
+.settings-add { display: flex; justify-content: flex-end; margin: 8px 0 18px; }
+.settings-add .btn svg { width: 16px; height: 16px; }

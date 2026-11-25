@@ -184,6 +184,7 @@
   "common.empty": "Nothing to show yet",
   "profiles.who": "Who’s watching?",
   "profiles.add": "Add profile",
+  "profiles.current": "Current profile",
   "profiles.manage": "Manage profiles",
   "profiles.dontAsk": "Don’t ask again at startup",
   "profiles.name": "Profile name",

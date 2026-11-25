@@ -184,6 +184,7 @@
   "common.empty": "Пока ничего нет",
   "profiles.who": "Кто смотрит?",
   "profiles.add": "Добавить профиль",
+  "profiles.current": "Текущий профиль",
   "profiles.manage": "Управление профилями",
   "profiles.dontAsk": "Больше не спрашивать при запуске",
   "profiles.name": "Имя профиля",

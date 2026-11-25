@@ -184,6 +184,7 @@
   "common.empty": "まだ表示するものがありません",
   "profiles.who": "誰が観ますか？",
   "profiles.add": "プロフィールを追加",
+  "profiles.current": "使用中のプロフィール",
   "profiles.manage": "プロフィールを管理",
   "profiles.dontAsk": "起動時に今後は尋ねない",
   "profiles.name": "プロフィール名",

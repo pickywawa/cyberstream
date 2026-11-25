@@ -184,6 +184,7 @@
   "common.empty": "Todavía no hay nada que mostrar",
   "profiles.who": "¿Quién está viendo?",
   "profiles.add": "Añadir perfil",
+  "profiles.current": "Perfil actual",
   "profiles.manage": "Gestionar perfiles",
   "profiles.dontAsk": "No volver a preguntar al iniciar",
   "profiles.name": "Nombre del perfil",
