@@ -575,6 +575,9 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 
 /* virtualized grids: cards fill their cell */
 .vgrid .land, .vgrid .poster, .vgrid .card { width: 100%; }
+.page-header { display: flex; align-items: center; gap: 8px; padding: calc(var(--nav-h) + 12px) var(--gutter) 8px; }
+/* the arrow lines up with the page's left edge (the button's padding hangs outside), the title follows */
+.page-header > .icon-btn:first-child { margin-inline-start: -10px; }
 .page-header .section-title { font-size: 1.6rem; }
 .stack-page .page-header { padding-top: calc(var(--nav-h) + 12px); }
 .mobile .stack-page .page-header, .mobile .settings .page-header { padding-top: calc(10px + var(--sat)); padding-left: 0; padding-right: 0; }

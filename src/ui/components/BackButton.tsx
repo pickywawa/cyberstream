@@ -13,7 +13,7 @@ export function BackButton({ floating = true }: { floating?: boolean }) {
 
 export function PageHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 'calc(var(--nav-h) + 12px) var(--gutter) 8px' }} className="page-header">
+    <div className="page-header">
       <BackButton floating={false} />
       <h1 className="section-title" style={{ flex: 1 }}>{title}</h1>
       {right}

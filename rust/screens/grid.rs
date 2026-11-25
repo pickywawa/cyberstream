@@ -12,7 +12,7 @@ pub fn grid_toolbar(
 ) -> String {
     html!{
         // a page of its own: back button and title; under Home's categories: the chips only
-        @if header{div.page-header style="display:flex;align-items:center;gap:12px;padding:calc(var(--nav-h) + 12px) var(--gutter) 8px"{
+        @if header{div.page-header{
             button.icon-btn data-f data-cmd="back" aria-label=(lookup(lang,"common.back")){(icon("back",""))}
             h1.section-title style="flex:1"{(title)}@if total>=0{span.dim.small{(total)}}}}
         @if genres.iter().filter(|n|**n>=8).count()>1{

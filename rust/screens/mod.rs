@@ -26,7 +26,7 @@ fn dots(index: usize, count: usize) -> Markup {
     html! {div.dots{@for i in 0..count{i.on[i==index] data-cmd=(format!("go:{i}")){}}}}
 }
 fn header(title: &str, lang: &str) -> Markup {
-    html! {div.page-header style="display:flex;align-items:center;gap:12px;padding:calc(var(--nav-h) + 12px) var(--gutter) 8px"{
+    html! {div.page-header{
         button.icon-btn data-f data-cmd="back" aria-label=(lookup(lang,"common.back")){(icon("back",""))}
         h1.section-title style="flex:1"{(title)}
     }}
