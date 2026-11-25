@@ -20,7 +20,7 @@ Repo: https://github.com/pickywawa/cyberstream.git
 Builds:
   - versionName: 2.1.0
     versionCode: 30
-    commit: v2.1.0
+    commit: 64c037cb195a4e6b1a6eafb0a364742daeb028cf
     subdir: android/app
     sudo:
       - apt-get update
