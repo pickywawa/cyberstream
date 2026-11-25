@@ -30,9 +30,9 @@
 > Cyberstream es un reproductor. No proporciona ningún contenido: usas tus propias fuentes.
 
 <p align="center">
-  <img src="../assets/demo.gif" alt="Demo: perfil, inicio, ficha de película, TV en directo, guía y búsqueda" width="100%" />
+  <img src="../assets/demo-en.gif" alt="Demo: perfil, inicio, ficha de película, TV en directo, guía y búsqueda" width="100%" />
   <br />
-  <sub>Grabado con la fuente de demostración y los metadatos de TMDB. La interfaz se muestra en francés.</sub>
+  <sub>Grabado con la fuente de demostración y los metadatos de TMDB. La interfaz se muestra en inglés.</sub>
 </p>
 
 ## ⚡ Funciones

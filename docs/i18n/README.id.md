@@ -30,9 +30,9 @@
 > Cyberstream adalah pemutar. Aplikasi ini tidak menyediakan konten apa pun: kamu memakai sumbermu sendiri.
 
 <p align="center">
-  <img src="../assets/demo.gif" alt="Demo: profil, beranda, halaman film, TV langsung, panduan, dan pencarian" width="100%" />
+  <img src="../assets/demo-en.gif" alt="Demo: profil, beranda, halaman film, TV langsung, panduan, dan pencarian" width="100%" />
   <br />
-  <sub>Direkam dengan sumber demo dan metadata TMDB. Antarmuka ditampilkan dalam bahasa Prancis.</sub>
+  <sub>Direkam dengan sumber demo dan metadata TMDB. Antarmuka ditampilkan dalam bahasa Inggris.</sub>
 </p>
 
 ## ⚡ Fitur

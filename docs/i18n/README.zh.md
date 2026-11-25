@@ -30,9 +30,9 @@
 > Cyberstream 只是一个播放器，不提供任何内容：你需要使用自己的源。
 
 <p align="center">
-  <img src="../assets/demo.gif" alt="演示：个人资料、首页、电影页、直播、节目单和搜索" width="100%" />
+  <img src="../assets/demo-en.gif" alt="演示：个人资料、首页、电影页、直播、节目单和搜索" width="100%" />
   <br />
-  <sub>使用演示源和 TMDB 元数据录制。界面显示为法语。</sub>
+  <sub>使用演示源和 TMDB 元数据录制。界面显示为英语。</sub>
 </p>
 
 ## ⚡ 功能

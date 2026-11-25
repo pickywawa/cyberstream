@@ -30,9 +30,9 @@
 > Cyberstream è un lettore. Non fornisce alcun contenuto: usi le tue sorgenti.
 
 <p align="center">
-  <img src="../assets/demo.gif" alt="Demo: profilo, home, scheda film, TV in diretta, guida e ricerca" width="100%" />
+  <img src="../assets/demo-en.gif" alt="Demo: profilo, home, scheda film, TV in diretta, guida e ricerca" width="100%" />
   <br />
-  <sub>Registrato con la sorgente demo e i metadati TMDB. L'interfaccia è mostrata in francese.</sub>
+  <sub>Registrato con la sorgente demo e i metadati TMDB. L'interfaccia è mostrata in inglese.</sub>
 </p>
 
 ## ⚡ Funzioni

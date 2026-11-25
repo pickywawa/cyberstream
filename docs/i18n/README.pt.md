@@ -30,9 +30,9 @@ O **Cyberstream** reproduz as suas fontes **Xtream Codes** e **M3U**: canais ao 
 > O Cyberstream é um player. Ele não fornece nenhum conteúdo: você usa as suas próprias fontes.
 
 <p align="center">
-  <img src="../assets/demo.gif" alt="Demo: perfil, início, página de filme, TV ao vivo, guia e busca" width="100%" />
+  <img src="../assets/demo-en.gif" alt="Demo: perfil, início, página de filme, TV ao vivo, guia e busca" width="100%" />
   <br />
-  <sub>Gravado com a fonte de demonstração e os metadados do TMDB. A interface é mostrada em francês.</sub>
+  <sub>Gravado com a fonte de demonstração e os metadados do TMDB. A interface é mostrada em inglês.</sub>
 </p>
 
 ## ⚡ Funções

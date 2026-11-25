@@ -30,9 +30,9 @@
 > Cyberstream is a player. It does not provide any content: you use your own sources.
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="Demo: profile, home, movie page, live TV, guide and search" width="100%" />
+  <img src="docs/assets/demo-en.gif" alt="Demo: home, movie page with its trailer, actor page, live TV and free content" width="100%" />
   <br />
-  <sub>Recorded with the demo source and TMDB metadata. The interface is shown in French.</sub>
+  <sub>Recorded with the demo source and TMDB metadata. The interface is shown in English.</sub>
 </p>
 
 ## ⚡ Features
