@@ -1,6 +1,7 @@
 // Cyberstream site: gallery tabs, install tabs, copy buttons, typed terminal, lightbox, reveal.
-const EN = document.documentElement.lang === 'en';
-const T = EN ? { copy: 'copy', copied: 'copied ✓', shot: 'Screenshot: ' } : { copy: 'copier', copied: 'copié ✓', shot: 'Capture : ' };
+// interface words come from the page (<html data-copy data-copied data-shot>), one page per language
+const D = document.documentElement.dataset;
+const T = { copy: D.copy || 'copy', copied: D.copied || 'copied ✓', shot: D.shot || 'Screenshot: ' };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // tab lists (gallery + install)

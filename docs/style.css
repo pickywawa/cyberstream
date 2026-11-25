@@ -67,8 +67,12 @@ code { font-family: var(--mono); font-size: 0.92em; color: var(--accent); }
 .links a:hover::after { right: 0; }
 .nav-cta { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 .gh { color: var(--text-2); display: grid; place-items: center; }
-.lang { font: 700 0.8rem var(--mono); color: var(--text-2); padding: 5px 8px; border: 1px solid var(--line-2); letter-spacing: 0.05em; }
-.lang:hover { color: var(--accent); border-color: var(--line); text-decoration: none; }
+.lang { font: 600 0.8rem var(--mono); color: var(--text-2); background: transparent; padding: 5px 24px 5px 8px; border: 1px solid var(--line-2); border-radius: 0; cursor: pointer;
+  appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 11px center, right 7px center; background-size: 4px 4px; background-repeat: no-repeat; }
+.lang:hover, .lang:focus-visible { color: var(--accent); border-color: var(--line); }
+.lang option { background: #0b0b0d; color: #e8e8ea; }
+[dir=rtl] .lang { padding: 5px 8px 5px 24px; background-position: left 7px center, left 11px center; }
 .gh:hover { color: var(--text); }
 
 /* ---------- buttons ---------- */
@@ -293,3 +297,7 @@ h3 { margin: 0 0 8px; font-size: 1.12rem; letter-spacing: -0.01em; }
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* right-to-left pages (Arabic, Urdu): code, commands and the terminal stay left-to-right */
+[dir=rtl] pre, [dir=rtl] code, [dir=rtl] .term, [dir=rtl] .mono { direction: ltr; unicode-bidi: isolate; }
+[dir=rtl] .term { text-align: left; }

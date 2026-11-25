@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="hi" data-copy="कॉपी" data-copied="कॉपी हो गया ✓" data-shot="स्क्रीनशॉट: ">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cyberstream — Rust इंजन वाला IPTV प्लेयर</title>
+  <meta name="description" content="Cyberstream: Android, Android TV, iOS, डेस्कटॉप और वेब के लिए IPTV प्लेयर। Xtream और M3U स्रोत, टीवी गाइड, फ़िल्में, सीरीज़, कैच-अप। WebAssembly में कंपाइल किया गया एक ही Rust इंजन।" />
+  <meta name="theme-color" content="#07080b" />
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml" />
+  <link rel="alternate" hreflang="fr" href="https://pickywawa.github.io/cyberstream/" />
+  <link rel="alternate" hreflang="en" href="https://pickywawa.github.io/cyberstream/en/" />
+  <link rel="alternate" hreflang="es" href="https://pickywawa.github.io/cyberstream/es/" />
+  <link rel="alternate" hreflang="de" href="https://pickywawa.github.io/cyberstream/de/" />
+  <link rel="alternate" hreflang="it" href="https://pickywawa.github.io/cyberstream/it/" />
+  <link rel="alternate" hreflang="pt" href="https://pickywawa.github.io/cyberstream/pt/" />
+  <link rel="alternate" hreflang="ru" href="https://pickywawa.github.io/cyberstream/ru/" />
+  <link rel="alternate" hreflang="zh" href="https://pickywawa.github.io/cyberstream/zh/" />
+  <link rel="alternate" hreflang="ja" href="https://pickywawa.github.io/cyberstream/ja/" />
+  <link rel="alternate" hreflang="hi" href="https://pickywawa.github.io/cyberstream/hi/" />
+  <link rel="alternate" hreflang="bn" href="https://pickywawa.github.io/cyberstream/bn/" />
+  <link rel="alternate" hreflang="ur" href="https://pickywawa.github.io/cyberstream/ur/" />
+  <link rel="alternate" hreflang="ar" href="https://pickywawa.github.io/cyberstream/ar/" />
+  <link rel="alternate" hreflang="id" href="https://pickywawa.github.io/cyberstream/id/" />
+  <link rel="alternate" hreflang="x-default" href="https://pickywawa.github.io/cyberstream/en/" />
+  <meta property="og:title" content="Cyberstream — Rust इंजन वाला IPTV प्लेयर" />
+  <meta property="og:description" content="Xtream, M3U, टीवी गाइड, फ़िल्में, सीरीज़ और कैच-अप। Android, Android TV, iOS, डेस्कटॉप और वेब।" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pickywawa.github.io/cyberstream/hi/" />
+  <meta property="og:image" content="https://pickywawa.github.io/cyberstream/assets/og-en.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Cyberstream, होम">
+      <img src="../assets/icon.svg" alt="" width="34" height="34" />
+      <span>Cyber<b>stream</b></span>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#features">सुविधाएँ</a>
+      <a href="#screenshots">स्क्रीनशॉट</a>
+      <a href="#engine">इंजन</a>
+      <a href="#install">इंस्टॉल</a>
+    </nav>
+    <div class="nav-cta">
+      <select class="lang" aria-label="Language" onchange="location.href=this.value">
+        <option value="../" lang="fr">Français</option>
+        <option value="../en/" lang="en">English</option>
+        <option value="../es/" lang="es">Español</option>
+        <option value="../de/" lang="de">Deutsch</option>
+        <option value="../it/" lang="it">Italiano</option>
+        <option value="../pt/" lang="pt">Português</option>
+        <option value="../ru/" lang="ru">Русский</option>
+        <option value="../zh/" lang="zh">中文</option>
+        <option value="../ja/" lang="ja">日本語</option>
+        <option value="../hi/" lang="hi" selected>हिन्दी</option>
+        <option value="../bn/" lang="bn">বাংলা</option>
+        <option value="../ur/" lang="ur">اردو</option>
+        <option value="../ar/" lang="ar">العربية</option>
+        <option value="../id/" lang="id">Bahasa Indonesia</option>
+      </select>
+      <a class="gh" href="https://github.com/pickywawa/cyberstream" aria-label="GitHub पर सोर्स कोड">
+        <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+      <a class="btn btn-accent sm" href="https://github.com/pickywawa/cyberstream/releases/latest">डाउनलोड</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="kicker"><span class="dot"></span> v2.0.0 · Android और Android TV पर उपलब्ध</p>
+        <h1 class="glitch" data-text="आपका पूरा टीवी।">आपका पूरा टीवी।</h1>
+        <h1 class="h1-2">एक <span class="neon">Rust इंजन</span>।</h1>
+        <p class="lead">Cyberstream आपके <b>Xtream</b> और <b>M3U</b> स्रोत चलाता है: लाइव चैनल, टीवी गाइड, फ़िल्में, सीरीज़ और कैच-अप। वही WebAssembly मॉड्यूल फ़ोन, टीवी, कंप्यूटर और ब्राउज़र पर चलता है।</p>
+        <div class="cta-row">
+          <a class="btn btn-accent" href="https://github.com/pickywawa/cyberstream/releases/latest">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+            APK डाउनलोड करें
+          </a>
+          <a class="btn btn-ghost" href="#screenshots">इंटरफ़ेस देखें</a>
+        </div>
+        <div class="term" aria-label="उदाहरण कमांड">
+          <span class="prompt">~/cyberstream</span><span class="sep">❯</span>
+          <span class="typed" data-lines='["npm run android:apk","cargo test --locked","npm run desktop","npm run dev -- --host 127.0.0.1"]'></span><span class="caret"></span>
+        </div>
+      </div>
+
+      <div class="hero-screen">
+        <div class="frame">
+          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <div class="frame-bar">
+            <span></span><span></span><span></span>
+            <em>cyberstream://demo</em>
+            <strong class="rec">● REC</strong>
+          </div>
+          <video src="../assets/demo-en.mp4" poster="../assets/demo-en-poster.webp" autoplay muted loop playsinline preload="metadata" aria-label="Cyberstream इंटरफ़ेस का डेमो"></video>
+        </div>
+        <p class="caption">डेमो स्रोत और TMDB मेटाडेटा के साथ रिकॉर्ड किया गया।</p>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" aria-label="आँकड़ों में">
+      <div><b>1</b><span>साझा Rust इंजन</span></div>
+      <div><b>5</b><span>प्लेटफ़ॉर्म: Android, टीवी, iOS, डेस्कटॉप, वेब</span></div>
+      <div><b>2</b><span>स्रोत: Xtream Codes और M3U</span></div>
+      <div><b>0</b><span>सामग्री दी जाती है: अपने स्रोत इस्तेमाल करें</span></div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <header class="sec-head">
+        <p class="tag">// 01 — सुविधाएँ</p>
+        <h2>रिमोट के लिए बना,<br />फ़ोन पर भी सहज।</h2>
+      </header>
+      <div class="features">
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3zM8 3l4 4 4-4"/></svg></div>
+          <h3>Xtream & M3U</h3>
+          <p>कैटलॉग हिस्सों में पढ़े जाते हैं, बैकअप सर्वर, डिफ़रेंशियल सिंक: सिर्फ़ बदली हुई पंक्तियाँ दोबारा लिखी जाती हैं।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 10h18M9 5v14"/></svg></div>
+          <h3>XMLTV गाइड</h3>
+          <p>वर्चुअलाइज़्ड चैनल × समय ग्रिड, दिन-ब-दिन नेविगेशन, gzip और टाइम ज़ोन का समर्थन। पिछले कार्यक्रम कैच-अप में चलते हैं।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 4v5M15 4v5"/></svg></div>
+          <h3>फ़िल्में और सीरीज़</h3>
+          <p>TMDB से समृद्ध पेज: कलाकार, कलेक्शन, आयु रेटिंग, सीज़न और एपिसोड, आगे देखना और अगला एपिसोड।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14M3 12a9 9 0 1 0 2.6-6.4"/></svg></div>
+          <h3>लाइव पॉज़</h3>
+          <p>30 से 60 मिनट का स्थानीय बफ़र: HLS स्ट्रीम पर पॉज़, ±10 सेकंड और लाइव पर वापसी, बैकअप स्ट्रीम पर अपने-आप स्विच के साथ।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+          <h3>वॉइस कमांड</h3>
+          <p>“चैनल 5 लगाओ”, “Dune खोजो”, “30 सेकंड पीछे जाओ”। डिवाइस पर ही समझे जाते हैं, इंटरफ़ेस की 14 भाषाओं में।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></svg></div>
+          <h3>QR कोड से सेटअप</h3>
+          <p>टीवी पर दिख रहा कोड फ़ोन से स्कैन करें: रिमोट से URL टाइप किए बिना प्रोफ़ाइल, स्रोत और सेटिंग्स आ जाती हैं।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4M12 8v4l3 2"/></svg></div>
+          <h3>मुफ़्त कैच-अप</h3>
+          <p>ARTE, france.tv और Okoo शामिल, साथ में YouTube RSS फ़ीड। सार्वजनिक चैनलों के लिए आधिकारिक स्ट्रीम पहले आती हैं।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zM8 20h8M7 11h4M13 11h4"/></svg></div>
+          <h3>सबटाइटल और Trakt</h3>
+          <p>SRT, WebVTT और OpenSubtitles हैश खोज। Trakt स्क्रॉबलिंग, वॉचलिस्ट और होम स्क्रीन पर सुझाव।</p>
+        </article>
+        <article class="feat">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div>
+          <h3>प्रोफ़ाइल और तिजोरी</h3>
+          <p>कई प्रोफ़ाइल, हर एक की अपनी भाषा, अवतार और आयु सीमा। सेवाओं के टोकन डिवाइस के सुरक्षित भंडार में रहते हैं।</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SCREENSHOTS -->
+    <section id="screenshots" class="section">
+      <header class="sec-head">
+        <p class="tag">// 02 — इंटरफ़ेस</p>
+        <h2>गहरा इंटरफ़ेस,<br />साफ़ और तेज़।</h2>
+      </header>
+
+      <div class="gallery">
+        <div class="tabs" role="tablist" aria-label="स्क्रीन">
+          <button role="tab" aria-selected="true" data-src="../assets/screens/home.webp" data-cap="होम: कैरोसेल, श्रेणियाँ और नई सामग्री की पंक्तियाँ।">होम</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/home-rows.webp" data-cap="रेटिंग के साथ फ़िल्मों और सीरीज़ की पंक्तियाँ।">पंक्तियाँ</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/live.webp" data-cap="लाइव टीवी: अभी, आज रात और श्रेणियाँ।">लाइव टीवी</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/guide.webp" data-cap="टीवी गाइड: वर्चुअलाइज़्ड ग्रिड और “अभी” की रेखा।">टीवी गाइड</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/movie.webp" data-cap="फ़िल्म पेज: कहानी, आयु रेटिंग, कलाकार।">फ़िल्म</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/series-episodes.webp" data-cap="सीरीज़: बाएँ से दाएँ सीज़न और एपिसोड।">सीरीज़</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/player.webp" data-cap="प्लेयर: ±10 सेकंड, ट्रैक, जानकारी, पिक्चर-इन-पिक्चर। टेस्ट स्ट्रीम: Big Buck Bunny © Blender Foundation, CC BY।">प्लेयर</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/search.webp" data-cap="टाइप करते ही खोज: चैनल, फ़िल्में, सीरीज़।">खोज</button>
+          <button role="tab" aria-selected="false" data-src="../assets/screens/profiles.webp" data-cap="“कौन देख रहा है?”: हर व्यक्ति की एक प्रोफ़ाइल।">प्रोफ़ाइल</button>
+        </div>
+        <figure class="stage frame">
+          <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <img id="stage-img" src="../assets/screens/home.webp" alt="Cyberstream होम स्क्रीन का स्क्रीनशॉट" width="1440" height="900" />
+          <figcaption id="stage-cap">होम: कैरोसेल, श्रेणियाँ और नई सामग्री की पंक्तियाँ।</figcaption>
+        </figure>
+      </div>
+
+      <div class="phones">
+        <div class="phones-copy">
+          <p class="tag">// मोबाइल</p>
+          <h3>आपकी जेब में भी।</h3>
+          <p>फ़ोन पर टैब बार नीचे आ जाता है, पंक्तियाँ उँगली से स्क्रॉल होती हैं और प्लेयर पिक्चर-इन-पिक्चर सपोर्ट करता है। वही APK फ़ोन पर इंस्टॉल होता है और Android TV लॉन्चर में भी दिखता है।</p>
+        </div>
+        <div class="phone-row">
+          <div class="phone"><img src="../assets/screens/mobile-home.webp" alt="फ़ोन पर होम" width="390" height="844" /></div>
+          <div class="phone up"><img src="../assets/screens/mobile-rows.webp" alt="फ़ोन पर पंक्तियाँ" width="390" height="844" /></div>
+          <div class="phone"><img src="../assets/screens/mobile-movie.webp" alt="फ़ोन पर फ़िल्म पेज" width="390" height="844" /></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENGINE -->
+    <section id="engine" class="section">
+      <header class="sec-head">
+        <p class="tag">// 03 — इंजन</p>
+        <h2>Rust कोर,<br />हर जगह WebAssembly।</h2>
+      </header>
+      <div class="arch">
+        <div class="arch-core">
+          <div class="core-box">
+            <span class="mono">rust/ → wasm32</span>
+            <strong>Cyberstream इंजन</strong>
+            <ul>
+              <li>Xtream, M3U, XMLTV पार्सिंग</li>
+              <li>खोज इंडेक्स, रैंकिंग</li>
+              <li>ग्रिड, व्यू, D-pad नेविगेशन</li>
+              <li>सबटाइटल, कैच-अप, Trakt</li>
+              <li>LZ4, gzip कम्प्रेशन</li>
+            </ul>
+          </div>
+        </div>
+        <div class="arch-wires" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="arch-hosts">
+          <div class="host"><b>Android & TV</b><span>Capacitor · Media3 · इमेज कैश · टाइमशिफ़्ट</span></div>
+          <div class="host"><b>iOS</b><span>Swift होस्ट · Capacitor</span></div>
+          <div class="host"><b>डेस्कटॉप</b><span>Electron · macOS, Windows, Linux</span></div>
+          <div class="host"><b>Web</b><span>React · IndexedDB · Web Worker</span></div>
+        </div>
+      </div>
+      <div class="perf">
+        <div><b>24 MiB</b><span>कम मेमोरी वाले डिवाइस पर मीडिया बफ़र</span></div>
+        <div><b>96 MiB</b><span>इमेज डिस्क कैश, LRU निष्कासन</span></div>
+        <div><b>0.4 s</b><span>फ़ोन पर टीवी गाइड खुलने में</span></div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install" class="section">
+      <header class="sec-head">
+        <p class="tag">// 04 — इंस्टॉल</p>
+        <h2>दो मिनट में तैयार।</h2>
+      </header>
+      <div class="install">
+        <div class="tabs small" role="tablist" aria-label="इंस्टॉल का तरीका">
+          <button role="tab" aria-selected="true" data-panel="p-android">Android & TV</button>
+          <button role="tab" aria-selected="false" data-panel="p-source">सोर्स से</button>
+          <button role="tab" aria-selected="false" data-panel="p-desktop">डेस्कटॉप</button>
+        </div>
+        <div class="panel" id="p-android">
+          <ol class="steps">
+            <li><a href="https://github.com/pickywawa/cyberstream/releases/latest">नवीनतम रिलीज़</a> से <code>Cyberstream-x.y.z.apk</code> डाउनलोड करें।</li>
+            <li>इसे फ़ोन पर इंस्टॉल करें, या <code>adb</code> से टीवी पर:</li>
+          </ol>
+          <div class="code"><button class="कॉपी" aria-label="कॉपी करें">कॉपी</button><pre><code>adb -d install -r Cyberstream-1.0.1.apk</code></pre></div>
+          <p class="note">कम से कम Android 7 (API 24), WebAssembly सपोर्ट करने वाले WebView के साथ। उसके बाद ऐप ख़ुद GitHub पर नए संस्करण जाँचता है।</p>
+        </div>
+        <div class="panel" id="p-source" hidden>
+          <p class="note">WebAssembly टार्गेट के साथ स्थिर Rust, Node.js 22.12 या बाद का, और npm।</p>
+          <div class="code"><button class="कॉपी" aria-label="कॉपी करें">कॉपी</button><pre><code>rustup target add wasm32-unknown-unknown
+cargo install --locked wasm-bindgen-cli --version 0.2.108
+npm ci
+cargo test --locked &amp;&amp; npm test
+npm run dev -- --host 127.0.0.1</code></pre></div>
+          <p class="note">डेवलपमेंट में, बिना सब्सक्रिप्शन आज़माने के लिए सेटअप के दौरान डेमो स्रोत चुनें।</p>
+        </div>
+        <div class="panel" id="p-desktop" hidden>
+          <p class="note">डेस्कटॉप संस्करण Electron का उपयोग करता है। इसे स्थानीय रूप से चलाएँ या macOS, Windows और Linux पैकेज बनाएँ:</p>
+          <div class="code"><button class="कॉपी" aria-label="कॉपी करें">कॉपी</button><pre><code>npm run desktop
+npm run desktop:dist</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <h2>अपना स्रोत जोड़ें। <span class="neon">प्ले दबाएँ।</span></h2>
+      <div class="cta-row center">
+        <a class="btn btn-accent" href="https://github.com/pickywawa/cyberstream/releases/latest">Cyberstream डाउनलोड करें</a>
+        <a class="btn btn-ghost" href="https://github.com/pickywawa/cyberstream">सोर्स कोड</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="brand small"><img src="../assets/icon.svg" alt="" width="22" height="22" /><span>Cyber<b>stream</b></span></div>
+    <p>Cyberstream एक प्लेयर है। यह कोई सामग्री न देता है, न होस्ट करता है, न सूचीबद्ध करता है: आप अपने स्रोत इस्तेमाल करते हैं। कोड MIT लाइसेंस के तहत जारी।</p>
+    <p class="dim">पोस्टर, फ़ोटो और मेटाडेटा: <a href="https://www.themoviedb.org/">TMDB</a>। यह उत्पाद TMDB API का उपयोग करता है, लेकिन TMDB द्वारा समर्थित या प्रमाणित नहीं है। चैनल लोगो: <a href="https://github.com/iptv-org/database">iptv-org</a> डेटाबेस; ट्रेडमार्क और चित्र उनके मालिकों के हैं। प्लेयर वीडियो: टेस्ट स्ट्रीम <i>Big Buck Bunny</i> © Blender Foundation, CC BY 3.0।</p>
+  </footer>
+
+  <div class="lightbox" hidden><img alt="" /></div>
+  <script src="../main.js" defer></script>
+</body>
+</html>

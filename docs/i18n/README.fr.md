@@ -199,7 +199,7 @@ Le mode performance est activé par défaut sur Android. L’accueil lit un éch
 
 ## 🌐 Site
 
-Le site vitrine est dans [`docs/`](../) (HTML, CSS et JS sans build), en français à la racine et en anglais dans `docs/en/`. Pour le publier : *Settings › Pages › Deploy from a branch*, branche `main`, dossier `/docs`. Aperçu local :
+Le site vitrine est dans [`docs/`](../) (HTML, CSS et JS), en français à la racine et dans 13 autres langues dans `docs/<langue>/`. La page anglaise `docs/en/index.html` sert de source aux traductions : après l’avoir modifiée, mettez à jour les tables de textes de `scripts/site/` et lancez `node scripts/site/build.mjs`. Pour le publier : *Settings › Pages › Deploy from a branch*, branche `main`, dossier `/docs`. Aperçu local :
 
 ```sh
 python3 -m http.server 8090 -d docs

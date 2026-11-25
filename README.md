@@ -199,7 +199,7 @@ Performance mode is on by default on Android. Home reads a bounded sample of mov
 
 ## 🌐 Website
 
-The website lives in [`docs/`](docs/) (plain HTML, CSS and JS, no build step), in French at the root and in English under `docs/en/`. It is published with GitHub Pages from the `main` branch, `/docs` folder. Local preview:
+The website lives in [`docs/`](docs/) (plain HTML, CSS and JS), in French at the root and in 13 other languages under `docs/<lang>/`. The English page `docs/en/index.html` is the source of the translated ones: after changing it, update the string tables in `scripts/site/` and run `node scripts/site/build.mjs`. It is published with GitHub Pages from the `main` branch, `/docs` folder. Local preview:
 
 ```sh
 python3 -m http.server 8090 -d docs
