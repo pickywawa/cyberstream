@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — Rust ইঞ্জিনের IPTV প্লেয়ার" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — Rust ইঞ্জিনের IPTV প্লেয়ার" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="সর্বশেষ সংস্করণ" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/engine-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="MIT লাইসেন্স" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="MIT লাইসেন্স" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="প্ল্যাটফর্ম" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-%E0%A6%B8%E0%A7%8D%E0%A6%95%E0%A7%8D%E0%A6%B0%E0%A6%BF%E0%A6%A8%E0%A6%B6%E0%A6%9F">স্ক্রিনশট</a> ·
   <a href="#%EF%B8%8F-%E0%A6%AC%E0%A6%BF%E0%A6%B2%E0%A7%8D%E0%A6%A1-%E0%A6%93-%E0%A6%9F%E0%A7%87%E0%A6%B8%E0%A7%8D%E0%A6%9F">বিল্ড</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <b>বাংলা</b> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <b>বাংলা</b> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 > Cyberstream একটি প্লেয়ার। এটি কোনো কনটেন্ট দেয় না: আপনি নিজের উৎস ব্যবহার করেন।
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="ডেমো: প্রোফাইল, হোম, সিনেমার পাতা, লাইভ টিভি, গাইড ও সার্চ" width="100%" />
+  <img src="../assets/demo.gif" alt="ডেমো: প্রোফাইল, হোম, সিনেমার পাতা, লাইভ টিভি, গাইড ও সার্চ" width="100%" />
   <br />
   <sub>ডেমো উৎস ও TMDB মেটাডেটা দিয়ে রেকর্ড করা। ইন্টারফেস ফরাসি ভাষায় দেখানো হয়েছে।</sub>
 </p>
@@ -118,25 +118,25 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="সিনেমা ও সিরিজের সারিসহ হোম" /><p align="center"><sub>হোম</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="লাইভ টিভি" /><p align="center"><sub>লাইভ টিভি</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="সিনেমা ও সিরিজের সারিসহ হোম" /><p align="center"><sub>হোম</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="লাইভ টিভি" /><p align="center"><sub>লাইভ টিভি</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="টিভি গাইড" /><p align="center"><sub>টিভি গাইড</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="সিনেমার পাতা" /><p align="center"><sub>সিনেমার পাতা</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="টিভি গাইড" /><p align="center"><sub>টিভি গাইড</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="সিনেমার পাতা" /><p align="center"><sub>সিনেমার পাতা</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="একটি সিরিজের সিজন ও পর্ব" /><p align="center"><sub>সিরিজ</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="প্লেয়ার" /><p align="center"><sub>প্লেয়ার — টেস্ট স্ট্রিম <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="একটি সিরিজের সিজন ও পর্ব" /><p align="center"><sub>সিরিজ</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="প্লেয়ার" /><p align="center"><sub>প্লেয়ার — টেস্ট স্ট্রিম <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="ফোনে হোম" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="ফোনে হোম" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="ফোনে সারি" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="ফোনে সারি" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="ফোনে সিনেমার পাতা" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="ফোনে সিনেমার পাতা" width="30%" />
 </p>
 
 ## 📦 ইনস্টল
@@ -163,7 +163,7 @@ Android প্যাকেজ হলো `app.cyberstream.player`। একই AP
 | ইন্টারফেস ও রিমোট | প্রধান মেনু, প্রোফাইল টাইল, অনুবাদ, দিকনির্দেশক নেভিগেশন, ভার্চুয়ালাইজেশন ও ভয়েস কমান্ড Rust-এ। Trakt ক্লায়েন্ট, OpenSubtitles র‍্যাঙ্কিং ও QR কোড বিনিময়ের যাচাইও। হোম, গ্রিড, সার্চ ফলাফল ও Replay পাতার Rust ভিউ আছে। React ও TypeScript স্ক্রিন মাউন্ট করে, ইভেন্ট ও কয়েকটি সার্ভিস ইন্টিগ্রেশন সামলায়। |
 | ডিভাইসের বৈশিষ্ট্য | Android, Media3, ক্যাশ, টাইমশিফট, সুরক্ষিত ভাণ্ডার ও টিভি পেয়ারিংয়ের জন্য Java ব্রিজ রাখে। iOS হোস্ট Swift এবং ডেস্কটপ হোস্ট Electron ব্যবহার করে। |
 
-মাইগ্রেশনের সময় ব্যবহারের প্রবাহ ধরে রাখতে CyberTV-এর স্ক্রিনগুলো নেওয়া হয়েছে। Android TV, iOS ও ডেস্কটপে পূর্ণ সমতা এখনও পরীক্ষা করা বাকি। মূল স্পেসিফিকেশন [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md)-এ (ফরাসি ভাষায়) আছে।
+মাইগ্রেশনের সময় ব্যবহারের প্রবাহ ধরে রাখতে CyberTV-এর স্ক্রিনগুলো নেওয়া হয়েছে। Android TV, iOS ও ডেস্কটপে পূর্ণ সমতা এখনও পরীক্ষা করা বাকি। মূল স্পেসিফিকেশন [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md)-এ (ফরাসি ভাষায়) আছে।
 
 ## 🛠️ বিল্ড ও টেস্ট
 
@@ -199,7 +199,7 @@ Android-এ পারফরম্যান্স মোড ডিফল্টভ
 
 ## 🌐 ওয়েবসাইট
 
-ওয়েবসাইট [`docs/`](docs/)-এ আছে (সাধারণ HTML, CSS ও JS, কোনো বিল্ড ধাপ নেই), রুটে ফরাসি এবং `docs/en/`-এ ইংরেজি। এটি GitHub Pages দিয়ে `main` ব্রাঞ্চের `/docs` ফোল্ডার থেকে প্রকাশিত হয়। লোকাল প্রিভিউ:
+ওয়েবসাইট [`docs/`](../)-এ আছে (সাধারণ HTML, CSS ও JS, কোনো বিল্ড ধাপ নেই), রুটে ফরাসি এবং `docs/en/`-এ ইংরেজি। এটি GitHub Pages দিয়ে `main` ব্রাঞ্চের `/docs` ফোল্ডার থেকে প্রকাশিত হয়। লোকাল প্রিভিউ:
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -207,7 +207,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 লাইসেন্স
 
-কোড [MIT](LICENSE) লাইসেন্সের অধীনে প্রকাশিত।
+কোড [MIT](../../LICENSE) লাইসেন্সের অধীনে প্রকাশিত।
 
 ---
 

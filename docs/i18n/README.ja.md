@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — Rust エンジンの IPTV プレーヤー" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — Rust エンジンの IPTV プレーヤー" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="最新バージョン" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/engine-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="MIT ライセンス" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="MIT ライセンス" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="プラットフォーム" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88">スクリーンショット</a> ·
   <a href="#%EF%B8%8F-%E3%83%93%E3%83%AB%E3%83%89%E3%81%A8%E3%83%86%E3%82%B9%E3%83%88">ビルド</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <b>日本語</b> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <b>日本語</b> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 > Cyberstream はプレーヤーです。コンテンツは一切提供しません。ご自身のソースをお使いください。
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="デモ：プロフィール、ホーム、映画ページ、ライブ TV、番組表、検索" width="100%" />
+  <img src="../assets/demo.gif" alt="デモ：プロフィール、ホーム、映画ページ、ライブ TV、番組表、検索" width="100%" />
   <br />
   <sub>デモソースと TMDB のメタデータで録画。インターフェースはフランス語で表示されています。</sub>
 </p>
@@ -118,25 +118,25 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="映画とシリーズの列があるホーム" /><p align="center"><sub>ホーム</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="ライブ TV" /><p align="center"><sub>ライブ TV</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="映画とシリーズの列があるホーム" /><p align="center"><sub>ホーム</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="ライブ TV" /><p align="center"><sub>ライブ TV</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="番組表" /><p align="center"><sub>番組表</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="映画ページ" /><p align="center"><sub>映画ページ</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="番組表" /><p align="center"><sub>番組表</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="映画ページ" /><p align="center"><sub>映画ページ</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="シリーズのシーズンとエピソード" /><p align="center"><sub>シリーズ</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="プレーヤー" /><p align="center"><sub>プレーヤー — テストストリーム <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="シリーズのシーズンとエピソード" /><p align="center"><sub>シリーズ</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="プレーヤー" /><p align="center"><sub>プレーヤー — テストストリーム <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="スマートフォンのホーム" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="スマートフォンのホーム" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="スマートフォンの列表示" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="スマートフォンの列表示" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="スマートフォンの映画ページ" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="スマートフォンの映画ページ" width="30%" />
 </p>
 
 ## 📦 インストール
@@ -163,7 +163,7 @@ Android パッケージ名は `app.cyberstream.player` です。同じ APK が�
 | インターフェースとリモコン | メインメニュー、プロフィールタイル、翻訳、方向キー操作、仮想化、音声コマンドは Rust です。Trakt クライアント、OpenSubtitles の並べ替え、QR コード交換の検証も同様です。ホーム、グリッド、検索結果、見逃し配信ページには Rust のビューがあります。React と TypeScript は画面のマウント、イベント処理、いくつかのサービス連携を担当します。 |
 | 端末機能 | Android は Media3、キャッシュ、タイムシフト、安全な保管領域、テレビのペアリングのための Java ブリッジを維持しています。iOS ホストは Swift、デスクトップホストは Electron です。 |
 
-移行中も利用の流れを保つため、CyberTV の画面を引き継いでいます。Android TV、iOS、デスクトップでの完全な同等性はまだ検証が必要です。元の仕様は [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md)（フランス語）にあります。
+移行中も利用の流れを保つため、CyberTV の画面を引き継いでいます。Android TV、iOS、デスクトップでの完全な同等性はまだ検証が必要です。元の仕様は [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md)（フランス語）にあります。
 
 ## 🛠️ ビルドとテスト
 
@@ -199,7 +199,7 @@ Android ではパフォーマンスモードが既定で有効です。ホーム
 
 ## 🌐 ウェブサイト
 
-ウェブサイトは [`docs/`](docs/) にあります（素の HTML、CSS、JS、ビルド不要）。ルートがフランス語、`docs/en/` が英語です。GitHub Pages で `main` ブランチの `/docs` フォルダから公開しています。ローカルプレビュー：
+ウェブサイトは [`docs/`](../) にあります（素の HTML、CSS、JS、ビルド不要）。ルートがフランス語、`docs/en/` が英語です。GitHub Pages で `main` ブランチの `/docs` フォルダから公開しています。ローカルプレビュー：
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -207,7 +207,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 ライセンス
 
-コードは [MIT](LICENSE) ライセンスで公開されています。
+コードは [MIT](../../LICENSE) ライセンスで公開されています。
 
 ---
 

@@ -3,6 +3,7 @@ name = "cyberstream"
 version = "0.1.0"
 license = "MIT"
 edition = "2024"
+build = "rust/build.rs"
 
 [lib]
 path = "rust/lib.rs"

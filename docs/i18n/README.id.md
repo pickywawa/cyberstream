@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — pemutar IPTV dengan mesin Rust" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — pemutar IPTV dengan mesin Rust" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="Versi terbaru" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=versi" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/mesin-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="Lisensi MIT" src="https://img.shields.io/badge/lisensi-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="Lisensi MIT" src="https://img.shields.io/badge/lisensi-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="Platform" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-tangkapan-layar">Tangkapan layar</a> ·
   <a href="#%EF%B8%8F-build-dan-uji">Build</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <b>Bahasa Indonesia</b>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <b>Bahasa Indonesia</b>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 > Cyberstream adalah pemutar. Aplikasi ini tidak menyediakan konten apa pun: kamu memakai sumbermu sendiri.
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="Demo: profil, beranda, halaman film, TV langsung, panduan, dan pencarian" width="100%" />
+  <img src="../assets/demo.gif" alt="Demo: profil, beranda, halaman film, TV langsung, panduan, dan pencarian" width="100%" />
   <br />
   <sub>Direkam dengan sumber demo dan metadata TMDB. Antarmuka ditampilkan dalam bahasa Prancis.</sub>
 </p>
@@ -118,25 +118,25 @@ Jumlah saluran gratis berasal dari daftar iptv-org pada saat penulisan. Sebagian
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="Beranda dengan baris film dan serial" /><p align="center"><sub>Beranda</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="TV langsung" /><p align="center"><sub>TV langsung</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="Beranda dengan baris film dan serial" /><p align="center"><sub>Beranda</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="TV langsung" /><p align="center"><sub>TV langsung</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="Panduan TV" /><p align="center"><sub>Panduan TV</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="Halaman film" /><p align="center"><sub>Halaman film</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="Panduan TV" /><p align="center"><sub>Panduan TV</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="Halaman film" /><p align="center"><sub>Halaman film</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="Musim dan episode sebuah serial" /><p align="center"><sub>Serial</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="Pemutar" /><p align="center"><sub>Pemutar — stream uji <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="Musim dan episode sebuah serial" /><p align="center"><sub>Serial</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="Pemutar" /><p align="center"><sub>Pemutar — stream uji <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="Beranda di ponsel" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="Beranda di ponsel" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="Baris di ponsel" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="Baris di ponsel" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="Halaman film di ponsel" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="Halaman film di ponsel" width="30%" />
 </p>
 
 ## 📦 Instalasi
@@ -163,7 +163,7 @@ Pra-rilis ini mengikuti CyberTV 0.16.0. Porting-nya masih hibrida.
 | Antarmuka dan remote | Menu utama, ubin profil, terjemahan, navigasi arah, virtualisasi, dan perintah suara memakai Rust. Klien Trakt, pengurutan OpenSubtitles, dan validasi pertukaran kode QR juga. Beranda, kisi, hasil pencarian, dan halaman Replay memiliki tampilan Rust. React dan TypeScript memasang layar, menangani event, dan beberapa integrasi layanan. |
 | Fitur perangkat | Android mempertahankan jembatan Java untuk Media3, cache, timeshift, penyimpanan aman, dan pemasangan TV. Host iOS memakai Swift dan host desktop memakai Electron. |
 
-Layar CyberTV dipertahankan agar alur penggunaan tetap sama selama migrasi. Kesetaraan penuh di Android TV, iOS, dan desktop masih perlu diuji. Spesifikasi aslinya ada di [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md) (dalam bahasa Prancis).
+Layar CyberTV dipertahankan agar alur penggunaan tetap sama selama migrasi. Kesetaraan penuh di Android TV, iOS, dan desktop masih perlu diuji. Spesifikasi aslinya ada di [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md) (dalam bahasa Prancis).
 
 ## 🛠️ Build dan uji
 
@@ -199,7 +199,7 @@ Mode performa aktif secara bawaan di Android. Beranda membaca sampel film yang t
 
 ## 🌐 Situs web
 
-Situs web ada di [`docs/`](docs/) (HTML, CSS, dan JS biasa, tanpa langkah build), dalam bahasa Prancis di root dan bahasa Inggris di `docs/en/`. Situs ini diterbitkan dengan GitHub Pages dari branch `main`, folder `/docs`. Pratinjau lokal:
+Situs web ada di [`docs/`](../) (HTML, CSS, dan JS biasa, tanpa langkah build), dalam bahasa Prancis di root dan bahasa Inggris di `docs/en/`. Situs ini diterbitkan dengan GitHub Pages dari branch `main`, folder `/docs`. Pratinjau lokal:
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -207,7 +207,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 Lisensi
 
-Kode dirilis di bawah lisensi [MIT](LICENSE).
+Kode dirilis di bawah lisensi [MIT](../../LICENSE).
 
 ---
 

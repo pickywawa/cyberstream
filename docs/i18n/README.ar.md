@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — مشغّل IPTV بمحرك Rust" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — مشغّل IPTV بمحرك Rust" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="أحدث إصدار" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/engine-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="رخصة MIT" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="رخصة MIT" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="المنصات" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-%D9%84%D9%82%D8%B7%D8%A7%D8%AA-%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A9">لقطات الشاشة</a> ·
   <a href="#%EF%B8%8F-%D8%A7%D9%84%D8%A8%D9%86%D8%A7%D8%A1-%D9%88%D8%A7%D9%84%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1">البناء</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <b>العربية</b> · <a href="README.id.md">Bahasa Indonesia</a>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <b>العربية</b> · <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
 ---
@@ -32,7 +32,7 @@
 > Cyberstream مجرد مشغّل. لا يوفّر أي محتوى: أنت تستخدم مصادرك الخاصة.
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="عرض توضيحي: الملف الشخصي، الرئيسية، صفحة فيلم، البث المباشر، الدليل والبحث" width="100%" />
+  <img src="../assets/demo.gif" alt="عرض توضيحي: الملف الشخصي، الرئيسية، صفحة فيلم، البث المباشر، الدليل والبحث" width="100%" />
   <br />
   <sub>مسجّل باستخدام المصدر التجريبي وبيانات TMDB. الواجهة معروضة بالفرنسية.</sub>
 </p>
@@ -120,25 +120,25 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="الرئيسية مع صفوف الأفلام والمسلسلات" /><p align="center"><sub>الرئيسية</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="البث المباشر" /><p align="center"><sub>البث المباشر</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="الرئيسية مع صفوف الأفلام والمسلسلات" /><p align="center"><sub>الرئيسية</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="البث المباشر" /><p align="center"><sub>البث المباشر</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="دليل البرامج" /><p align="center"><sub>دليل البرامج</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="صفحة فيلم" /><p align="center"><sub>صفحة فيلم</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="دليل البرامج" /><p align="center"><sub>دليل البرامج</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="صفحة فيلم" /><p align="center"><sub>صفحة فيلم</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="مواسم وحلقات مسلسل" /><p align="center"><sub>المسلسلات</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="المشغّل" /><p align="center"><sub>المشغّل — بث تجريبي <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="مواسم وحلقات مسلسل" /><p align="center"><sub>المسلسلات</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="المشغّل" /><p align="center"><sub>المشغّل — بث تجريبي <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="الرئيسية على الهاتف" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="الرئيسية على الهاتف" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="الصفوف على الهاتف" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="الصفوف على الهاتف" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="صفحة فيلم على الهاتف" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="صفحة فيلم على الهاتف" width="30%" />
 </p>
 
 ## 📦 التثبيت
@@ -165,7 +165,7 @@ adb -d install -r Cyberstream-1.0.1.apk
 | الواجهة وجهاز التحكم | تستخدم القوائم الرئيسية وبطاقات الملفات الشخصية والترجمات والتنقّل بالاتجاهات والعرض الافتراضي والأوامر الصوتية Rust. وكذلك عميل Trakt وترتيب OpenSubtitles والتحقق من التبادل عبر رمز QR. للرئيسية والشبكات ونتائج البحث وصفحات Replay واجهات Rust. يتولّى React وTypeScript تركيب الشاشات ومعالجة الأحداث وعدة تكاملات مع الخدمات. |
 | ميزات الجهاز | يحتفظ Android بجسور Java لـMedia3 والتخزين المؤقت والإزاحة الزمنية والمخزن الآمن واقتران التلفزيون. يستخدم مضيف iOS لغة Swift ومضيف سطح المكتب Electron. |
 
-نُقلت شاشات CyberTV للحفاظ على مسارات الاستخدام أثناء الترحيل. لا يزال التكافؤ الكامل على Android TV وiOS وسطح المكتب بحاجة إلى اختبار. المواصفات الأصلية في [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md) (بالفرنسية).
+نُقلت شاشات CyberTV للحفاظ على مسارات الاستخدام أثناء الترحيل. لا يزال التكافؤ الكامل على Android TV وiOS وسطح المكتب بحاجة إلى اختبار. المواصفات الأصلية في [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md) (بالفرنسية).
 
 ## 🛠️ البناء والاختبار
 
@@ -201,7 +201,7 @@ adb -d install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 ## 🌐 الموقع
 
-يوجد الموقع في [`docs/`](docs/) (HTML وCSS وJS بسيطة، دون خطوة بناء)، بالفرنسية في الجذر وبالإنجليزية في `docs/en/`. يُنشر عبر GitHub Pages من الفرع `main`، المجلد `/docs`. معاينة محلية:
+يوجد الموقع في [`docs/`](../) (HTML وCSS وJS بسيطة، دون خطوة بناء)، بالفرنسية في الجذر وبالإنجليزية في `docs/en/`. يُنشر عبر GitHub Pages من الفرع `main`، المجلد `/docs`. معاينة محلية:
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -209,7 +209,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 الرخصة
 
-الشيفرة منشورة بموجب رخصة [MIT](LICENSE).
+الشيفرة منشورة بموجب رخصة [MIT](../../LICENSE).
 
 </div>
 

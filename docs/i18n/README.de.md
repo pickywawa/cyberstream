@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — IPTV-Player mit Rust-Engine" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — IPTV-Player mit Rust-Engine" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="Neueste Version" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/engine-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="MIT-Lizenz" src="https://img.shields.io/badge/lizenz-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="MIT-Lizenz" src="https://img.shields.io/badge/lizenz-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="Plattformen" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-screenshots">Screenshots</a> ·
   <a href="#%EF%B8%8F-bauen-und-testen">Bauen</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <b>Deutsch</b> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <b>Deutsch</b> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 > Cyberstream ist ein Player. Er stellt keine Inhalte bereit: Du nutzt deine eigenen Quellen.
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="Demo: Profil, Startseite, Filmseite, Live-TV, Guide und Suche" width="100%" />
+  <img src="../assets/demo.gif" alt="Demo: Profil, Startseite, Filmseite, Live-TV, Guide und Suche" width="100%" />
   <br />
   <sub>Aufgenommen mit der Demo-Quelle und TMDB-Metadaten. Die Oberfläche ist auf Französisch.</sub>
 </p>
@@ -118,25 +118,25 @@ Die Anzahl der freien Sender stammt aus den iptv-org-Listen zum Zeitpunkt des Sc
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="Startseite mit Film- und Serienreihen" /><p align="center"><sub>Startseite</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="Live-TV" /><p align="center"><sub>Live-TV</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="Startseite mit Film- und Serienreihen" /><p align="center"><sub>Startseite</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="Live-TV" /><p align="center"><sub>Live-TV</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="TV-Guide" /><p align="center"><sub>TV-Guide</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="Filmseite" /><p align="center"><sub>Filmseite</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="TV-Guide" /><p align="center"><sub>TV-Guide</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="Filmseite" /><p align="center"><sub>Filmseite</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="Staffeln und Folgen einer Serie" /><p align="center"><sub>Serien</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="Player" /><p align="center"><sub>Player — Teststream <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="Staffeln und Folgen einer Serie" /><p align="center"><sub>Serien</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="Player" /><p align="center"><sub>Player — Teststream <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="Startseite auf einem Smartphone" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="Startseite auf einem Smartphone" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="Reihen auf einem Smartphone" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="Reihen auf einem Smartphone" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="Filmseite auf einem Smartphone" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="Filmseite auf einem Smartphone" width="30%" />
 </p>
 
 ## 📦 Installation
@@ -163,7 +163,7 @@ Die Vorabversion folgt CyberTV 0.16.0. Die Portierung ist noch hybrid.
 | Oberfläche und Fernbedienung | Hauptmenüs, Profilkacheln, Übersetzungen, Richtungsnavigation, Virtualisierung und Sprachbefehle nutzen Rust. Der Trakt-Client, die OpenSubtitles-Sortierung und die Prüfung des QR-Code-Austauschs ebenfalls. Startseite, Raster, Suchergebnisse und Replay-Seiten haben Rust-Ansichten. React und TypeScript binden Bildschirme ein und verarbeiten Ereignisse und mehrere Dienstintegrationen. |
 | Gerätefunktionen | Android behält Java-Brücken für Media3, Cache, Timeshift, den sicheren Speicher und das TV-Pairing. Der iOS-Host nutzt Swift, der Desktop-Host Electron. |
 
-Die Bildschirme von CyberTV wurden übernommen, um die Abläufe während der Migration beizubehalten. Die volle Parität auf Android TV, iOS und Desktop muss noch getestet werden. Die ursprünglichen Spezifikationen stehen in [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md) (auf Französisch).
+Die Bildschirme von CyberTV wurden übernommen, um die Abläufe während der Migration beizubehalten. Die volle Parität auf Android TV, iOS und Desktop muss noch getestet werden. Die ursprünglichen Spezifikationen stehen in [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md) (auf Französisch).
 
 ## 🛠️ Bauen und testen
 
@@ -199,7 +199,7 @@ Der Leistungsmodus ist auf Android standardmäßig aktiv. Die Startseite liest e
 
 ## 🌐 Website
 
-Die Website liegt in [`docs/`](docs/) (reines HTML, CSS und JS, ohne Build-Schritt), auf Französisch im Stammverzeichnis und auf Englisch unter `docs/en/`. Sie wird mit GitHub Pages aus dem Branch `main`, Ordner `/docs`, veröffentlicht. Lokale Vorschau:
+Die Website liegt in [`docs/`](../) (reines HTML, CSS und JS, ohne Build-Schritt), auf Französisch im Stammverzeichnis und auf Englisch unter `docs/en/`. Sie wird mit GitHub Pages aus dem Branch `main`, Ordner `/docs`, veröffentlicht. Lokale Vorschau:
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -207,7 +207,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 Lizenz
 
-Code unter der [MIT](LICENSE)-Lizenz veröffentlicht.
+Code unter der [MIT](../../LICENSE)-Lizenz veröffentlicht.
 
 ---
 

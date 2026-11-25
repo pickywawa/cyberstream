@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://pickywawa.github.io/cyberstream/en/">
-    <img src="docs/assets/banner-en.png" alt="Cyberstream — 基于 Rust 引擎的 IPTV 播放器" width="100%" />
+    <img src="../assets/banner-en.png" alt="Cyberstream — 基于 Rust 引擎的 IPTV 播放器" width="100%" />
   </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/pickywawa/cyberstream/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/pickywawa/cyberstream?style=for-the-badge&color=4fe3a8&labelColor=0b0b0d&label=version" /></a>
   <img alt="Rust + WebAssembly" src="https://img.shields.io/badge/engine-Rust%20%2B%20Wasm-4fe3a8?style=for-the-badge&labelColor=0b0b0d&logo=rust&logoColor=4fe3a8" />
-  <a href="LICENSE"><img alt="MIT 许可证" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
+  <a href="../../LICENSE"><img alt="MIT 许可证" src="https://img.shields.io/badge/license-MIT-4fe3a8?style=for-the-badge&labelColor=0b0b0d" /></a>
   <img alt="平台" src="https://img.shields.io/badge/Android%20%C2%B7%20TV%20%C2%B7%20iOS%20%C2%B7%20Desktop%20%C2%B7%20Web-2de2ff?style=for-the-badge&labelColor=0b0b0d" />
 </p>
 
@@ -19,7 +19,7 @@
   <a href="#%EF%B8%8F-%E6%88%AA%E5%9B%BE">截图</a> ·
   <a href="#%EF%B8%8F-%E6%9E%84%E5%BB%BA%E4%B8%8E%E6%B5%8B%E8%AF%95">构建</a>
   <br />
-  <a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <b>中文</b> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
+  <a href="../../README.md">English</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.ru.md">Русский</a> · <b>中文</b> · <a href="README.ja.md">日本語</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.ur.md">اردو</a> · <a href="README.ar.md">العربية</a> · <a href="README.id.md">Bahasa Indonesia</a>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 > Cyberstream 只是一个播放器，不提供任何内容：你需要使用自己的源。
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="演示：个人资料、首页、电影页、直播、节目单和搜索" width="100%" />
+  <img src="../assets/demo.gif" alt="演示：个人资料、首页、电影页、直播、节目单和搜索" width="100%" />
   <br />
   <sub>使用演示源和 TMDB 元数据录制。界面显示为法语。</sub>
 </p>
@@ -118,25 +118,25 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screens/home-rows.webp" alt="带电影和剧集行的首页" /><p align="center"><sub>首页</sub></p></td>
-    <td width="50%"><img src="docs/assets/screens/live.webp" alt="直播" /><p align="center"><sub>直播</sub></p></td>
+    <td width="50%"><img src="../assets/screens/home-rows.webp" alt="带电影和剧集行的首页" /><p align="center"><sub>首页</sub></p></td>
+    <td width="50%"><img src="../assets/screens/live.webp" alt="直播" /><p align="center"><sub>直播</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/guide.webp" alt="电视节目单" /><p align="center"><sub>电视节目单</sub></p></td>
-    <td><img src="docs/assets/screens/movie.webp" alt="电影页" /><p align="center"><sub>电影页</sub></p></td>
+    <td><img src="../assets/screens/guide.webp" alt="电视节目单" /><p align="center"><sub>电视节目单</sub></p></td>
+    <td><img src="../assets/screens/movie.webp" alt="电影页" /><p align="center"><sub>电影页</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/screens/series-episodes.webp" alt="剧集的季和集" /><p align="center"><sub>剧集</sub></p></td>
-    <td><img src="docs/assets/screens/player.webp" alt="播放器" /><p align="center"><sub>播放器 — 测试流 <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
+    <td><img src="../assets/screens/series-episodes.webp" alt="剧集的季和集" /><p align="center"><sub>剧集</sub></p></td>
+    <td><img src="../assets/screens/player.webp" alt="播放器" /><p align="center"><sub>播放器 — 测试流 <i>Big Buck Bunny</i> © Blender Foundation, CC BY</sub></p></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/assets/screens/mobile-home.webp" alt="手机上的首页" width="30%" />
+  <img src="../assets/screens/mobile-home.webp" alt="手机上的首页" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-rows.webp" alt="手机上的内容行" width="30%" />
+  <img src="../assets/screens/mobile-rows.webp" alt="手机上的内容行" width="30%" />
   &nbsp;
-  <img src="docs/assets/screens/mobile-movie.webp" alt="手机上的电影页" width="30%" />
+  <img src="../assets/screens/mobile-movie.webp" alt="手机上的电影页" width="30%" />
 </p>
 
 ## 📦 安装
@@ -163,7 +163,7 @@ Android 包名为 `app.cyberstream.player`。同一个 APK 可安装在手机上
 | 界面与遥控器 | 主菜单、个人资料卡片、翻译、方向导航、虚拟化和语音命令使用 Rust。Trakt 客户端、OpenSubtitles 排序和扫码交换校验同样如此。首页、网格、搜索结果和回看页面有 Rust 视图。React 和 TypeScript 负责挂载页面、处理事件以及若干服务集成。 |
 | 设备功能 | Android 保留了用于 Media3、缓存、时移、安全存储和电视配对的 Java 桥接。iOS 宿主使用 Swift，桌面宿主使用 Electron。 |
 
-CyberTV 的页面被保留下来，以便在迁移期间维持用户流程。Android TV、iOS 和桌面端的完整一致性仍有待测试。原始规格见 [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md)（法语）。
+CyberTV 的页面被保留下来，以便在迁移期间维持用户流程。Android TV、iOS 和桌面端的完整一致性仍有待测试。原始规格见 [docs/SPECIFICATIONS.md](../SPECIFICATIONS.md)（法语）。
 
 ## 🛠️ 构建与测试
 
@@ -199,7 +199,7 @@ Android 上默认开启性能模式。首页只读取有限数量的电影样本
 
 ## 🌐 网站
 
-网站位于 [`docs/`](docs/)（纯 HTML、CSS 和 JS，无需构建），法语版在根目录，英语版在 `docs/en/`。它通过 GitHub Pages 从 `main` 分支的 `/docs` 目录发布。本地预览：
+网站位于 [`docs/`](../)（纯 HTML、CSS 和 JS，无需构建），法语版在根目录，英语版在 `docs/en/`。它通过 GitHub Pages 从 `main` 分支的 `/docs` 目录发布。本地预览：
 
 ```sh
 python3 -m http.server 8090 -d docs
@@ -207,7 +207,7 @@ python3 -m http.server 8090 -d docs
 
 ## 📄 许可证
 
-代码以 [MIT](LICENSE) 许可证发布。
+代码以 [MIT](../../LICENSE) 许可证发布。
 
 ---
 
