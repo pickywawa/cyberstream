@@ -62,7 +62,7 @@
     "minNativeCode": 19
   },
   "main": "dist-electron/main.cjs",
-  "description": "Lecteur IPTV pour vos propres sources (Android, Android TV, iOS, ordinateur)",
+  "description": "IPTV player for your own sources (Android, Android TV, iOS, desktop)",
   "author": "pickywawa",
   "build": {
     "appId": "app.cyberstream.desktop",
