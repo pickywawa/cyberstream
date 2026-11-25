@@ -62,7 +62,7 @@ pub fn settings_menu(lang: &str, name: &str, emoji: &str, accent: &str, install:
     html!{h1.tab-h1{(lookup(lang,"settings.title"))}
         button.list-item data-cmd="profile-edit" data-f data-autofocus {span.avatar style=(format!("background:{}",color(accent))){(emoji)}
             span.grow {div style="font-weight:700"{(name)}div.small.muted{(lookup(lang,"settings.profile"))}} (icon("next","chev"))}
-        div.list style="margin-top:8px" {@for sec in ["profiles","sources","tvinstall","services","appearance","player","parental","sync","categories","about"]{
+        div.list style="margin-top:8px" {@for sec in ["profiles","sources","tvinstall","appearance","player","parental","sync","categories","about"]{
             @if sec!="tvinstall" || install {button.list-item data-f data-cmd=(sec){span.grow{(lookup(lang,&format!("settings.{sec}")))}(icon("next","chev"))}}
         }}
     }.into_string()

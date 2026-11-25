@@ -23,7 +23,7 @@ export type Route =
   | { name: 'person'; id: number; title: string }
   | { name: 'send-to-tv'; target?: string };
 
-export type SettingsSection = 'sources' | 'services' | 'appearance' | 'player' | 'parental' | 'sync' | 'categories' | 'about' | 'tvinstall';
+export type SettingsSection = 'sources' | 'appearance' | 'player' | 'parental' | 'sync' | 'categories' | 'about' | 'tvinstall';
 
 export interface GridFilter {
   universe?: string;

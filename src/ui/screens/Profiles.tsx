@@ -3,15 +3,15 @@ import { RustView } from '../components/RustView';
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
-import { t, setLang, getLang } from '@/core/i18n';
+import { t, setLang, getLang, LANGS, isLang } from '@/core/i18n';
 import type { Profile } from '@/core/types';
 import { COLORS, EMOJIS, deleteProfile, syncFreeTvSources, updateProfile } from '@/core/profiles';
 import { useApp, applyTheme } from '@/state/store';
-import { runSync, selectProfile } from '@/app/services';
+import { runSync, selectProfile, startEnrichment } from '@/app/services';
+import { OpenSubtitlesBox, TmdbLine, TraktBox } from '../components/ServiceBoxes';
 import { LANGUAGES } from '@/core/util/lang';
 import { langPrefs, profileCountries, subMode } from '@/core/prefs';
 import { CountryPicker } from '../components/CountryPicker';
-import { hasOsKey } from '@/core/subs/opensubtitles';
 import { Logo } from '@/app/App';
 import { Onboarding } from './Onboarding';
 import { PinPad } from '../components/PinPad';
@@ -116,8 +116,6 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
   const pop = useApp((s) => s.pop);
   const [pinMode, setPinMode] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
-  const [osReady, setOsReady] = useState<boolean | null>(null);
-  useEffect(() => void hasOsKey(id).then(setOsReady), [id]);
   if (!p) return null;
   const patch = async (x: Partial<Profile>) => {
     if (x.countries) x = { ...x, country: x.countries[0] };
@@ -127,7 +125,10 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
     if (p.id === current.id) {
       useApp.getState().patchProfile(x);
       if (x.audioLangs || x.subLangs || x.country) useApp.getState().bumpCatalog();
-      if (x.lang) setLang(x.lang);
+      if (x.lang) {
+        setLang(x.lang);
+        void startEnrichment({ ...p, ...x });
+      }
       // the catalogue only holds the audio languages (and the chosen countries): download again what changed
       const filterChanged = x.countryFilter !== undefined || (x.countries && (x.countryFilter ?? p.countryFilter));
       if ((x.audioLangs && !p.catalogAllLangs) || x.catalogAllLangs !== undefined || filterChanged || freeChanged) void runSync(p.id, !!(freeChanged || x.countries), { quiet: true });
@@ -138,6 +139,12 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
     <div className="settings">
       <PageHeader title={p.name} />
       <div className="form" style={{ marginTop: 16 }}>
+        <div className="field">
+          <label>{t('settings.language')}</label>
+          <select className="select input" data-f value={p.lang} onChange={(e) => isLang(e.target.value) && void patch({ lang: e.target.value })}>
+            {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+          </select>
+        </div>
         <div className="field">
           <label>{t('profiles.name')}</label>
           <input className="input" data-f defaultValue={p.name} onBlur={(e) => void patch({ name: e.target.value.trim() || p.name })} maxLength={24} />
@@ -155,6 +162,7 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
         <span className="small dim">{t('profiles.countriesHelp')}</span>
         <Toggle label={t('profiles.freeTv')} sub={t('profiles.freeTvHint')} on={!!p.freeTv} onChange={(v) => void patch({ freeTv: v })} />
         <Toggle label={t('profiles.countryFilter')} sub={t('profiles.countryFilterHint')} on={!!p.countryFilter} onChange={(v) => void patch({ countryFilter: v })} />
+        <TmdbLine profile={p} />
 
         <h2>{t('profiles.audio')}</h2>
         <LangPair
@@ -179,18 +187,14 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
             ))}
           </div>
         </div>
-        <Toggle
-          label={t('os.profileToggle')}
-          sub={osReady === false ? t('os.profileNoKey') : t('os.profileSub')}
-          on={p.subsOnline !== false}
-          onChange={(v) => void patch({ subsOnline: v })}
-        />
+        <OpenSubtitlesBox profile={p} />
         {profileCountries(p).includes('FR') && <Toggle
           label={t('replay.officialLive')}
           sub={t('replay.officialLiveHint')}
           on={p.officialLive !== false}
           onChange={(v) => void patch({ officialLive: v })}
         />}
+        <TraktBox profile={p} />
         <div className="btn-row" style={{ marginTop: 20 }}>
           {confirmDel ? (
             <>

@@ -63,7 +63,8 @@ export function useExternalSubs(p: { req: PlayRequest; profile: Profile; tracks:
   const [offset, setOffset] = useState(0);
   const autoDone = useRef('');
   const itemKey = `${req.kind}:${req.itemId}`;
-  const enabled = vod && keyOk && profile.subsOnline !== false;
+  // a saved OpenSubtitles key is the switch: subtitles are fetched when the video has none in the profile's languages
+  const enabled = vod && keyOk;
 
   useEffect(() => void hasOsKey(profile.id).then(setKeyOk), [profile.id]);
   // new item: reset, restore its offset
