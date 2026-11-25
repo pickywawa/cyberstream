@@ -1,0 +1,4 @@
+- Profils en anglais : fiches et films mis en avant dans la langue du profil
+- Vignettes plus petites dans les catégories de l’accueil
+- Accueil, catégories et fiches acteurs plus rapides sur TV
+- Pas de mise à jour intégrée dans les versions des stores

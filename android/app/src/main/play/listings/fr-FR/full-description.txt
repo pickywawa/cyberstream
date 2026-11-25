@@ -1,0 +1,20 @@
+<p>Cyberstream est un lecteur IPTV libre et gratuit pour téléphones et téléviseurs Android. Il lit vos propres comptes <b>Xtream Codes</b> et listes <b>M3U</b> : chaînes en direct, guide TV, films, séries et replay. C’est un lecteur : il ne fournit aucun contenu.</p>
+
+<p>Sans abonnement IPTV, il peut ajouter les chaînes gratuites publiques recensées par iptv-org pour les pays que vous suivez, avec leur guide TV, leurs radios et les scores en direct.</p>
+
+<p><b>Fonctions</b></p>
+<ul>
+<li>TV en direct avec guide XMLTV, replay des programmes passés et pause du direct (mémoire locale de 30 à 60 minutes)</li>
+<li>Fiches films et séries avec affiches, casting, âge conseillé, saisons, reprise et épisode suivant (avec une clé TMDB gratuite)</li>
+<li>Chaînes gratuites, guides TV, radios et scores pour 42 pays, plusieurs pays par profil</li>
+<li>Replay gratuit : ARTE, france.tv, ARD Mediathek et les chaînes YouTube des médias</li>
+<li>Sous-titres : SRT, WebVTT et recherche OpenSubtitles</li>
+<li>Trakt : suivi, liste à voir et recommandations</li>
+<li>Commandes vocales, et configuration de la TV depuis le téléphone avec un QR code</li>
+<li>Profils avec leur langue, avatar, âge limite et code PIN</li>
+<li>Interface en 14 langues, pensée pour la télécommande et le tactile</li>
+</ul>
+
+<p>Le moteur est écrit en Rust et compilé en WebAssembly ; la vidéo est lue par Media3 (ExoPlayer). Pas de publicité, pas de compte, pas de pistage. Les clés de services (TMDB, Trakt, OpenSubtitles) sont facultatives et restent dans le stockage sécurisé de l’appareil.</p>
+
+<p>Services en ligne facultatifs : TMDB (métadonnées), Trakt, OpenSubtitles, YouTube (replay et bandes-annonces), Wikipédia et Wikidata, iptv-org, Radio Browser.</p>

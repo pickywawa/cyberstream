@@ -1,0 +1,20 @@
+<p>Cyberstream is a free and open-source IPTV player for Android phones and Android TV. It plays your own <b>Xtream Codes</b> accounts and <b>M3U</b> playlists: live channels, TV guide, movies, series and catch-up. It is a player only and does not provide any content.</p>
+
+<p>Without an IPTV subscription, it can add the public free channels listed by iptv-org for the countries you follow, with their TV guide, radios and live scores.</p>
+
+<p><b>Features</b></p>
+<ul>
+<li>Live TV with an XMLTV guide, catch-up of past programmes and live pause (local 30 to 60 minute buffer)</li>
+<li>Movie and series pages with posters, cast, age ratings, seasons, resume and next episode (with a free TMDB key)</li>
+<li>Free channels, TV guides, radios and scores for 42 countries, several countries per profile</li>
+<li>Free catch-up: ARTE, france.tv, ARD Mediathek and the YouTube channels of news outlets</li>
+<li>Subtitles: SRT, WebVTT and OpenSubtitles search</li>
+<li>Trakt: scrobbling, watchlist and recommendations</li>
+<li>Voice commands, and setup of the TV from your phone with a QR code</li>
+<li>Profiles with their own language, avatar, age limit and PIN</li>
+<li>Interface in 14 languages, designed for the remote and for touch screens</li>
+</ul>
+
+<p>The engine is written in Rust and compiled to WebAssembly; video is played by Media3 (ExoPlayer). No ads, no account, no tracking. Service keys (TMDB, Trakt, OpenSubtitles) are optional and stay in the device's secure storage.</p>
+
+<p>Optional online services used: TMDB (metadata), Trakt, OpenSubtitles, YouTube (catch-up and trailers), Wikipedia and Wikidata, iptv-org, Radio Browser.</p>

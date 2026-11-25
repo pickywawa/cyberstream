@@ -374,7 +374,8 @@ function AboutSection() {
         Cyberstream {info?.webVersion || APP_VERSION}
         {info ? ` · app ${info.versionName} (${info.versionCode})` : ''} · Media3 / hls.js / mpegts.js · TMDB
       </p>
-      {isAndroidApp || isDesktop ? (
+      {/* no update channel (F-Droid build, dev): the store updates the app, no check here */}
+      {!hasUpdateChannel ? null : isAndroidApp || isDesktop ? (
         <div className="btn-row">
           <button className="btn" data-f disabled={checking} onClick={() => void check()}>
             {checking ? <span className="spinner" /> : <IcRefresh />} {t('update.check')}
@@ -385,7 +386,6 @@ function AboutSection() {
         <p className="small dim">{t('update.webOnly')}</p>
       )}
       {(isAndroidApp || isDesktop) && <div className="btn-row">
-        {!hasUpdateChannel && <span className="small muted">{t('update.channelMissing')}</span>}
         <a className="btn" data-f href={RELEASES_URL} target="_blank" rel="noreferrer">{t('update.releases')}</a>
       </div>}
       <button className="btn" data-f onClick={async () => {

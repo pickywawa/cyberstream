@@ -1,0 +1,56 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: Optional online services (TMDB, Trakt, OpenSubtitles, YouTube) for metadata,
+      tracking, subtitles and catch-up.
+Categories:
+  - Multimedia
+  - Online Media Player
+License: MIT
+AuthorName: Alexis Picard
+WebSite: https://pickywawa.github.io/cyberstream/
+SourceCode: https://github.com/pickywawa/cyberstream
+IssueTracker: https://github.com/pickywawa/cyberstream/issues
+Changelog: https://github.com/pickywawa/cyberstream/releases
+
+AutoName: Cyberstream
+
+RepoType: git
+Repo: https://github.com/pickywawa/cyberstream.git
+
+Builds:
+  - versionName: 2.1.0
+    versionCode: 30
+    commit: v2.1.0
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y curl xz-utils build-essential
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v22.22.1/node-v22.22.1-linux-x64.tar.xz
+      - echo "9a6bc82f9b491279147219f6a18add1e18424dce90d41d2a5fcd69d4924ba3aa node.tar.xz"
+        | sha256sum -c -
+      - tar xJf node.tar.xz --strip-components=1 -C /usr/local
+      - rm node.tar.xz
+    gradle:
+      - yes
+    srclibs:
+      - rustup@1.29.3
+    rm:
+      - ios
+    prebuild:
+      - sed -i -e '/REQUEST_INSTALL_PACKAGES/d' src/main/AndroidManifest.xml
+      - bash $$rustup$$/rustup-init.sh -y --profile minimal --default-toolchain 1.100.0
+        --target wasm32-unknown-unknown
+      - source $HOME/.cargo/env
+      - cargo install --locked wasm-bindgen-cli --version 0.2.108
+      - cd ../..
+      - ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci
+      - CYBER_UPDATE_URL= npm run build
+      - npx cap sync android
+    scanignore:
+      - node_modules
+      - android/capacitor-cordova-android-plugins
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+CurrentVersion: 2.1.0
+CurrentVersionCode: 30

@@ -1,0 +1,4 @@
+- English profiles: movie details and featured titles in the profile's language
+- Smaller cards in Home categories
+- Faster Home, categories and actor pages on TV
+- No built-in updater in store builds
