@@ -63,10 +63,10 @@ pub fn settings_menu(lang: &str, profiles: &str, current: &str, install: bool) -
     Ok(html!{h1.tab-h1{(lookup(lang,"settings.title"))}
         h2.settings-group{(lookup(lang,"settings.profiles"))}
         div.list.settings-profiles {@for (i,p) in profiles.iter().enumerate(){
-            button.list-item data-cmd=(format!("edit:{}",p.id)) data-f data-autofocus[i==0] {span.avatar style=(format!("background:{}",color(&p.color))){(p.emoji)}
+            button.list-item data-cmd=(format!("edit:{}",p.id)) data-f data-autofocus[i==0] data-nav-up=[(i==0).then_some(".topnav [data-cmd=settings]")] data-nav-right="[data-cmd=add-profile]" {span.avatar style=(format!("background:{}",color(&p.color))){(p.emoji)}
                 span.grow {div style="font-weight:700"{(p.name)}@if p.id==current{div.small.muted{(lookup(lang,"profiles.current"))}}} (icon("next","chev"))}
         }
-            div.settings-add{button.btn.small data-f data-cmd="add-profile"{(icon("plus",""))" "(lookup(lang,"profiles.add"))}}
+            div.settings-add{button.btn.small data-f data-nav-skip data-cmd="add-profile"{(icon("plus",""))" "(lookup(lang,"profiles.add"))}}
         }
         div.list style="margin-top:8px" {@for sec in ["sources","tvinstall","appearance","player","parental","sync","categories","about"]{
             @if sec!="tvinstall" || install {button.list-item data-f data-cmd=(sec){span.grow{div style="font-weight:700"{(lookup(lang,&format!("settings.{sec}")))}div.small.muted{(lookup(lang,&format!("settings.desc.{sec}")))}}(icon("next","chev"))}}

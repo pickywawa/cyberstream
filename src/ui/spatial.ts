@@ -6,6 +6,8 @@ import { isLowEnd } from '@/core/perfTier';
  *  - rows:   [data-row]   left/right stays inside the row first, rows remember their last focus
  *  - scope:  [data-scope] the last mounted scope traps focus (modals, player overlay)
  *  - long press on OK: elements with [data-lp] receive a `longpress` CustomEvent
+ *  - explicit links: [data-nav-up|down|left|right="selector"] go to that element in that direction;
+ *    [data-nav-skip] is left out of Up / Down (reached from the side only)
  *  - tab rows: [data-row][data-tabs]  entering one focuses its current tab (`.active`), and a tab
  *    reached with left/right is opened by itself after a short pause (no OK needed);
  *    [data-noauto] items (toggles) still need OK
@@ -148,6 +150,12 @@ export function move(dir: Dir): boolean {
       return true;
     }
   }
+  const link = active.getAttribute(`data-nav-${dir}`);
+  const linked = link ? document.querySelector<HTMLElement>(link) : null;
+  if (linked && visible(linked)) {
+    focusEl(linked, !linked.closest('.topnav'));
+    return true;
+  }
   const row = active.closest('[data-row]');
   // low-end device, Home's / Contenus' shelves: Up / Down only looks at the shelf above / below (measuring
   // the hundreds of cards of the page on every press is what makes a weak TV lag)
@@ -169,8 +177,9 @@ export function move(dir: Dir): boolean {
     }
     if (row.hasAttribute('data-row-lock')) return true;
   }
-  const all = scopeItems(scope);
-  const others = row && (dir === 'up' || dir === 'down') ? all.filter((e) => !row.contains(e)) : all;
+  const vertical = dir === 'up' || dir === 'down';
+  const all = scopeItems(scope).filter((e) => !vertical || !e.hasAttribute('data-nav-skip'));
+  const others = row && vertical ? all.filter((e) => !row.contains(e)) : all;
   // the floating Back button (always shown, top left) is reached from the page's header only:
   // lower down, Up goes to the row above (it used to grab the focus as soon as the page was scrolled)
   const nearBack = !!active.closest('.hero, .detail-hero, .page-header');
