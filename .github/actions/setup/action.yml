@@ -1,0 +1,21 @@
+name: Setup
+description: Node, Rust (wasm32) and wasm-bindgen, then npm ci
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: npm
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    - uses: Swatinem/rust-cache@v2
+    # must match the wasm-bindgen version pinned in Cargo.toml
+    - uses: taiki-e/install-action@v2
+      with:
+        tool: wasm-bindgen@0.2.108
+    - run: npm ci
+      shell: bash
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: '1'

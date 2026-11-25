@@ -6,6 +6,9 @@ import { dataWorker } from '@/core/workers';
 import { normServer, serverLabel } from '@/core/sources/servers';
 import type { ServerTest } from '@/core/sync/sync';
 import { IcClose, IcPlus } from '../icons';
+import { isPlainWeb } from '@/core/platform';
+
+const RELEASES = 'https://github.com/pickywawa/cyberstream/releases/latest';
 
 export interface SourceDraft {
   type: SourceType;
@@ -122,6 +125,14 @@ export function SourceForm({ draft, onChange }: { draft: SourceDraft; onChange: 
           </button>
         ))}
       </div>
+      {isPlainWeb && (
+        <p className="small dim">
+          {t('web.limits')}{' '}
+          <a href={RELEASES} target="_blank" rel="noreferrer">
+            {t('web.getApp')}
+          </a>
+        </p>
+      )}
       <div className="field">
         <label>{t('onboard.label')}</label>
         <input className="input" data-f value={draft.label} onChange={(e) => set({ label: e.target.value })} placeholder={t('onboard.label')} />

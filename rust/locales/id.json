@@ -596,5 +596,7 @@
   "sort.added": "Baru ditambahkan",
   "sort.rating": "Rating tertinggi",
   "sort.year": "Tahun",
-  "sort.title": "A → Z"
+  "sort.title": "A → Z",
+  "web.limits": "Versi web: hanya sumber HTTPS yang mengizinkan akses dari browser yang berfungsi. Untuk yang lain, pasang aplikasinya.",
+  "web.getApp": "Unduh aplikasi"
 }

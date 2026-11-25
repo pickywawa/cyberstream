@@ -78,7 +78,7 @@ async function createWindow() {
     minWidth: 900,
     minHeight: 560,
     backgroundColor: '#0b0b0d',
-    title: 'CyberIPTV',
+    title: 'Cyberstream',
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });

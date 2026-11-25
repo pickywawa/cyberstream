@@ -1,5 +1,5 @@
 import { CapacitorHttp } from '@capacitor/core';
-import { isNative } from '../platform';
+import { isNative, isPlainWeb } from '../platform';
 import { timeoutSignal } from './http';
 
 export interface Req {
@@ -32,9 +32,12 @@ export async function request<T = any>(r: Req): Promise<{ status: number; data: 
     return { status: res.status, data };
   }
   const headers: Record<string, string> = {};
-  // browsers refuse to set User-Agent: the relay applies it
-  for (const [k, v] of Object.entries(r.headers || {})) headers[k.toLowerCase() === 'user-agent' ? 'x-ua' : k] = v;
-  const res = await fetch(`/xhr?u=${encodeURIComponent(r.url)}`, {
+  // browsers refuse to set User-Agent: the relay applies it (no relay on the published web build: dropped)
+  for (const [k, v] of Object.entries(r.headers || {})) {
+    if (k.toLowerCase() !== 'user-agent') headers[k] = v;
+    else if (!isPlainWeb) headers['x-ua'] = v;
+  }
+  const res = await fetch(isPlainWeb ? r.url : `/xhr?u=${encodeURIComponent(r.url)}`, {
     method,
     headers,
     body: r.body !== undefined ? JSON.stringify(r.body) : undefined,

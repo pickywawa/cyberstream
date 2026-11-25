@@ -596,5 +596,7 @@
   "sort.added": "Recently added",
   "sort.rating": "Top rated",
   "sort.year": "Year",
-  "sort.title": "A → Z"
+  "sort.title": "A → Z",
+  "web.limits": "Web version: only HTTPS sources that allow browser access work. For the others, install the app.",
+  "web.getApp": "Get the app"
 }

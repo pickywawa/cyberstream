@@ -596,5 +596,7 @@
   "sort.added": "最近追加",
   "sort.rating": "高評価順",
   "sort.year": "年",
-  "sort.title": "名前順"
+  "sort.title": "名前順",
+  "web.limits": "Web版：ブラウザーからのアクセスを許可する HTTPS ソースのみ利用できます。それ以外はアプリをインストールしてください。",
+  "web.getApp": "アプリを入手"
 }

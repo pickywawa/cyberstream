@@ -596,5 +596,7 @@
   "sort.added": "最近添加",
   "sort.rating": "评分最高",
   "sort.year": "年份",
-  "sort.title": "名称排序"
+  "sort.title": "名称排序",
+  "web.limits": "网页版：仅支持允许浏览器访问的 HTTPS 源。其他源请安装应用。",
+  "web.getApp": "下载应用"
 }

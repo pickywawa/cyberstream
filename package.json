@@ -16,7 +16,7 @@
     "release": "node scripts/release.mjs",
     "desktop:build-main": "vite build -c electron/vite.config.ts",
     "desktop": "vite build && npm run desktop:build-main && electron .",
-    "desktop:dist": "vite build && npm run desktop:build-main && electron-builder --mac --win --linux --publish never",
+    "desktop:dist": "vite build && node scripts/desktop-dist.mjs",
     "rust:build": "bash scripts/build-rust.sh",
     "predev": "npm run rust:build",
     "prebuild": "npm run rust:build",
@@ -26,7 +26,9 @@
     "preandroid:sync": "npm run rust:build",
     "predesktop": "npm run rust:build",
     "prerelease": "npm run rust:build",
-    "predesktop:dist": "npm run rust:build"
+    "predesktop:dist": "npm run rust:build",
+    "build:pages": "bash scripts/build-pages.sh",
+    "prebuild:pages": "npm run rust:build"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.2",
@@ -98,6 +100,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "electron/build/icon.png",
@@ -105,7 +113,9 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "artifactName": "Cyberstream-Setup-${version}-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -114,10 +124,25 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "AudioVideo",
-      "icon": "electron/build/icon.png"
+      "icon": "electron/build/icon.png",
+      "synopsis": "IPTV player for your own sources",
+      "maintainer": "pickywawa <44199439+pickywawa@users.noreply.github.com>"
+    },
+    "copyright": "Copyright © pickywawa",
+    "dmg": {
+      "title": "Cyberstream ${version}"
+    },
+    "portable": {
+      "artifactName": "Cyberstream-${version}-portable-${arch}.${ext}"
     }
   }
 }

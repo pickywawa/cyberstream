@@ -7,7 +7,8 @@
  * --native   the Android side changed: bump versionCode and require this APK for the new web bundle
  *            (without it, installed apps update their web content silently)
  * --publish  create the GitHub release (gh CLI) with the APK, the web zip and update.json
- * --desktop  also build the desktop app (Electron): macOS dmg (arm64 + x64), Windows installer, Linux AppImage
+ * --desktop  also build the desktop app (Electron): macOS dmg (arm64 + x64, Developer ID signed + notarized),
+ *            Windows installer + portable exe, Linux AppImage + deb
  * --ios      also build an unsigned iOS .ipa (to sideload: AltStore, Sideloadly… re-sign it with an Apple ID)
  * --notes-file <path>  release notes from a Markdown file
  *
@@ -64,10 +65,9 @@ const extra = [];
 
 // ── desktop (Electron) ──
 if (flag('--desktop')) {
-  rmSync(join(out, 'desktop'), { recursive: true, force: true });
-  run('npm run desktop:build-main');
-  run('npx electron-builder --mac --win --linux --publish never -c.directories.output=release/desktop', root, { CSC_IDENTITY_AUTO_DISCOVERY: 'false' });
-  for (const f of readdirSync(join(out, 'desktop'))) if (/\.(dmg|exe|AppImage)$/.test(f)) extra.push(join(out, 'desktop', f));
+  // macOS signed + notarized with the keys in ~/.config/cyberstream-release (see scripts/desktop-dist.mjs)
+  run('node scripts/desktop-dist.mjs');
+  for (const f of readdirSync(join(out, 'desktop'))) if (/\.(dmg|exe|AppImage|deb)$/.test(f)) extra.push(join(out, 'desktop', f));
 }
 
 // ── iOS (unsigned) ──

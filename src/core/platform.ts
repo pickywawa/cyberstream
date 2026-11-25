@@ -9,6 +9,8 @@ export const isAndroidApp = isNative && isAndroid;
 export const isIOSApp = isNative && Capacitor.getPlatform() === 'ios';
 /** desktop app (Electron): web engine, local Node proxy serving the app */
 export const isDesktop = typeof navigator !== 'undefined' && /\bElectron\//.test(navigator.userAgent);
+/** published web build (GitHub Pages): no proxy, so only HTTPS sources that send CORS headers work */
+export const isPlainWeb = !isNative && !isDesktop && !import.meta.env?.DEV;
 
 /** Android TV / large remote-driven screen detection (refined by the native plugin on Android) */
 let tvMode: boolean | null = null;

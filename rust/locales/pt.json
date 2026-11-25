@@ -596,5 +596,7 @@
   "sort.added": "Adicionados recentemente",
   "sort.rating": "Mais bem avaliados",
   "sort.year": "Ano",
-  "sort.title": "A → Z"
+  "sort.title": "A → Z",
+  "web.limits": "Versão web: só funcionam fontes HTTPS que permitem acesso pelo navegador. Para as outras, instale o app.",
+  "web.getApp": "Baixar o app"
 }

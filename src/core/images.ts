@@ -38,7 +38,7 @@ export function registerImageCache() {
     if (img instanceof HTMLImageElement && img.dataset.art && img.dataset.fallback)
       img.outerHTML = artwork_failed(img.dataset.art, img.dataset.fallback);
   }, true);
-  if (!isNative && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if (!isNative && 'serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
 }
 
 /** a hue for a name (tiles without a coloured logo): stable, spread around the colour wheel */
