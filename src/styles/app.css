@@ -1078,11 +1078,18 @@ html.has-update:not(.mobile) .app-shell { top: var(--update-h); }
 .radio-tile .name-tile .mono { width: auto; height: 98%; aspect-ratio: 1; font-size: clamp(1.2rem, 2vw, 1.7rem); border-radius: 22%; }
 .radio-tile .name-tile .nm { display: none; }
 
-/* followed countries (profile): flag + name chips, several can be on */
-.country-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-.country-grid button { padding: 8px 12px; border-radius: 8px; background: var(--surface); color: var(--text-2); font-weight: 600; }
-.country-grid button.on { background: var(--surface-hover); color: var(--text); box-shadow: 0 0 0 2px var(--accent); }
-.country-chosen { margin: 2px 0 10px; }
+/* followed countries (profile): a drop-down with several choices */
+.multi-select-head { display: flex; align-items: center; gap: 10px; width: 100%; text-align: start; }
+.multi-select-head .grow, .multi-select-option .grow { flex: 1; min-width: 0; }
+.multi-select-head .chev { width: 18px; height: 18px; color: var(--text-3); transform: rotate(90deg); transition: transform 0.15s; flex: none; }
+.multi-select.open .multi-select-head .chev { transform: rotate(-90deg); }
+.multi-select-list { margin-top: 6px; max-height: 340px; overflow-y: auto; padding: 6px; background: var(--surface); border-radius: var(--radius); display: flex; flex-direction: column; gap: 2px; }
+.multi-select-option { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; text-align: start; color: var(--text-2); }
+.multi-select-option.on { color: var(--text); }
+.multi-select-option .box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--text-3); display: grid; place-items: center; flex: none; }
+.multi-select-option.on .box { background: var(--accent); border-color: var(--accent); color: #000; }
+.multi-select-option .box svg { width: 14px; height: 14px; }
+.multi-select-done { align-self: flex-end; margin: 6px 4px 2px; }
 
 /* services in the profile: a line that opens its form */
 .collapse-head .chev { transition: transform 0.15s; }

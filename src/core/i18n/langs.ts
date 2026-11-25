@@ -7,6 +7,8 @@ import type { Lang } from '../types';
 export interface LangInfo {
   code: Lang;
   name: string;
+  /** flag shown next to the name */
+  flag: string;
   /** BCP 47 tag for dates and sorting */
   locale: string;
   /** TMDB `language` parameter */
@@ -20,20 +22,20 @@ export interface LangInfo {
 }
 
 export const LANGS: LangInfo[] = [
-  { code: 'fr', name: 'Français', locale: 'fr-FR', tmdb: 'fr-FR', speech: 'fr-FR', country: 'FR', wiki: 'fr' },
-  { code: 'en', name: 'English', locale: 'en-GB', tmdb: 'en-US', speech: 'en-US', country: 'GB', wiki: 'en' },
-  { code: 'de', name: 'Deutsch', locale: 'de-DE', tmdb: 'de-DE', speech: 'de-DE', country: 'DE', wiki: 'de' },
-  { code: 'es', name: 'Español', locale: 'es-ES', tmdb: 'es-ES', speech: 'es-ES', country: 'ES', wiki: 'es' },
-  { code: 'it', name: 'Italiano', locale: 'it-IT', tmdb: 'it-IT', speech: 'it-IT', country: 'IT', wiki: 'it' },
-  { code: 'pt', name: 'Português', locale: 'pt-PT', tmdb: 'pt-PT', speech: 'pt-PT', country: 'PT', wiki: 'pt' },
-  { code: 'ar', name: 'العربية', locale: 'ar', tmdb: 'ar-SA', speech: 'ar-SA', rtl: true, country: 'SA', wiki: 'ar' },
-  { code: 'hi', name: 'हिन्दी', locale: 'hi-IN', tmdb: 'hi-IN', speech: 'hi-IN', country: 'IN', wiki: 'hi' },
-  { code: 'zh', name: '中文', locale: 'zh-CN', tmdb: 'zh-CN', speech: 'zh-CN', country: 'CN', wiki: 'zh' },
-  { code: 'bn', name: 'বাংলা', locale: 'bn-BD', tmdb: 'bn-BD', speech: 'bn-BD', country: 'BD', wiki: 'bn' },
-  { code: 'id', name: 'Bahasa Indonesia', locale: 'id-ID', tmdb: 'id-ID', speech: 'id-ID', country: 'ID', wiki: 'id' },
-  { code: 'ur', name: 'اردو', locale: 'ur-PK', tmdb: 'ur-PK', speech: 'ur-PK', rtl: true, country: 'PK', wiki: 'ur' },
-  { code: 'ru', name: 'Русский', locale: 'ru-RU', tmdb: 'ru-RU', speech: 'ru-RU', country: 'RU', wiki: 'ru' },
-  { code: 'ja', name: '日本語', locale: 'ja-JP', tmdb: 'ja-JP', speech: 'ja-JP', country: 'JP', wiki: 'ja' },
+  { code: 'fr', flag: '🇫🇷', name: 'Français', locale: 'fr-FR', tmdb: 'fr-FR', speech: 'fr-FR', country: 'FR', wiki: 'fr' },
+  { code: 'en', flag: '🇬🇧', name: 'English', locale: 'en-GB', tmdb: 'en-US', speech: 'en-US', country: 'GB', wiki: 'en' },
+  { code: 'de', flag: '🇩🇪', name: 'Deutsch', locale: 'de-DE', tmdb: 'de-DE', speech: 'de-DE', country: 'DE', wiki: 'de' },
+  { code: 'es', flag: '🇪🇸', name: 'Español', locale: 'es-ES', tmdb: 'es-ES', speech: 'es-ES', country: 'ES', wiki: 'es' },
+  { code: 'it', flag: '🇮🇹', name: 'Italiano', locale: 'it-IT', tmdb: 'it-IT', speech: 'it-IT', country: 'IT', wiki: 'it' },
+  { code: 'pt', flag: '🇵🇹', name: 'Português', locale: 'pt-PT', tmdb: 'pt-PT', speech: 'pt-PT', country: 'PT', wiki: 'pt' },
+  { code: 'ar', flag: '🇸🇦', name: 'العربية', locale: 'ar', tmdb: 'ar-SA', speech: 'ar-SA', rtl: true, country: 'SA', wiki: 'ar' },
+  { code: 'hi', flag: '🇮🇳', name: 'हिन्दी', locale: 'hi-IN', tmdb: 'hi-IN', speech: 'hi-IN', country: 'IN', wiki: 'hi' },
+  { code: 'zh', flag: '🇨🇳', name: '中文', locale: 'zh-CN', tmdb: 'zh-CN', speech: 'zh-CN', country: 'CN', wiki: 'zh' },
+  { code: 'bn', flag: '🇧🇩', name: 'বাংলা', locale: 'bn-BD', tmdb: 'bn-BD', speech: 'bn-BD', country: 'BD', wiki: 'bn' },
+  { code: 'id', flag: '🇮🇩', name: 'Bahasa Indonesia', locale: 'id-ID', tmdb: 'id-ID', speech: 'id-ID', country: 'ID', wiki: 'id' },
+  { code: 'ur', flag: '🇵🇰', name: 'اردو', locale: 'ur-PK', tmdb: 'ur-PK', speech: 'ur-PK', rtl: true, country: 'PK', wiki: 'ur' },
+  { code: 'ru', flag: '🇷🇺', name: 'Русский', locale: 'ru-RU', tmdb: 'ru-RU', speech: 'ru-RU', country: 'RU', wiki: 'ru' },
+  { code: 'ja', flag: '🇯🇵', name: '日本語', locale: 'ja-JP', tmdb: 'ja-JP', speech: 'ja-JP', country: 'JP', wiki: 'ja' },
 ];
 
 const BY_CODE = new Map(LANGS.map((l) => [l.code, l]));

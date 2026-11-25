@@ -140,14 +140,14 @@ export function ProfileEdit({ profileId }: { profileId?: string }) {
       <PageHeader title={p.name} />
       <div className="form" style={{ marginTop: 16 }}>
         <div className="field">
-          <label>{t('settings.language')}</label>
-          <select className="select input" data-f value={p.lang} onChange={(e) => isLang(e.target.value) && void patch({ lang: e.target.value })}>
-            {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-          </select>
-        </div>
-        <div className="field">
           <label>{t('profiles.name')}</label>
           <input className="input" data-f defaultValue={p.name} onBlur={(e) => void patch({ name: e.target.value.trim() || p.name })} maxLength={24} />
+        </div>
+        <div className="field">
+          <label>{t('settings.language')}</label>
+          <select className="select input" data-f value={p.lang} onChange={(e) => isLang(e.target.value) && void patch({ lang: e.target.value })}>
+            {LANGS.map((l) => <option key={l.code} value={l.code}>{l.flag}  {l.name}</option>)}
+          </select>
         </div>
         <div className="emoji-grid" data-row>
           {EMOJIS.map((e) => <button key={e} data-f className={p.emoji === e ? 'on' : ''} onClick={() => void patch({ emoji: e })}>{e}</button>)}
