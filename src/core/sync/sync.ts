@@ -44,7 +44,7 @@ async function pruneStale(table: any, sourceId: string, keep: Set<string>): Prom
 
 const ENRICH_FIELDS = [
   'poster', 'backdrop', 'logo', 'plot', 'rating', 'genres', 'cast', 'director', 'trailer', 'tmdbId', 'durationSec', 'year', 'enrichedAt', 'origLang',
-  'enrichV', 'imdbId', 'imdbRating', 'imdbVotes', 'cert', 'certAge', 'recos', 'people', 'collection', 'providerInfoAt',
+  'enrichV', 'enrichLang', 'imdbId', 'imdbRating', 'imdbVotes', 'cert', 'certAge', 'recos', 'people', 'collection', 'providerInfoAt',
 ] as const;
 
 /** keep TMDB enrichment & first-seen date when a row is re-synced */

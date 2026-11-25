@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { grid } from './grid';
+import { grid, warmGrid } from './grid';
 import { db, getMeta, setMeta } from '@/core/db';
 import { SearchIndex, type SearchDoc } from '@/core/search';
 import { norm } from '@/core/util/text';
@@ -102,6 +102,7 @@ async function buildProgs(epgVersion: number) {
 
 export const api = {
   grid,
+  warmGrid,
   async search(profileId: string, version: number, q: string) {
     await ensure(profileId, version);
     return index.search(q);

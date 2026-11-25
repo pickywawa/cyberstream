@@ -127,7 +127,7 @@ export async function similarByGenre(profileId: string, kind: 'movie'|'series', 
 }
 
 /** the film / series rails of Home (the rest — continue watching, favourites, Trakt — is small) */
-export async function homeCatalog(profileId: string, lang: string, hideAdult: boolean, prefs: LangPrefs) {
+export async function homeCatalog(profileId: string, lang: string, hideAdult: boolean, prefs: LangPrefs, sampleSize = 4000) {
   const lists = await tmdbLists(lang);
   const [fresh, newSeries, top0, nowPlaying0, popularMovies0, topRated0, trendingTv0, popularTv0, sample0] = await Promise.all([
     latestMovies(profileId, 40, hideAdult, prefs),
@@ -138,7 +138,7 @@ export async function homeCatalog(profileId: string, lang: string, hideAdult: bo
     matchMovies(profileId, lists?.topRatedMovies || []),
     matchSeries(profileId, lists?.trendingTv || []),
     matchSeries(profileId, lists?.popularTv || []),
-    moviesSample(profileId, 4000),
+    moviesSample(profileId, sampleSize),
   ]);
   // content in the user's audio languages first (secondary language next, then untagged, then the rest)
   const L = <T extends Movie | Series>(rows: T[]) => sortByLang(rows, prefs);

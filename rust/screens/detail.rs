@@ -51,6 +51,9 @@ fn flags(
 pub fn detail_header(raw: &str, lang: &str) -> Result<String, String> {
     let mut d: Detail = serde_json::from_str(raw).map_err(|_| "Fiche invalide")?;
     let t = |k| lookup(lang, k);
+    // French typography ("2 h 28", "-12", "Réalisateur :"); the other languages read "2h 28m", "12+", "Director:"
+    let fr = lang == "fr";
+    let colon = if fr { " :" } else { ":" };
     let it = d.item;
     let m = &it.media;
     let resume = d.progress.filter(|p| !p.completed && p.position_sec > 60.);
@@ -61,9 +64,9 @@ pub fn detail_header(raw: &str, lang: &str) -> Result<String, String> {
         div.facts{
             @if let Some(y)=m.year{span{(y)}}
             @if let Some(sec)=it.duration_sec.filter(|s|*s>0.){@let h=sec as u64/3600; @let min=((sec%3600.)/60.).round() as u64;
-                span{(if h>0{format!("{h} h {min:02}")}else{format!("{min} min")})}}
+                span{(if h>0{if fr{format!("{h} h {min:02}")}else{format!("{h}h {min:02}m")}}else{format!("{min} min")})}}
             @if let Some(age)=it.cert_age{span class=(format!("age-pill a{age}")) title=(if age==0{t("age.all").into()}else{t("age.min").replace("{n}",&age.to_string())}){
-               (if age==0{t("age.allShort").into()}else{format!("-{age}")})}}
+               (if age==0{t("age.allShort").into()}else if fr{format!("-{age}")}else{format!("{age}+")})}}
             @else if let Some(cert)=it.cert.filter(|c|!c.is_empty()){span.age-pill{(cert)}}
             @if let Some(r)=m.imdb_rating.filter(|v|*v!=0.){span.imdb.inline title=[it.votes]{b{"IMDb"}(format!("{r:.1}"))}}
             @if let Some(r)=it.rating.filter(|v|*v!=0.){span.rating title="TMDB"{(icon("star","detail-star"))" "(format!("{r:.1}"))}}
@@ -85,8 +88,8 @@ pub fn detail_header(raw: &str, lang: &str) -> Result<String, String> {
             @if let Some(url)=it.trailer.filter(|u|u.starts_with("https://")||u.starts_with("http://")){a.btn data-f href=(url) target="_blank" rel="noreferrer"{(t("detail.trailer"))}}
         }
         div.small.muted style="margin-top:18px;line-height:1.6"{
-          @if let Some(s)=it.director.filter(|s|!s.is_empty()){div{b{(t("detail.director"))" :"}" "(s)}}
-          @if !it.cast.is_empty(){div.clamp2{b{(t("detail.cast"))" :"}" "(it.cast.iter().take(8).cloned().collect::<Vec<_>>().join(", "))}}
+          @if let Some(s)=it.director.filter(|s|!s.is_empty()){div{b{(t("detail.director"))(colon)}" "(s)}}
+          @if !it.cast.is_empty(){div.clamp2{b{(t("detail.cast"))(colon)}" "(it.cast.iter().take(8).cloned().collect::<Vec<_>>().join(", "))}}
           @if d.variants>1{div{(t("detail.sources").replace("{n}",&d.variants.to_string()))}}
         }
     }.into_string())

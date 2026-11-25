@@ -1,4 +1,4 @@
-import { dataWorker } from '@/core/workers';
+import { dataWorker, searchWorker } from '@/core/workers';
 import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp } from '@/state/store';
 import { t } from '@/core/i18n';
@@ -103,7 +103,9 @@ export function Home() {
         }
       : null;
     // the catalogue is read and the shelves built in the data worker: only their HTML comes back
-    return dataWorker().homeView(profile.id, profile.lang, hideAdult, prefs, { trakt, cont, favMovies, favSeries });
+    // performance mode / weak device: a smaller sample of films for the genre, kids and must-see rails
+    const sample = settings.performance || isLowEnd() ? 1200 : 4000;
+    return dataWorker().homeView(profile.id, profile.lang, hideAdult, prefs, { trakt, cont, favMovies, favSeries, sample });
   }, [profile.id, prefsKey, hideAdult, nonce], { key: homeKey(profile.id, prefsKey, hideAdult), lazy: isLowEnd() && filled.current });
   filled.current = !!data?.hasVod;
 
@@ -119,6 +121,12 @@ export function Home() {
     prioritizeEnrichment('movie', data.enrich.movie);
     prioritizeEnrichment('series', data.enrich.series);
   }, [data]);
+  // the films' grid read ahead once Home is on screen: the first category opens at once
+  useEffect(() => {
+    if (!data?.hasVod) return;
+    const tm = setTimeout(() => void searchWorker().warmGrid(profile.id, 'movie').catch(() => {}), 4000);
+    return () => clearTimeout(tm);
+  }, [profile.id, !!data?.hasVod]);
 
   if (!data) return <div className="empty"><div className="spinner big" style={{ margin: '80px auto' }} /></div>;
   const hero = data.hero;

@@ -575,6 +575,10 @@ textarea.input { height: auto; min-height: 90px; padding: 12px 14px; resize: ver
 
 /* virtualized grids: cards fill their cell */
 .vgrid .land, .vgrid .poster, .vgrid .card { width: 100%; }
+/* Home categories: half-size cards, smaller captions and badges */
+.vgrid.small .card { font-size: 0.8rem; }
+.vgrid.small .badge { font-size: 0.6rem; padding: 2px 4px; left: 5px; top: 5px; }
+.vgrid.small .badge.right { left: auto; right: 5px; }
 .page-header { display: flex; align-items: center; gap: 8px; padding: calc(var(--nav-h) + 12px) var(--gutter) 8px; }
 /* the arrow lines up with the page's left edge (the button's padding hangs outside), the title follows */
 .page-header > .icon-btn:first-child { margin-inline-start: -10px; }

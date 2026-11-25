@@ -62,12 +62,20 @@ export class Tmdb {
   private queue: Promise<unknown> = Promise.resolve();
   private last = 0;
   constructor(private token: string, private lang = 'fr-FR', private minGapMs = 60) {}
+  /** language tag of every answer ("en-GB") */
+  get language(): string {
+    return this.lang;
+  }
   /** ISO country of the language tag ("pt-BR" → BR): release dates, ratings, streaming offers */
   get region(): string {
     return this.lang.split('-')[1] || 'US';
   }
 
-  async get<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
+  /**
+   * urgent: a page the user is waiting for (actor page) skips the queue of background enrichment;
+   * that queue runs one request at a time, so a page used to wait behind it on a TV.
+   */
+  async get<T>(path: string, params: Record<string, string | number | undefined> = {}, urgent = false): Promise<T> {
     const q = new URLSearchParams();
     q.set('language', this.lang);
     for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') q.set(k, String(v));
@@ -91,6 +99,7 @@ export class Tmdb {
       }
       throw new Error('TMDB rate limited');
     };
+    if (urgent) return run() as Promise<T>;
     const p = this.queue.then(run, run);
     this.queue = p.catch(() => {});
     return p as Promise<T>;
@@ -182,12 +191,12 @@ export class Tmdb {
   }
 
   async person(id: number): Promise<TmdbPerson> {
-    const r = await this.get<any>(`/person/${id}`, { append_to_response: 'combined_credits' });
+    const r = await this.get<any>(`/person/${id}`, { append_to_response: 'combined_credits' }, true);
     // biographies are often missing in French: fall back to English
     let bio: string | undefined = r.biography || undefined;
     if (!bio && !this.lang.startsWith('en')) {
       try {
-        bio = (await new Tmdb(this.token, 'en-US', this.minGapMs).get<any>(`/person/${id}`)).biography || undefined;
+        bio = (await new Tmdb(this.token, 'en-US', this.minGapMs).get<any>(`/person/${id}`, {}, true)).biography || undefined;
       } catch {
         /* no bio */
       }

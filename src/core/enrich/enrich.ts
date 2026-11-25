@@ -70,7 +70,7 @@ function similar(a: string, b: string): boolean {
   return !!x && !!y && (x === y || x.includes(y) || y.includes(x));
 }
 
-function patchFrom(d: TmdbDetails, keepPoster?: string) {
+function patchFrom(d: TmdbDetails, lang: string, keepPoster?: string) {
   return {
     tmdbId: d.tmdbId,
     // provider posters are often low-res/ugly: prefer TMDB, keep provider as fallback
@@ -93,6 +93,7 @@ function patchFrom(d: TmdbDetails, keepPoster?: string) {
     people: d.people,
     collection: d.collection,
     enrichV: ENRICH_V,
+    enrichLang: lang,
     enrichedAt: Date.now(),
   };
 }
@@ -109,7 +110,7 @@ export async function enrichMovie(tmdb: Tmdb, m: Movie): Promise<void> {
       return;
     }
     const d = await tmdb.details('movie', id);
-    const p = patchFrom(d, m.poster);
+    const p = patchFrom(d, tmdb.language, m.poster);
     const same = await db.movies.where('groupKey').equals(m.groupKey).primaryKeys();
     await db.transaction('rw', db.movies, async () => {
       for (const k of new Set([m.id, ...same])) await db.movies.update(k, Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)) as Partial<Movie>);
@@ -132,7 +133,7 @@ export async function enrichSeries(tmdb: Tmdb, s: Series): Promise<void> {
       return;
     }
     const d = await tmdb.details('tv', id);
-    const { durationSec: _d, director: _dir, collection: _col, trailer, ...p } = patchFrom(d, s.poster);
+    const { durationSec: _d, director: _dir, collection: _col, trailer, ...p } = patchFrom(d, tmdb.language, s.poster);
     const same = await db.series.where('groupKey').equals(s.groupKey).primaryKeys();
     await db.transaction('rw', db.series, async () => {
       for (const k of new Set([s.id, ...same]))
@@ -187,7 +188,7 @@ export class Enricher {
   }
 
   private async upgradeBatch(kind: 'movie' | 'series'): Promise<boolean> {
-    const key = `enrich:upgrade:${ENRICH_V}:${kind}:${this.profileId}`;
+    const key = `enrich:upgrade:${ENRICH_V}:${this.tmdb.language}:${kind}:${this.profileId}`;
     const cursor = (await getMeta<number>(key)) ?? 0;
     if (cursor < 0) return false;
     const table = kind === 'movie' ? db.movies : db.series;
@@ -198,7 +199,7 @@ export class Enricher {
     }
     for (const it of batch) {
       if (this.stopFlag || this.priority.length) break;
-      if (it.profileId !== this.profileId || !needsEnrich(it)) continue;
+      if (it.profileId !== this.profileId || !needsEnrich(it, this.tmdb.language)) continue;
       if (kind === 'movie') await enrichMovie(this.tmdb, it);
       else await enrichSeries(this.tmdb, it);
     }
@@ -221,10 +222,10 @@ export class Enricher {
       if (job) {
         if (job.kind === 'movie') {
           const m = await db.movies.get(job.id);
-          if (m && needsEnrich(m)) await enrichMovie(this.tmdb, m);
+          if (m && needsEnrich(m, this.tmdb.language)) await enrichMovie(this.tmdb, m);
         } else {
           const s = await db.series.get(job.id);
-          if (s && needsEnrich(s)) await enrichSeries(this.tmdb, s);
+          if (s && needsEnrich(s, this.tmdb.language)) await enrichSeries(this.tmdb, s);
         }
         if (++sinceNotify >= 4 || !this.priority.length) notify();
         continue;
@@ -264,9 +265,15 @@ export class Enricher {
   }
 }
 
-/** not enriched yet, or enriched by an older version (only when TMDB matched it) */
-export function needsEnrich(x: { enrichedAt?: number; enrichV?: number; tmdbId?: number }): boolean {
-  return !x.enrichedAt || (x.enrichedAt > 0 && !!x.tmdbId && (x.enrichV || 1) < ENRICH_V);
+/**
+ * Not enriched yet, or (only when TMDB matched it) enriched by an older version or in another
+ * language than the profile's: a profile switched to English gets its plots, genres, logos and
+ * age ratings again in English.
+ */
+export function needsEnrich(x: { enrichedAt?: number; enrichV?: number; tmdbId?: number; enrichLang?: string }, lang?: string): boolean {
+  if (!x.enrichedAt) return true;
+  if (x.enrichedAt < 0 || !x.tmdbId) return false;
+  return (x.enrichV || 1) < ENRICH_V || (!!lang && (x.enrichLang || 'fr-FR') !== lang);
 }
 
 const IMDB_RATINGS = 'https://datasets.imdbws.com/title.ratings.tsv.gz';

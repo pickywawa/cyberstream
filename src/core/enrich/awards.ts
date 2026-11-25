@@ -50,7 +50,11 @@ async function query(q: string): Promise<TmdbListItem[]> {
 
 let loading: Promise<Awards | null> | null = null;
 
-/** saved lists at once (refreshed in the background once a week); the first time, waits a little */
+/**
+ * Saved lists at once (refreshed in the background once a week). The first time nothing is
+ * waited for: Home used to wait up to 8 s for Wikidata on the first launch; the award rows
+ * show from the next time Home is built.
+ */
 export async function awards(lang: string): Promise<Awards | null> {
   const l = langInfo(lang).wiki;
   const saved = await getMeta<Awards>(KEY(l)).catch(() => undefined);
@@ -63,6 +67,5 @@ export async function awards(lang: string): Promise<Awards | null> {
     })
     .catch(() => null)
     .finally(() => (loading = null));
-  if (saved) return saved;
-  return Promise.race([loading, new Promise<null>((r) => setTimeout(() => r(null), 8000))]);
+  return saved ?? null;
 }

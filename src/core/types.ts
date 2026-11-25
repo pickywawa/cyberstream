@@ -158,6 +158,8 @@ export interface Movie {
   providerInfoAt?: number;
   /** TMDB extras (enrichment v2) */
   enrichV?: number;
+  /** TMDB language tag the enrichment was fetched in ("en-GB"); absent: "fr-FR", the only one before */
+  enrichLang?: string;
   imdbId?: string;
   imdbRating?: number;
   imdbVotes?: number;
@@ -213,6 +215,8 @@ export interface Series {
   origLang?: string;
   /** TMDB extras (enrichment v2) */
   enrichV?: number;
+  /** TMDB language tag the enrichment was fetched in ("en-GB"); absent: "fr-FR", the only one before */
+  enrichLang?: string;
   imdbId?: string;
   imdbRating?: number;
   imdbVotes?: number;

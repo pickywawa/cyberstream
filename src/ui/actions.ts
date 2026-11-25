@@ -6,6 +6,7 @@ import { t } from '@/core/i18n';
 import { dataWorker } from '@/core/workers';
 import { loadXtreamEpisodesIfNeeded } from './episodes';
 import { needsEnrich } from '@/core/enrich/enrich';
+import { tmdbLang } from '@/core/i18n/langs';
 import { replayInfo, replayPlayRequest, officialPlayRequest, type OfficialLive, type ReplayItem } from '@/core/replay';
 import { getProgress } from '@/core/repo';
 
@@ -169,7 +170,9 @@ export async function resume(w: WatchState) {
   }
 }
 
-export function prioritizeEnrichment(kind: 'movie' | 'series', items: { id: string; enrichedAt?: number; enrichV?: number; tmdbId?: number }[]) {
-  const ids = items.filter(needsEnrich).map((x) => x.id);
+export function prioritizeEnrichment(kind: 'movie' | 'series', items: { id: string; enrichedAt?: number; enrichV?: number; tmdbId?: number; enrichLang?: string }[]) {
+  const p = useApp.getState().profile;
+  const lang = p ? tmdbLang(p.lang, p.country) : undefined;
+  const ids = items.filter((x) => needsEnrich(x, lang)).map((x) => x.id);
   if (ids.length) void dataWorker().prioritize(kind, ids);
 }

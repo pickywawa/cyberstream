@@ -65,8 +65,9 @@ export function Grid({ kind, title, filter, embedded }: { kind: Kind; title: str
     }} />
     <div className="container" style={{ paddingTop: 12 }}>
       {!ids ? <div className="spinner big" style={{ margin: '60px auto' }} /> : !ids.length ? <div className="empty">{t('common.empty')}</div> :
-        <VirtualGridRows className="vgrid" items={ids} minWidth={mobile ? 104 : 170} aspect={2 / 3} extraHeight={52}
-          gap={mobile ? 10 : 18} row={slice => <CatalogRow kind={kind} ids={slice} />} />}
+        // Home's categories (embedded): cards half the size, as many on screen as in Home's shelves on a TV
+        <VirtualGridRows className={embedded && !mobile ? 'vgrid small' : 'vgrid'} items={ids} minWidth={mobile ? 104 : embedded ? 85 : 170}
+          aspect={2 / 3} extraHeight={embedded && !mobile ? 40 : 52} gap={mobile ? 10 : embedded ? 12 : 18} row={slice => <CatalogRow kind={kind} ids={slice} />} />}
     </div>
   </div>;
 }
